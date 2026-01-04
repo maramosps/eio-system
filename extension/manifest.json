@@ -13,7 +13,7 @@
   ],
   "host_permissions": [
     "https://*.instagram.com/*",
-    "https://s-one-pi.vercel.app/*"
+    "https://eio-system.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js",

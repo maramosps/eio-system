@@ -8,7 +8,7 @@
 
 const LICENSE_CONFIG = {
     TRIAL_DAYS: 5,
-    API_URL: 'https://s-one-pi.vercel.app', // ✅ URL de Produção Vercel
+    API_URL: 'https://eio-system.vercel.app', // ✅ URL de Produção
     SUPPORT_EMAIL: 'msasdigital@gmail.com',
     COMPANY_NAME: 'MS Assessoria Digital',
     // Modo de produção - ATIVADO
