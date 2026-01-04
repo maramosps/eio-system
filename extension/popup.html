@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.I.O - Decole seu Insta</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="flow-builder-styles.css">
+</head>
+
+<body>
+    <div class="eio-popup-container">
+        <!-- Header Premium -->
+        <header class="eio-popup-header">
+            <div class="eio-logo-compact">
+                <img src="public/assets/official_brand_rocket.png" onerror="this.src='icons/icon48.png'" alt="E.I.O"
+                    class="eio-logo-rocket">
+                <div class="eio-logo-text">
+                    <span class="eio-title">E.I.O SYSTEM</span>
+                    <span class="eio-subtitle">Decole seu Instagram</span>
+                </div>
+            </div>
+            <button class="eio-icon-btn" id="settingsBtn" title="Configurações">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Barra de Status Conectado -->
+        <div class="eio-connection-bar">
+            <div class="eio-status-dot"></div>
+            <span class="eio-connection-text">Conectado ao Instagram</span>
+        </div>
+
+        <!-- Navegação -->
+        <nav class="eio-tabs-nav">
+            <button class="eio-tab eio-tab-active" data-tab="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Dashboard</span>
+            </button>
+            <button class="eio-tab" data-tab="automations">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span>Fluxos</span>
+            </button>
+            <button class="eio-tab" data-tab="assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+                <span>Assistente</span>
+            </button>
+            <button class="eio-tab" data-tab="console">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                <span>Console</span>
+            </button>
+        </nav>
+
+        <main class="eio-main-scroll">
+            <!-- Aba Dashboard -->
+            <div class="eio-tab-content eio-tab-content-active" id="dashboardTab">
+                <div class="eio-stats-grid">
+                    <div class="eio-stat-item">
+                        <span class="eio-stat-val" id="followsToday">0</span>
+                        <span class="eio-stat-label">Seguidores</span>
+                    </div>
+                    <div class="eio-stat-item">
+                        <span class="eio-stat-val" id="likesToday">0</span>
+                        <span class="eio-stat-label">Curtidas</span>
+                    </div>
+                    <div class="eio-stat-item">
+                        <span class="eio-stat-val" id="commentsToday">0</span>
+                        <span class="eio-stat-label">Comentários</span>
+                    </div>
+                </div>
+
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Controle Geral</h3>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="startAutomationBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                            Iniciar
+                        </button>
+                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="pauseAutomationBtn" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+                            </svg>
+                            Pausar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Automações (Flow Builder Integrado) -->
+            <div class="eio-tab-content" id="automationsTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Criar Fluxo de Automação</h3>
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Nome do Fluxo</label>
+                        <input type="text" class="eio-input" id="flowName" placeholder="Ex: Campanha Janeiro 2026"
+                            value="Meu Fluxo">
+                    </div>
+
+                    <!-- Blocos Disponíveis -->
+                    <div class="eio-blocks-section">
+                        <label class="eio-label">Blocos de Extração</label>
+                        <div class="eio-blocks-grid">
+                            <div class="eio-mini-block" data-block-type="extract-hashtag">
+                                <span class="eio-block-emoji">🔍</span>
+                                <span class="eio-block-label">Hashtag</span>
+                            </div>
+                            <div class="eio-mini-block" data-block-type="extract-followers">
+                                <span class="eio-block-emoji">👥</span>
+                                <span class="eio-block-label">Seguidores</span>
+                            </div>
+                            <div class="eio-mini-block" data-block-type="extract-likes">
+                                <span class="eio-block-emoji">❤️</span>
+                                <span class="eio-block-label">Curtidas</span>
+                            </div>
+                        </div>
+
+                        <label class="eio-label" style="margin-top: 16px;">Blocos de Ação</label>
+                        <div class="eio-blocks-grid">
+                            <div class="eio-mini-block" data-block-type="action-follow">
+                                <span class="eio-block-emoji">➕</span>
+                                <span class="eio-block-label">Seguir</span>
+                            </div>
+                            <div class="eio-mini-block" data-block-type="action-like">
+                                <span class="eio-block-emoji">💙</span>
+                                <span class="eio-block-label">Curtir</span>
+                            </div>
+                            <div class="eio-mini-block" data-block-type="action-comment">
+                                <span class="eio-block-emoji">💬</span>
+                                <span class="eio-block-label">Comentar</span>
+                            </div>
+                            <div class="eio-mini-block" data-block-type="action-dm">
+                                <span class="eio-block-emoji">✉️</span>
+                                <span class="eio-block-label">Enviar DM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Canvas de Fluxo -->
+                    <div class="eio-flow-canvas" id="flowCanvas">
+                        <div class="eio-canvas-placeholder">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" opacity="0.2" />
+                                <path d="M24 16v16M16 24h16" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <p>Clique nos blocos acima para montar seu fluxo</p>
+                        </div>
+                        <div id="flowSteps"></div>
+                    </div>
+
+                    <!-- Ações do Fluxo -->
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="clearFlowBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                            </svg>
+                            Limpar
+                        </button>
+                        <button class="eio-btn eio-btn-primary" style="flex: 2;" id="saveFlowBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            Salvar e Ativar Fluxo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Fluxos Salvos -->
+                <div class="eio-section"
+                    style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; margin-top: 20px;">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Meus Fluxos Ativos</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-mini" id="refreshFlowsBtn">Atualizar</button>
+                    </div>
+
+                    <div id="activeFlowsList">
+                        <!-- Gerado via JS -->
+                    </div>
+
+                    <div id="noFlowsMessage" style="text-align: center; padding: 20px 0; display: none;">
+                        <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem;">Nenhum fluxo ativo no momento</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Assistente (Extração) -->
+            <div class="eio-tab-content" id="assistantTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Extração Inteligente</h3>
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Fonte de Leads</label>
+                        <select class="eio-select" id="extractSource">
+                            <option value="followers">Seguidores de (@perfil)</option>
+                            <option value="likes">Curtidas em (Post URL)</option>
+                            <option value="hashtags">Hashtag (#tag)</option>
+                            <option value="unfollow">Deixar de Seguir (Não me seguem)</option>
+                        </select>
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Alvo / Referência</label>
+                        <input type="text" class="eio-input" id="extractTarget" placeholder="@usuario ou link do post">
+                    </div>
+
+                    <div class="eio-filters-box">
+                        <span class="eio-label">Filtros Avançados de Qualidade</span>
+                        <div class="eio-checkbox-grid">
+                            <label class="eio-checkbox-label"><input type="checkbox" id="filterBR" checked>
+                                Brasileiros</label>
+                            <label class="eio-checkbox-label"><input type="checkbox" id="filterPhoto" checked> Com
+                                Foto</label>
+                            <label class="eio-checkbox-label"><input type="checkbox" id="filterPosts"> Com Posts</label>
+                            <label class="eio-checkbox-label"><input type="checkbox" id="filterPublic"> Contas
+                                Públicas</label>
+                        </div>
+                    </div>
+
+                    <button class="eio-btn eio-btn-primary" style="width: 100%; margin-top: 20px;"
+                        id="startExtractionBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Iniciar Varredura
+                    </button>
+                </div>
+
+                <!-- Resultados da Extração -->
+                <div id="extractionProgress" style="display: none;" class="eio-progress-container">
+                    <div class="eio-progress-label">
+                        <span>Extraindo Leads...</span>
+                        <span id="extractionCount">0 leads</span>
+                    </div>
+                    <div class="eio-progress-bar-bg">
+                        <div class="eio-progress-bar-fill" id="extractionProgressFill"></div>
+                    </div>
+                </div>
+
+                <div id="extractionResults" style="display: none; margin-top: 20px;">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Leads Encontrados</h3>
+                        <span id="selectedCount" style="font-size: 0.75rem; color: var(--eio-blue-400);"></span>
+                    </div>
+                    <div id="resultsList"
+                        style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <!-- Leads list -->
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="eio-btn eio-btn-primary" style="flex: 2;" id="executeSelectedBtn">Automatizar
+                            Atendimento</button>
+                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="sendToCrmBtn">CRM</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Console -->
+            <div class="eio-tab-content" id="consoleTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">Monitor Operacional</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-mini" id="clearConsoleBtn">Limpar</button>
+                    </div>
+                    <div class="eio-console-box" id="consoleLog">
+                        <!-- Logs injectados aqui -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Profissional -->
+        <footer class="eio-popup-footer">
+            <a href="#" class="eio-footer-link" id="dashboardLink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Dashboard Web
+            </a>
+            <a href="https://wa.me/5521975312662" target="_blank" class="eio-footer-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Suporte Premium
+            </a>
+        </footer>
+    </div>
+
+    <!-- Modal de Termos (Overlay Profissional) -->
+    <div id="termsModal" class="eio-terms-modal">
+        <div class="eio-terms-content">
+            <span class="eio-terms-title">🛡️ Filtro de Segurança</span>
+            <div class="eio-terms-text">
+                O <b>E.I.O</b> utiliza navegação humana simulada. Ao continuar, você concorda em seguir os limites
+                estipulados para a saúde da sua conta.
+            </div>
+            <button class="eio-btn eio-btn-primary" style="width: 100%;" id="acceptTermsBtn">Entendi e Aceito</button>
+        </div>
+    </div>
+
+    <!-- License Manager - DEVE SER O PRIMEIRO -->
+    <script src="license-manager.js"></script>
+    <script src="settings-handler.js"></script>
+    <script src="flow-management.js"></script>
+    <script src="flow-builder-integration.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>
+```

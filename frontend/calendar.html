@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Editorial - E.I.O</title>
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="calendar.css">
+</head>
+
+<body class="eio-dashboard-body">
+    <aside class="eio-sidebar">
+        <div class="eio-sidebar-header">
+            <img src="public/assets/official_brand_rocket.png" alt="E.I.O" class="eio-sidebar-logo">
+            <div class="eio-sidebar-title">
+                <span class="eio-title-main">E.I.O</span>
+                <span class="eio-title-sub">Content Calendar</span>
+            </div>
+        </div>
+
+        <nav class="eio-sidebar-nav">
+            <a href="dashboard.html" class="eio-nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 10L10 3L17 10M5 8V17H8V13H12V17H15V8" stroke="currentColor" stroke-width="2" />
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="eio-nav-item eio-nav-item-active">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="4" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2" />
+                    <path d="M3 9H17M7 3V5M13 3V5" stroke="currentColor" stroke-width="2" />
+                </svg>
+                <span>Calendário</span>
+            </a>
+        </nav>
+
+        <!-- Content Library -->
+        <div class="eio-content-library">
+            <div class="eio-library-header">
+                <h4>Biblioteca de Conteúdo</h4>
+                <button class="eio-btn eio-btn-sm eio-btn-primary" id="btnAddContent">+</button>
+            </div>
+
+            <div class="eio-library-items">
+                <div class="eio-library-item" draggable="true" data-type="post">
+                    <div class="eio-item-icon" style="background: rgba(33, 150, 243, 0.15);">
+                        <svg width="20" height="20" fill="#2196F3">
+                            <rect width="20" height="20" rx="2" />
+                        </svg>
+                    </div>
+                    <span>Post Feed</span>
+                </div>
+
+                <div class="eio-library-item" draggable="true" data-type="story">
+                    <div class="eio-item-icon" style="background: rgba(156, 39, 176, 0.15);">
+                        <svg width="20" height="20" fill="#9C27B0">
+                            <circle cx="10" cy="10" r="9" />
+                        </svg>
+                    </div>
+                    <span>Story</span>
+                </div>
+
+                <div class="eio-library-item" draggable="true" data-type="reel">
+                    <div class="eio-item-icon" style="background: rgba(244, 67, 54, 0.15);">
+                        <svg width="20" height="20" fill="#F44336">
+                            <path d="M4 3L7 10L4 17H16L13 10L16 3H4Z" />
+                        </svg>
+                    </div>
+                    <span>Reels</span>
+                </div>
+
+                <div class="eio-library-item" draggable="true" data-type="igtv">
+                    <div class="eio-item-icon" style="background: rgba(255, 152, 0, 0.15);">
+                        <svg width="20" height="20" fill="#FF9800">
+                            <rect x="3" y="5" width="14" height="10" rx="2" />
+                        </svg>
+                    </div>
+                    <span>IGTV</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="eio-main-content">
+        <header class="eio-topbar">
+            <div class="eio-topbar-left">
+                <button class="eio-btn eio-btn-ghost" id="btnPrevMonth">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </button>
+                <h1 class="eio-page-title" id="currentMonth">Janeiro 2025</h1>
+                <button class="eio-btn eio-btn-ghost" id="btnNextMonth">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="eio-topbar-right">
+                <button class="eio-btn eio-btn-outline" id="btnToday">Hoje</button>
+                <button class="eio-btn eio-btn-primary" id="btnExportCalendar">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M14 10V13H2V10M8 2V11M8 11L5 8M8 11L11 8" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </header>
+
+        <div class="eio-calendar-container">
+            <div class="eio-calendar-header">
+                <div class="eio-calendar-day">Dom</div>
+                <div class="eio-calendar-day">Seg</div>
+                <div class="eio-calendar-day">Ter</div>
+                <div class="eio-calendar-day">Qua</div>
+                <div class="eio-calendar-day">Qui</div>
+                <div class="eio-calendar-day">Sex</div>
+                <div class="eio-calendar-day">Sáb</div>
+            </div>
+
+            <div class="eio-calendar-body" id="calendarBody">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Content Modal -->
+    <div class="eio-modal" id="contentModal">
+        <div class="eio-modal-overlay"></div>
+        <div class="eio-modal-content">
+            <div class="eio-modal-header">
+                <h3>Agendar Conteúdo</h3>
+                <button class="eio-modal-close">&times;</button>
+            </div>
+            <div class="eio-modal-body">
+                <div class="eio-form-group">
+                    <label>Tipo de Conteúdo</label>
+                    <select class="eio-input" id="contentType">
+                        <option value="post">Post Feed</option>
+                        <option value="story">Story</option>
+                        <option value="reel">Reels</option>
+                        <option value="igtv">IGTV</option>
+                    </select>
+                </div>
+
+                <div class="eio-form-group">
+                    <label>Data e Hora</label>
+                    <input type="datetime-local" class="eio-input" id="contentDateTime">
+                </div>
+
+                <div class="eio-form-group">
+                    <label>Legenda</label>
+                    <textarea class="eio-input" id="contentCaption" rows="4"
+                        placeholder="Escreva sua legenda..."></textarea>
+                </div>
+
+                <div class="eio-form-group">
+                    <label>Hashtags</label>
+                    <input type="text" class="eio-input" id="contentHashtags" placeholder="#exemplo #hashtag">
+                </div>
+
+                <div class="eio-form-group">
+                    <label>Status</label>
+                    <select class="eio-input" id="contentStatus">
+                        <option value="draft">Rascunho</option>
+                        <option value="scheduled">Agendado</option>
+                        <option value="published">Publicado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="eio-modal-footer">
+                <button class="eio-btn eio-btn-ghost" id="btnCancelContent">Cancelar</button>
+                <button class="eio-btn eio-btn-primary" id="btnSaveContent">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="calendar.js"></script>
+</body>
+
+</html>

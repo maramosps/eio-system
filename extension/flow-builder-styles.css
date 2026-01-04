@@ -1,0 +1,235 @@
+/* Estilos adicionais para Flow Builder - Append ao popup.css */
+
+/* ===== FLOW BUILDER INTEGRADO - MELHORADO ===== */
+.eio-blocks-section {
+    margin: 20px 0;
+}
+
+.eio-blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.eio-mini-block {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(0, 188, 212, 0.08) 100%);
+    border: 2px solid rgba(33, 150, 243, 0.3);
+    border-radius: 12px;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.eio-mini-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.eio-mini-block:hover {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(0, 188, 212, 0.15) 100%);
+    border-color: #42A5F5;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+}
+
+.eio-mini-block:hover::before {
+    opacity: 0.1;
+}
+
+.eio-mini-block:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.eio-block-emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.eio-block-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Canvas de Fluxo */
+.eio-flow-canvas {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px dashed rgba(33, 150, 243, 0.2);
+    border-radius: 12px;
+    min-height: 180px;
+    padding: 16px;
+    margin-top: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.eio-flow-canvas:has(.eio-flow-step) {
+    border-style: solid;
+    border-color: rgba(33, 150, 243, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.eio-canvas-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.eio-canvas-placeholder svg {
+    color: rgba(33, 150, 243, 0.3);
+}
+
+.eio-canvas-placeholder p {
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+#flowSteps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.eio-flow-step {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(0, 188, 212, 0.12) 100%);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.eio-step-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.eio-step-emoji {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.eio-step-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+}
+
+.eio-step-remove {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+    color: #F44336;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.eio-step-remove:hover {
+    background: #F44336;
+    color: white;
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Botões de Ação dos Fluxos - ESTILO PREMIUM */
+.eio-flow-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.eio-flow-actions .eio-btn-mini {
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Botão Pausar - Estilo Premium Laranja */
+.eio-btn-pause {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.3);
+}
+
+.eio-btn-pause:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+}
+
+/* Botão Retomar - Estilo Premium Verde */
+.eio-btn-resume {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+}
+
+.eio-btn-resume:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+/* Botão Parar - Estilo Premium Vermelho */
+.eio-btn-stop {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.3);
+}
+
+.eio-btn-stop:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+}

@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "E.I.O - Decole seu Instagram",
+  "version": "1.0.0",
+  "description": "Engajamento Inteligente Orgânico - Sistema profissional de automação para Instagram com IA",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "webRequest",
+    "cookies",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://*.instagram.com/*",
+    "https://api.eio-system.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.instagram.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "E.I.O - Decole seu Instagram",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "styles/*",
+        "assets/*",
+        "scripts/*"
+      ],
+      "matches": [
+        "https://*.instagram.com/*"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

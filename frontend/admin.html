@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - E.I.O Dashboard</title>
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="eio-dashboard-body">
+    <!-- Sidebar -->
+    <aside class="eio-sidebar">
+        <div class="eio-sidebar-header">
+            <img src="public/assets/official_brand_rocket.png" alt="E.I.O" class="eio-sidebar-logo">
+            <div class="eio-sidebar-title">
+                <span class="eio-title-main">E.I.O</span>
+                <span class="eio-title-sub">Admin Panel</span>
+            </div>
+        </div>
+
+        <nav class="eio-sidebar-nav">
+            <a href="#overview" class="eio-nav-item eio-nav-item-active" data-page="overview">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2" />
+                    <rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2" />
+                    <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2" />
+                    <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2" />
+                </svg>
+                <span>Overview</span>
+            </a>
+
+            <a href="#users" class="eio-nav-item" data-page="users">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M13 14C13 12.3431 11.6569 11 10 11H6C4.34315 11 3 12.3431 3 14V17H13V14Z"
+                        stroke="currentColor" stroke-width="2" />
+                    <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="2" />
+                    <path d="M17 17V14C17 12.8954 16.1046 12 15 12H14" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                    <path d="M14 3C14.5915 3.41618 15 4.16006 15 5C15 5.83994 14.5915 6.58382 14 7"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>Usuários</span>
+            </a>
+
+            <a href="#subscriptions" class="eio-nav-item" data-page="subscriptions">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="2" />
+                    <path d="M3 8H17" stroke="currentColor" stroke-width="2" />
+                    <path d="M7 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>Assinaturas</span>
+            </a>
+
+            <a href="#automations" class="eio-nav-item" data-page="automations">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2L3 7L10 12L17 7L10 2Z" stroke="currentColor" stroke-width="2" />
+                    <path d="M3 12L10 17L17 12" stroke="currentColor" stroke-width="2" />
+                </svg>
+                <span>Automações</span>
+            </a>
+
+            <a href="#agents" class="eio-nav-item" data-page="agents">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Agentes IA</span>
+            </a>
+
+            <a href="#finances" class="eio-nav-item" data-page="finances">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" />
+                    <path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>Financeiro</span>
+            </a>
+
+            <a href="#logs" class="eio-nav-item" data-page="logs">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 3H17V17H3V3Z" stroke="currentColor" stroke-width="2" />
+                    <path d="M6 7H14M6 10H14M6 13H10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>Logs do Sistema</span>
+            </a>
+        </nav>
+
+        <div class="eio-sidebar-footer">
+            <a href="dashboard.html" class="eio-btn eio-btn-ghost eio-btn-sm" style="width: 100%;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" />
+                </svg>
+                Voltar ao Dashboard
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="eio-main-content">
+        <!-- Topbar -->
+        <header class="eio-topbar">
+            <div class="eio-topbar-left">
+                <h1 class="eio-page-title">Admin Overview</h1>
+            </div>
+
+            <div class="eio-topbar-right">
+                <div class="eio-user-menu">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" class="eio-avatar">
+                    <div class="eio-user-info">
+                        <span class="eio-user-name">Admin User</span>
+                        <span class="eio-user-email">admin@eio.com</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="eio-page-content" id="pageContent">
+            <!-- Overview Section -->
+            <div class="eio-content-section eio-content-active" data-section="overview">
+                <!-- Admin Stats Grid -->
+                <div class="eio-stats-grid">
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Total de Usuários</span>
+                            <div class="eio-stat-icon eio-stat-icon-blue">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                                        stroke="currentColor" stroke-width="2" />
+                                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                    <path
+                                        d="M23 21V19C23 18.1212 22.6839 17.2818 22.1213 16.6485M16 3C17.6568 3.94876 18.8097 5.77817 18.8097 7.875C18.8097 9.97183 17.6568 11.8012 16 12.75"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">1,247</div>
+                        <div class="eio-stat-change eio-stat-positive">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            +12 novos hoje
+                        </div>
+                    </div>
+
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Receita Mensal</span>
+                            <div class="eio-stat-icon eio-stat-icon-purple">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">R$ 249K</div>
+                        <div class="eio-stat-change eio-stat-positive">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            +28% vs mês anterior
+                        </div>
+                    </div>
+
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Assinaturas Ativas</span>
+                            <div class="eio-stat-icon eio-stat-icon-cyan">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">1,089</div>
+                        <div class="eio-stat-change eio-stat-positive">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            87.4% de retenção
+                        </div>
+                    </div>
+
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Automações Rodando</span>
+                            <div class="eio-stat-icon eio-stat-icon-orange">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">3,542</div>
+                        <div class="eio-stat-change eio-stat-positive">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            421 iniciadas hoje
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="eio-admin-grid">
+                    <div class="eio-card eio-card-large">
+                        <div class="eio-card-header">
+                            <h3>Receita dos Últimos 30 Dias</h3>
+                            <select class="eio-select-minimal">
+                                <option>Últimos 30 dias</option>
+                                <option>Últimos 7 dias</option>
+                                <option>Este mês</option>
+                            </select>
+                        </div>
+                        <div class="eio-chart-container">
+                            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="eio-card">
+                        <div class="eio-card-header">
+                            <h3>Novos Usuários</h3>
+                        </div>
+                        <div class="eio-chart-container">
+                            <canvas id="usersChart" style="max-height: 240px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Atividade Recente do Sistema</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-sm">Ver Todos</button>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Ação</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="eio-user-cell">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user1"
+                                                class="eio-table-avatar">
+                                            <div>
+                                                <div class="eio-table-name">João Silva</div>
+                                                <div class="eio-table-email">joao@email.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Nova assinatura</td>
+                                    <td><span class="eio-badge eio-badge-success">Completo</span></td>
+                                    <td>Há 5 minutos</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="eio-user-cell">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user2"
+                                                class="eio-table-avatar">
+                                            <div>
+                                                <div class="eio-table-name">Maria Santos</div>
+                                                <div class="eio-table-email">maria@email.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Automação iniciada</td>
+                                    <td><span class="eio-badge eio-badge-info">Em andamento</span></td>
+                                    <td>Há 12 minutos</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="eio-user-cell">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user3"
+                                                class="eio-table-avatar">
+                                            <div>
+                                                <div class="eio-table-name">Pedro Costa</div>
+                                                <div class="eio-table-email">pedro@email.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Cancelamento de assinatura</td>
+                                    <td><span class="eio-badge eio-badge-warning">Pendente</span></td>
+                                    <td>Há 1 hora</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div class="eio-content-section" data-section="users">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Gerenciar Usuários</h3>
+                        <div style="display: flex; gap: var(--spacing-md);">
+                            <input type="search" class="eio-input" placeholder="Buscar usuários..."
+                                style="width: 300px;">
+                            <button class="eio-btn eio-btn-primary">Adicionar Usuário</button>
+                        </div>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Email</th>
+                                    <th>Plano</th>
+                                    <th>Status</th>
+                                    <th>Método Pgto</th>
+                                    <th>Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Section -->
+            <div class="eio-content-section" data-section="subscriptions">
+                <div class="eio-stats-grid" style="margin-bottom: 30px;">
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Assinaturas Ativas</span>
+                            <div class="eio-stat-icon eio-stat-icon-blue">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">1,089</div>
+                        <div class="eio-stat-change eio-stat-positive">87.4% de retenção</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Em Trial</span>
+                            <div class="eio-stat-icon eio-stat-icon-cyan">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">158</div>
+                        <div class="eio-stat-change eio-stat-positive">+23 hoje</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Pagamentos Pendentes</span>
+                            <div class="eio-stat-icon eio-stat-icon-orange">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">42</div>
+                        <div class="eio-stat-change" style="color: #FFC107;">Requer atenção</div>
+                    </div>
+                </div>
+
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Histórico de Assinaturas</h3>
+                        <select class="eio-select-minimal">
+                            <option>Todas</option>
+                            <option>Ativas</option>
+                            <option>Trial</option>
+                            <option>Expiradas</option>
+                            <option>Canceladas</option>
+                        </select>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plano</th>
+                                    <th>Status</th>
+                                    <th>Valor</th>
+                                    <th>Próximo Pagamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptionsTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finances Section -->
+            <div class="eio-content-section" data-section="finances">
+                <div class="eio-stats-grid" style="margin-bottom: 30px;">
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Receita Mensal (MRR)</span>
+                            <div class="eio-stat-icon eio-stat-icon-purple">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">R$ 214K</div>
+                        <div class="eio-stat-change eio-stat-positive">+18% vs mês anterior</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Receita Total (Ano)</span>
+                            <div class="eio-stat-icon eio-stat-icon-blue">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="2" />
+                                    <path d="M7 8V16M12 11V16M17 6V16" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">R$ 2.1M</div>
+                        <div class="eio-stat-change eio-stat-positive">Meta: R$ 3M</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Ticket Médio</span>
+                            <div class="eio-stat-icon eio-stat-icon-cyan">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M3 8H21" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="eio-stat-value">R$ 400</div>
+                        <div class="eio-stat-change eio-stat-positive">Plano Anual Premium</div>
+                    </div>
+                </div>
+
+                <div class="eio-card" style="margin-top: 20px;">
+                    <div class="eio-card-header">
+                        <h3>Transações Recentes</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-sm">Exportar Relatório</button>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Método</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automations Section -->
+            <div class="eio-content-section" data-section="automations">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Monitoramento de Automações</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <span class="eio-badge eio-badge-success">3.542 Ativas</span>
+                            <span class="eio-badge eio-badge-warning">128 Pausadas</span>
+                        </div>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Conta Instagram</th>
+                                    <th>Ação Atual</th>
+                                    <th>Velocidade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>João Silva</td>
+                                    <td>@joaosilva_fit</td>
+                                    <td>Seguindo / Curtindo</td>
+                                    <td>Médio (Humanizado)</td>
+                                    <td><span class="eio-badge eio-badge-success">Rodando</span></td>
+                                    <td><button class="eio-btn eio-btn-ghost eio-btn-sm">Pausar</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Maria Santos</td>
+                                    <td>@mariasantos</td>
+                                    <td>Deixando de Seguir</td>
+                                    <td>Lento (Seguro)</td>
+                                    <td><span class="eio-badge eio-badge-success">Rodando</span></td>
+                                    <td><button class="eio-btn eio-btn-ghost eio-btn-sm">Pausar</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Carlos Souza</td>
+                                    <td>@carlossouza</td>
+                                    <td>Nenhuma</td>
+                                    <td>-</td>
+                                    <td><span class="eio-badge eio-badge-warning">Pausado</span></td>
+                                    <td><button class="eio-btn eio-btn-primary eio-btn-sm">Retomar</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Agents Section -->
+            <div class="eio-content-section" data-section="agents">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Performance dos Agentes IA</h3>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Agente Ativo</th>
+                                    <th>Mensagens/Dia</th>
+                                    <th>Leads Qualificados</th>
+                                    <th>Status IA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Ana Lima</td>
+                                    <td>Boas-vindas + Vendas</td>
+                                    <td>124</td>
+                                    <td>18</td>
+                                    <td><span class="eio-badge eio-badge-success">Online</span></td>
+                                </tr>
+                                <tr>
+                                    <td>João Silva</td>
+                                    <td>Auto-Resposta</td>
+                                    <td>45</td>
+                                    <td>5</td>
+                                    <td><span class="eio-badge eio-badge-success">Online</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Logs Section -->
+            <div class="eio-content-section" data-section="logs">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>Logs de Atividade Técnica</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-sm">Limpar Logs</button>
+                    </div>
+                    <div class="eio-admin-table">
+                        <div
+                            style="background: #000; color: #0f0; font-family: monospace; padding: 20px; border-radius: 8px; max-height: 400px; overflow-y: auto;">
+                            <div>[2024-12-31 17:40:12] INFO: Backup diário do banco de dados concluído com sucesso.
+                            </div>
+                            <div>[2024-12-31 17:42:05] WARNING: Taxa de erro API Instagram acima do normal para
+                                @usuario_x.</div>
+                            <div>[2024-12-31 17:43:18] INFO: Novo registro de usuário: felipe@email.com.</div>
+                            <div>[2024-12-31 17:44:02] ERROR: Falha na renovação recorrente do cliente João Silva
+                                (Cartão Recusado).</div>
+                            <div>[2024-12-31 17:45:10] INFO: Agente IA atualizado para versão 2.4.1.</div>
+                            <div>[2024-12-31 17:45:55] INFO: Sessão Admin iniciada por admin@eio.com.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

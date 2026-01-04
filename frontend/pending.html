@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ativação de Conta - E.I.O</title>
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="stylesheet" href="landing.css">
+    <style>
+        .eio-pending-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            background: var(--eio-black);
+            text-align: center;
+        }
+
+        .eio-pending-card {
+            max-width: 1100px;
+            width: 100%;
+            background: var(--eio-glass-bg);
+            backdrop-filter: var(--eio-glass-blur);
+            border: 1px solid var(--eio-glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-3xl);
+            box-shadow: var(--eio-shadow-xl);
+        }
+
+        .eio-pending-status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(255, 111, 0, 0.15);
+            color: var(--eio-orange-400);
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .eio-pending-title {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .eio-pending-message {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 700px;
+            margin: 0 auto var(--spacing-3xl);
+            line-height: 1.6;
+        }
+
+        /* Reutilizando estilos de pricing com ajustes */
+        .eio-pricing-card-wrapper {
+            margin-top: 0;
+        }
+
+        .eio-logout-btn {
+            margin-top: var(--spacing-2xl);
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            display: inline-block;
+            transition: color 0.3s;
+        }
+
+        .eio-logout-btn:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="eio-pending-container">
+        <div class="eio-pending-card">
+            <div class="eio-pending-status">
+                ⚠️ Período de Teste Encerrado
+            </div>
+
+            <h1 class="eio-pending-title">Sua conta está pendente de ativação</h1>
+            <p class="eio-pending-message">
+                Escolha um dos nossos planos abaixo para ativar sua conta e continuar decolando seu Instagram com a
+                tecnologia E.I.O.
+            </p>
+
+            <div class="eio-pricing-card-wrapper">
+                <!-- Plano 1: Quero Decolar -->
+                <div class="eio-pricing-card">
+                    <div class="eio-pricing-header">
+                        <h3 class="eio-pricing-name">Quero Decolar</h3>
+                        <div class="eio-pricing-price">
+                            <span class="eio-pricing-currency">R$</span>
+                            <span class="eio-pricing-amount">349</span>
+                            <span class="eio-pricing-period">,90/mês</span>
+                        </div>
+                        <p class="eio-pricing-description">
+                            Acesso Mensal (30 dias). Renovação manual após o período.
+                        </p>
+                    </div>
+
+                    <div class="eio-pricing-features">
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span>Extração Inteligente Ilimitada</span>
+                        </div>
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span>Filtros IA Brasil & Foto</span>
+                        </div>
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span>Dashboard Profissional</span>
+                        </div>
+                    </div>
+
+                    <a href="https://wa.me/5521975312662" class="eio-btn eio-btn-outline eio-btn-block">
+                        Ativar Plano
+                    </a>
+                </div>
+
+                <!-- Plano 2: Decolando seu Insta -->
+                <div class="eio-pricing-card eio-pricing-featured">
+                    <div class="eio-pricing-badge">🎯 Super Desconto</div>
+                    <div class="eio-pricing-header">
+                        <h3 class="eio-pricing-name">Decolando seu Insta</h3>
+                        <div class="eio-pricing-price">
+                            <span class="eio-pricing-currency">R$</span>
+                            <span class="eio-pricing-amount">149</span>
+                            <span class="eio-pricing-period">,90/mês</span>
+                        </div>
+                        <div class="eio-pricing-setup">
+                            Taxa de Adesão: R$ 299,90 (Única vez)
+                        </div>
+                        <p class="eio-pricing-description">
+                            Melhor custo-benefício para quem quer crescer todos os meses.
+                        </p>
+                    </div>
+
+                    <div class="eio-pricing-features">
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span><b>Economia de 55% na mensalidade</b></span>
+                        </div>
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span>Todas as Funções do E.I.O</span>
+                        </div>
+                        <div class="eio-pricing-feature">
+                            <span class="eio-feature-check">✓</span>
+                            <span>Suporte Prioritário VIP</span>
+                        </div>
+                    </div>
+
+                    <a href="https://wa.me/5521975312662" class="eio-btn eio-btn-primary eio-btn-block">
+                        Ativar com Desconto
+                    </a>
+                </div>
+            </div>
+
+            <a href="login.html" class="eio-logout-btn">Voltar para o Login</a>
+        </div>
+    </div>
+</body>
+
+</html>

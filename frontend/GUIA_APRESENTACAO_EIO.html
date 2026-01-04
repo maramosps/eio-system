@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.I.O - Guia de Apresentação ao Cliente</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #1976D2;
+            --secondary: #9C27B0;
+            --dark: #0F172A;
+            --light: #F8FAFC;
+            --success: #10B981;
+            --warning: #F59E0B;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 60px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 40px;
+        }
+
+        .logo-placeholder {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: var(--dark);
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: var(--dark);
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .feature-item h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .step-by-step {
+            background: var(--dark);
+            color: #fff;
+            padding: 40px;
+            border-radius: 24px;
+            margin-top: 40px;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step-number {
+            background: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                border-radius: 0;
+            }
+
+            .step-by-step {
+                background: #f0f0f0 !important;
+                color: #000 !important;
+            }
+
+            .step-content h4 {
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-placeholder">🚀</div>
+            <p class="subtitle">Apresentação Estratégica</p>
+            <h1>E.I.O - Engajamento Inteligente Orgânico</h1>
+            <p>O Sistema Definitivo para Decolar sua Presença no Instagram</p>
+        </header>
+
+        <section>
+            <h2>O que é o E.I.O?</h2>
+            <p>O E.I.O não é apenas um robô de automação; é uma inteligência de crescimento orgânico. Diferente de
+                plataformas que compram seguidores falsos, o E.I.O utiliza algoritmos de busca avançada para encontrar
+                <strong>clientes reais</strong> que já demonstram interesse no seu nicho, conectando sua marca com quem
+                realmente importa.
+            </p>
+        </section>
+
+        <section>
+            <h2>Funcionalidades de Elite</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h3>🔍 Extração Inteligente de Leads</h3>
+                    <p>Captura perfis de seguidores, contas que o alvo segue ou curtidas em posts específicos. Tudo com
+                        filtros de alta qualidade.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🇧🇷 Filtro Brasil (Exclusivo)</h3>
+                    <p>Foca apenas em perfis brasileiros, analisando nomes e bio para garantir que sua rede seja local e
+                        relevante.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📸 Verificação de Qualidade</h3>
+                    <p>O robô ignora contas sem foto (fakes) e prioriza perfis com stories ativos e postagens recentes.
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <h3>🛡️ Motor de Segurança Humana</h3>
+                    <p>Emula o comportamento humano com pausas aleatórias e limites diários rígidos (200 segue / 500
+                        unfollow) para proteger sua conta contra bloqueios.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📊 Dashboard em Tempo Real</h3>
+                    <p>Acompanhe sua produtividade diária e a saúde da sua conta diretamente no painel de controle da
+                        extensão.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🧹 Limpeza Estratégica (Unfollow)</h3>
+                    <p>Mantenha sua lista de "Seguindo" limpa, visualizando as fotos dos perfis antes de remover,
+                        garantindo segurança total.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="step-by-step">
+            <h2>Passo a Passo para o Sucesso</h2>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Mapeamento do Público</h4>
+                    <p>Identifique um perfil concorrente ou influenciador que possua o público que você deseja atrair.
+                    </p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Extração e Filtragem</h4>
+                    <p>Use a aba "Assistente" para extrair os leads. Ative os filtros de "BR Only" e "Com Foto" para
+                        máxima eficiência.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Conferência Visual (Opcional)</h4>
+                    <p>Para casos de Unfollow, revise visualmente sua lista com as fotos de perfil capturadas pelo robô.
+                    </p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Decolagem (Start)</h4>
+                    <p>Clique em "Executar Ação nos Selecionados". O robô assumirá o comando, executando as interações
+                        com segurança enquanto você foca no seu negócio.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Termo de Uso e Responsabilidade</h2>
+            <div
+                style="background: #FFFBEB; border: 1px solid #FEF3C7; padding: 25px; border-radius: 16px; font-size: 14px; color: #92400E;">
+                <p><strong>⚠️ Aviso Importante:</strong> O uso de automação no Instagram requer responsabilidade. O
+                    E.I.O foi projetado com um "Escudo de Segurança" que respeita os limites da plataforma, mas é dever
+                    do cliente seguir as boas práticas:</p>
+                <ul style="margin-bottom: 0;">
+                    <li><strong>Limites Diários:</strong> O sistema trava automaticamente em 200 follows e 500 unfollows
+                        para evitar detecção.</li>
+                    <li><strong>Aquecimento:</strong> Comece com metas menores em perfis novos.</li>
+                    <li><strong>Uso Simultâneo (PROIBIDO):</strong> Não realize interações manuais (celular/tablet)
+                        enquanto o robô estiver ativo. Isto causa bloqueios imediatos por detecção de acessos
+                        conflitantes. A MS Assessoria Digital isenta-se de responsabilidade caso esta regra seja
+                        violada.</li>
+                    <li><strong>Isenção:</strong> A estratégia de conteúdo e o uso ético da ferramenta são de
+                        responsabilidade do titular da conta.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>E.I.O - Engajamento Inteligente Orgânico &copy; 2025 | Sistema Profissional para Instagram</p>
+            <p><em>Nota: Configure sua página para "Imprimir como PDF" para gerar o documento oficial.</em></p>
+        </footer>
+    </div>
+</body>
+
+</html>

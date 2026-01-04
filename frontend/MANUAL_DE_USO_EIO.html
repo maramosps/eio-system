@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.I.O - Manual Passo a Passo do Usuário</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #1976D2;
+            --accent: #00ACC1;
+            --dark: #0A0A0F;
+            --card-bg: #111118;
+            --text: #FFFFFF;
+            --text-dim: rgba(255, 255, 255, 0.7);
+            --success: #4CAF50;
+            --warning: #FF6F00;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #111118 0%, #0A0A0F 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin: 0;
+            background: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.intro {
+            font-size: 18px;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .step-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 22px;
+            color: var(--accent);
+            margin-top: 0;
+        }
+
+        .instruction-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instruction-list li {
+            padding: 12px 0;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .instruction-list li:last-child {
+            border-bottom: none;
+        }
+
+        .bullet {
+            background: var(--primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .tip-box {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: rgba(255, 111, 0, 0.1);
+            border: 1px solid rgba(255, 111, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 40px;
+            color: #FFB74D;
+        }
+
+        .warning-box b {
+            color: #FF6F00;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .btn-print {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        @media print {
+            .btn-print {
+                display: none;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+
+            .step-section {
+                border: 1px solid #ddd;
+                background: #fff;
+            }
+
+            .step-number {
+                display: none;
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #000 !important;
+            }
+
+            .tip-box,
+            .warning-box {
+                border: 1px solid #ccc;
+                background: #fafafa !important;
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <center><button class="btn-print" onclick="window.print()">🖨️ Salvar como PDF</button></center>
+
+        <header>
+            <div class="logo">🚀</div>
+            <h1>E.I.O - Manual do Usuário</h1>
+            <p class="intro">O guia mais prático do mundo para decolar seu Instagram. Siga os passos e veja a mágica
+                acontecer!</p>
+        </header>
+
+        <!-- ETAPA 1 -->
+        <section class="step-section">
+            <div class="step-number">01</div>
+            <h2>🔐 Passo 1: Como entrar no sistema</h2>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Abra o site <b>dashboard.eio-system.com</b> no seu
+                        computador.</span></li>
+                <li><span class="bullet">2</span><span>Coloque seu e-mail e a senha que você recebeu no momento da
+                        compra.</span></li>
+                <li><span class="bullet">3</span><span>Clique no botão azul "Entrar Agora".</span></li>
+            </ul>
+            <div class="tip-box">
+                <span>💡</span>
+                <div><b>Dica Pro:</b> Marque a caixa "Lembrar-me" para não precisar digitar sua senha toda vez que
+                    entrar.</div>
+            </div>
+        </section>
+
+        <!-- ETAPA 2 -->
+        <section class="step-section">
+            <div class="step-number">02</div>
+            <h2>📊 Passo 2: Entendendo seu Painel</h2>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Na tela inicial, você verá 3 cards coloridos. Eles mostram
+                        quantas pessoas você seguiu ou curtiu <b>HOJE</b>.</span></li>
+                <li><span class="bullet">2</span><span>Olhe a barra de "Saúde da Conta". Se ela estiver verde e em 100%,
+                        você está seguro e pronto para agir!</span></li>
+            </ul>
+            <div class="tip-box">
+                <span>💡</span>
+                <div><b>Dica Pro:</b> Se a saúde da conta baixar, o sistema te avisará para descansar. Escute o robô!
+                </div>
+            </div>
+        </section>
+
+        <!-- ETAPA 3 -->
+        <section class="step-section">
+            <div class="step-number">03</div>
+            <h2>🔍 Passo 3: Encontrando seus Clientes (Extração)</h2>
+            <p>Esta é a parte mais importante! Vamos dizer ao robô quem ele deve encontrar.</p>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Clique na aba <b>"Assistente"</b> (ícone de foguete).</span></li>
+                <li><span class="bullet">2</span><span>No campo "Alvo", coloque o @ de um concorrente ou um link de um
+                        post famoso.</span></li>
+                <li><span class="bullet">3</span><span><b>Escolha os filtros mágicos:</b> Marque "Somente Brasileiros" e
+                        "Com Foto de Perfil". Isso evita robôs e fakes!</span></li>
+                <li><span class="bullet">4</span><span>Clique em "Iniciar Extração Inteligente". Aguarde a lista
+                        aparecer.</span></li>
+            </ul>
+        </section>
+
+        <!-- ETAPA 4 -->
+        <section class="step-section">
+            <div class="step-number">04</div>
+            <h2>✅ Passo 4: Organizando e Começando</h2>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Com a lista na tela, você pode desmarcar pessoas que não quer
+                        seguir clicando na foto delas.</span></li>
+                <li><span class="bullet">2</span><span>Tudo pronto? Clique no botão azul grande: <b>"Executar Ação nos
+                            Selecionados"</b>.</span></li>
+                <li><span class="bullet">3</span><span>O robô vai mudar para a aba de Automação e começará a trabalhar
+                        sozinho!</span></li>
+            </ul>
+        </section>
+
+        <!-- ETAPA 5 -->
+        <section class="step-section">
+            <div class="step-number">05</div>
+            <h2>👥 Passo 5: Gerenciando no CRM</h2>
+            <p>Os perfis que você seguiu viram cartões automáticos no CRM.</p>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Na aba <b>"CRM"</b>, os clientes estão divididos em colunas
+                        (Novos, Contactados, etc).</span></li>
+                <li><span class="bullet">2</span><span>Arraste o cartão de uma coluna para a outra quando falar com o
+                        cliente.</span></li>
+                <li><span class="bullet">3</span><span>Clique no cartão para escrever anotações importantes sobre o
+                        atendimento.</span></li>
+            </ul>
+        </section>
+
+        <!-- ETAPA 6 -->
+        <section class="step-section">
+            <div class="step-number">06</div>
+            <h2>📅 Passo 6: Planejando Postagens</h2>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Clique em <b>"Calendário"</b>. Aqui você pode ver o que vai ser
+                        postado.</span></li>
+                <li><span class="bullet">2</span><span>Use a ferramenta para agendar legendas e hashtags que a nossa IA
+                        sugere para você.</span></li>
+            </ul>
+        </section>
+
+        <!-- ETAPA 7 -->
+        <section class="step-section">
+            <div class="step-number">07</div>
+            <h2>🤖 Passo 7: Agente de Boas-Vindas (IA)</h2>
+            <p>Automatize o primeiro contato com novos seguidores de forma segura.</p>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>Acesse o menu <b>"Agentes IA"</b> no painel lateral.</span></li>
+                <li><span class="bullet">2</span><span>Ative a chave do card "Boas-Vindas Automáticas".</span></li>
+                <li><span class="bullet">3</span><span>Configure sua mensagem usando <b>Spintax</b> (ex: {Oi|Olá}) para
+                        variar o texto e evitar bloqueios.</span></li>
+                <li><span class="bullet">4</span><span>Ajuste o delay (tempo de espera) para pelo menos 15 minutos. Isso
+                        torna a ação humana aos olhos do Instagram.</span></li>
+            </ul>
+        </section>
+
+        <!-- ETAPA 8 -->
+        <section class="step-section">
+            <div class="step-number">08</div>
+            <h2>❤️ Passo 8: Auto-Engajamento Estratégico</h2>
+            <p>Aumente sua visibilidade interagindo com o conteúdo dos seus leads.</p>
+            <ul class="instruction-list">
+                <li><span class="bullet">1</span><span>No módulo "Auto-Engajamento", ative a função.</span></li>
+                <li><span class="bullet">2</span><span><b>Limite Rígido:</b> O sistema curtirá e comentará no máximo 3
+                        posts recentes do perfil visitado. Isso é intencional para parecer natural.</span></li>
+                <li><span class="bullet">3</span><span><b>Estratégia de Emojis:</b> O sistema usará emojis simples (👍,
+                        ❤️, 😊) alternadamente. Evite comentários repetitivos de texto que podem ser marcados como
+                        spam.</span></li>
+            </ul>
+        </section>
+
+        <!-- REGRA DE OURO -->
+        <div class="warning-box">
+            <h3>⛔ REGRA DE OURO (MUITO IMPORTANTE)</h3>
+            <p>Para sua segurança total, existe uma regra que você nunca deve quebrar:</p>
+            <p><b>NUNCA use o Instagram no celular para curtir ou seguir ao mesmo tempo que o robô estiver
+                    trabalhando.</b></p>
+            <p>Se você fizer isso, o Instagram vai pensar que sua conta está em dois lugares ao mesmo tempo e pode te
+                bloquear. Se quiser usar o celular, clique em <b>"Pausar"</b> no Robô primeiro!</p>
+        </div>
+
+        <footer>
+            <p>E.I.O - Sistema Profissional de Engajamento Inteligente Orgânico</p>
+            <p>E.I.O System &copy; 2025 | Todos os direitos reservados</p>
+        </footer>
+    </div>
+</body>
+
+</html>

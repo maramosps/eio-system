@@ -1,0 +1,160 @@
+/*
+═══════════════════════════════════════════════════════════
+  E.I.O - CONTENT SCRIPT STYLES
+  Estilos do console flutuante injetado no Instagram
+═══════════════════════════════════════════════════════════
+*/
+
+#eio-console-float {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 400px;
+    background: rgba(17, 17, 24, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(33, 150, 243, 0.2);
+    z-index: 999999;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+}
+
+.eio-console-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
+    cursor: move;
+    user-select: none;
+}
+
+.eio-console-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.eio-console-logo svg {
+    flex-shrink: 0;
+}
+
+.eio-console-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eio-console-controls button {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.eio-console-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.eio-console-body {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    background: rgba(10, 10, 15, 0.95);
+}
+
+.eio-console-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.eio-console-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.eio-console-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.eio-console-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#eio-console-log {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.eio-log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.eio-log-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.eio-log-time {
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.eio-log-message {
+    color: rgba(255, 255, 255, 0.9);
+    flex: 1;
+}
+
+.eio-log-info .eio-log-message {
+    color: #42A5F5;
+}
+
+.eio-log-success .eio-log-message {
+    color: #4CAF50;
+}
+
+.eio-log-warning .eio-log-message {
+    color: #FF8F00;
+}
+
+.eio-log-error .eio-log-message {
+    color: #F44336;
+}
+
+/* Animação de entrada */
+@keyframes eioSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#eio-console-float {
+    animation: eioSlideIn 0.3s ease-out;
+}
