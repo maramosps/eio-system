@@ -25,7 +25,8 @@
         "https://*.instagram.com/*"
       ],
       "js": [
-        "content.js"
+        "content.js",
+        "chat-sync.js"
       ],
       "css": [
         "content.css"
