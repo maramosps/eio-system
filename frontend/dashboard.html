@@ -278,6 +278,80 @@
                     </div>
                 </div>
 
+                <!-- ✅ NOVO: Card de Download da Extensão -->
+                <div class="eio-card"
+                    style="margin-top: 20px; background: linear-gradient(135deg, rgba(98, 70, 234, 0.1) 0%, rgba(255, 0, 85, 0.1) 100%); border: 2px solid #6246ea;">
+                    <div class="eio-card-header" style="align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div
+                                style="width: 60px; height: 60px; background: linear-gradient(135deg, #6246ea 0%, #ff0055 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.3rem; color: #fff;">Baixar Extensão Chrome</h3>
+                                <p style="margin: 5px 0 0; color: #aaa; font-size: 0.95rem;">Instale a extensão E.I.O
+                                    para começar a automatizar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Versão Atual</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #6246ea;" id="extensionVersion">
+                                    1.0.0</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Tamanho</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #ff0055;" id="extensionSize">
+                                    Carregando...</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Status</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #4CAF50;">✓ Disponível</div>
+                            </div>
+                        </div>
+
+                        <button class="eio-btn eio-btn-primary" id="btnDownloadExtension"
+                            style="width: 100%; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #6246ea 0%, #ff0055 100%); border: none;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" style="margin-right: 10px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Baixar Extensão (.zip)
+                        </button>
+
+                        <div
+                            style="margin-top: 15px; padding: 15px; background: rgba(98, 70, 234, 0.1); border-left: 3px solid #6246ea; border-radius: 8px;">
+                            <div style="font-size: 0.9rem; color: #fff; font-weight: 600; margin-bottom: 8px;">📋 Após o
+                                download:</div>
+                            <ol
+                                style="margin: 0; padding-left: 20px; color: #aaa; font-size: 0.85rem; line-height: 1.8;">
+                                <li>Extraia o arquivo .zip</li>
+                                <li>Abra o Chrome e vá em <code
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">chrome://extensions/</code>
+                                </li>
+                                <li>Ative o "Modo do desenvolvedor"</li>
+                                <li>Clique em "Carregar sem compactação"</li>
+                                <li>Selecione a pasta extraída</li>
+                            </ol>
+                            <a href="#" id="btnShowInstructions"
+                                style="display: inline-block; margin-top: 10px; color: #6246ea; text-decoration: none; font-size: 0.85rem;">
+                                📖 Ver instruções detalhadas
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Active Flows & Activity -->
                 <div class="eio-dashboard-grid">
                     <div class="eio-card">

@@ -365,6 +365,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch dashboard data
     fetchDashboardData();
+
+    // ✅ NOVO: Extension Download Functionality
+    initExtensionDownload();
 });
 
 async function fetchDashboardData() {
@@ -386,3 +389,219 @@ async function fetchDashboardData() {
         console.error('Error fetching dashboard data:', error);
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// EXTENSION DOWNLOAD FUNCTIONALITY
+// ═══════════════════════════════════════════════════════════
+
+async function initExtensionDownload() {
+    const btnDownload = document.getElementById('btnDownloadExtension');
+    const btnInstructions = document.getElementById('btnShowInstructions');
+    const extensionSize = document.getElementById('extensionSize');
+    const extensionVersion = document.getElementById('extensionVersion');
+
+    // Fetch extension info
+    await fetchExtensionInfo();
+
+    // Download button
+    if (btnDownload) {
+        btnDownload.addEventListener('click', async () => {
+            try {
+                btnDownload.disabled = true;
+                btnDownload.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px; animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    Baixando...
+                `;
+
+                const token = localStorage.getItem('accessToken');
+                const API_URL = window.location.hostname === 'localhost'
+                    ? 'http://localhost:3000'
+                    : 'https://eio-system.vercel.app';
+
+                const response = await fetch(`${API_URL}/api/v1/extension/download`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Erro ao baixar extensão');
+                }
+
+                // Download file
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'eio-extension.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Success feedback
+                btnDownload.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Download Concluído!
+                `;
+
+                setTimeout(() => {
+                    btnDownload.disabled = false;
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Baixar Extensão (.zip)
+                    `;
+                }, 3000);
+
+            } catch (error) {
+                console.error('Download error:', error);
+                btnDownload.disabled = false;
+                btnDownload.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    Erro no Download
+                `;
+                alert(`Erro ao baixar extensão: ${error.message}`);
+
+                setTimeout(() => {
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Baixar Extensão (.zip)
+                    `;
+                }, 3000);
+            }
+        });
+    }
+
+    // Instructions modal
+    if (btnInstructions) {
+        btnInstructions.addEventListener('click', (e) => {
+            e.preventDefault();
+            showInstructionsModal();
+        });
+    }
+}
+
+async function fetchExtensionInfo() {
+    try {
+        const token = localStorage.getItem('accessToken');
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://eio-system.vercel.app';
+
+        const response = await fetch(`${API_URL}/api/v1/extension/info`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('extensionSize').textContent = data.data.size;
+                document.getElementById('extensionVersion').textContent = data.data.version;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching extension info:', error);
+        document.getElementById('extensionSize').textContent = '~2 MB';
+    }
+}
+
+function showInstructionsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'eio-modal active';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="eio-modal-content" style="max-width: 700px;">
+            <div class="eio-modal-header">
+                <h3>📖 Como Instalar a Extensão E.I.O</h3>
+                <button class="eio-modal-close" onclick="this.closest('.eio-modal').remove()">×</button>
+            </div>
+            <div class="eio-modal-body">
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension.zip</code> 
+                        na pasta de Downloads e extraia todo o conteúdo para uma pasta no seu computador.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">🌐 Passo 2: Abrir Configurações do Chrome</h4>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        Abra o Google Chrome e digite na barra de endereços:<br>
+                        <code style="background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 8px;">chrome://extensions/</code>
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">🔧 Passo 3: Ativar Modo Desenvolvedor</h4>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        No canto superior direito da página, ative o botão <strong>"Modo do desenvolvedor"</strong>.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">📂 Passo 4: Carregar Extensão</h4>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        Clique no botão <strong>"Carregar sem compactação"</strong> e selecione a pasta que você extraiu no Passo 1.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">✅ Passo 5: Pronto!</h4>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        A extensão E.I.O agora está instalada! Você verá o ícone do foguete 🚀 na barra de extensões do Chrome.
+                        Clique nele para fazer login e começar a automatizar.
+                    </p>
+                </div>
+
+                <div style="background: rgba(98, 70, 234, 0.1); padding: 15px; border-left: 3px solid #6246ea; border-radius: 8px;">
+                    <strong style="color: #fff;">💡 Dica:</strong>
+                    <p style="color: #aaa; margin: 8px 0 0; font-size: 0.9rem;">
+                        Fixe a extensão na barra de ferramentas clicando no ícone de quebra-cabeça 🧩 e depois no alfinete 📌 ao lado do E.I.O.
+                    </p>
+                </div>
+            </div>
+            <div class="eio-modal-footer">
+                <button class="eio-btn eio-btn-primary" onclick="this.closest('.eio-modal').remove()">Entendi!</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Add spin animation for loading
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
