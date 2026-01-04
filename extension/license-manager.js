@@ -8,12 +8,12 @@
 
 const LICENSE_CONFIG = {
     TRIAL_DAYS: 5,
-    API_URL: 'http://localhost:3000', // ALTERAR PARA PRODUÇÃO: https://api.eio-system.com
+    API_URL: 'https://s-one-pi.vercel.app', // ✅ URL de Produção Vercel
     SUPPORT_EMAIL: 'msasdigital@gmail.com',
     COMPANY_NAME: 'MS Assessoria Digital',
-    // Modo de desenvolvimento - DESATIVAR EM PRODUÇÃO
-    DEV_MODE: true, // ALTERAR PARA false EM PRODUÇÃO
-    DEV_SKIP_LICENSE: false // true = pula verificação de licença (apenas para testes)
+    // Modo de produção - ATIVADO
+    DEV_MODE: false, // ✅ Produção
+    DEV_SKIP_LICENSE: false
 };
 
 class LicenseManager {
