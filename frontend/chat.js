@@ -27,9 +27,7 @@ async function initializeChat() {
     }
 
     // Conectar WebSocket
-    const API_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:3000'
-        : 'https://eio-system.vercel.app';
+    const API_URL = window.EIO_CONFIG?.WS_URL || 'https://eio-system.vercel.app';
 
     socket = io(API_URL, {
         auth: { token }

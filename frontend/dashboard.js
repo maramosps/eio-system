@@ -374,7 +374,8 @@ async function fetchDashboardData() {
     const token = localStorage.getItem('accessToken');
 
     try {
-        const response = await fetch('http://localhost:3000/api/v1/analytics/dashboard', {
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+        const response = await fetch(`${API_URL}/analytics/dashboard`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -417,9 +418,7 @@ async function initExtensionDownload() {
                 `;
 
                 const token = localStorage.getItem('accessToken');
-                const API_URL = window.location.hostname === 'localhost'
-                    ? 'http://localhost:3000'
-                    : 'https://eio-system.vercel.app';
+                const API_URL = window.EIO_CONFIG?.API_BASE_URL?.replace('/api/v1', '') || 'https://eio-system.vercel.app';
 
                 const response = await fetch(`${API_URL}/api/v1/extension/download`, {
                     method: 'GET',
@@ -504,9 +503,7 @@ async function initExtensionDownload() {
 async function fetchExtensionInfo() {
     try {
         const token = localStorage.getItem('accessToken');
-        const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000'
-            : 'https://eio-system.vercel.app';
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL?.replace('/api/v1', '') || 'https://eio-system.vercel.app';
 
         const response = await fetch(`${API_URL}/api/v1/extension/info`, {
             headers: {
