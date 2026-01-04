@@ -1,11 +1,10 @@
-/*
-═══════════════════════════════════════════════════════════
-  E.I.O - API SERVICE
-  Serviço centralizado para chamadas à API
-═══════════════════════════════════════════════════════════
-*/
+// ═══════════════════════════════════════════════════════════
+// E.I.O SYSTEM - API CLIENT
+// Cliente HTTP para comunicação com backend
+// ═══════════════════════════════════════════════════════════
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+// Usar configuração centralizada
+const API_BASE_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
 
 class API {
     constructor() {
