@@ -38,6 +38,7 @@ const { authenticate, checkSubscription } = require('./middlewares/auth');
 const { initializeDatabase } = require('./database/connection');
 const { initializeRedis } = require('./services/redis.service');
 const { initializeSocketIO } = require('./services/socket.service');
+const ChatService = require('./services/chat.service'); // ✅ NOVO - Chat em tempo real
 
 // Initialize Express app
 const app = express();
@@ -177,6 +178,11 @@ async function initialize() {
         logger.info('Initializing WebSocket server...');
         initializeSocketIO(io);
         logger.info('✓ WebSocket server initialized');
+
+        // Initialize Chat Service
+        logger.info('Initializing Chat Service...');
+        const chatService = new ChatService(io);
+        logger.info('✓ Chat Service initialized');
 
         // Start server
         const PORT = process.env.PORT || 3000;
