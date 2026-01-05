@@ -1,14 +1,6 @@
-const express = require('express');
-const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
-
-const app = express();
-
-// Middleware
-app.use(cors({ origin: '*', credentials: true }));
-app.use(express.json());
 
 // Supabase Client
 let supabase = null;
@@ -26,31 +18,36 @@ const jwtSecret = process.env.JWT_SECRET || 'eio-secret-key-2026';
 
 // Rota handler
 module.exports = async (req, res) => {
-    const { method, url } = req;
+    const { method, query } = req;
 
-    // CORS preflight
+    // Reconstruir a URL completa a partir do query param 'path'
+    const pathFromQuery = query?.path || '';
+    const path = `/api/${pathFromQuery}`.replace(/\/+$/, ''); // Remove trailing slashes
+
+    // CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     if (method === 'OPTIONS') {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return res.status(200).end();
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
     try {
         // Health Check
-        if (url === '/api/health' || url === '/api/health/') {
+        if (path === '/api/health' || path === '/api' || pathFromQuery === 'health') {
             return res.json({
                 status: 'OK',
                 message: 'E.I.O System API está rodando',
                 timestamp: new Date().toISOString(),
-                supabaseConfigured: !!supabase
+                supabaseConfigured: !!supabase,
+                path: path,
+                pathFromQuery: pathFromQuery
             });
         }
 
         // Register
-        if (url === '/api/v1/auth/register' && method === 'POST') {
+        if ((path === '/api/v1/auth/register' || pathFromQuery === 'v1/auth/register') && method === 'POST') {
             if (!supabase) {
                 return res.status(500).json({ message: 'Banco de dados não configurado' });
             }
@@ -108,7 +105,7 @@ module.exports = async (req, res) => {
         }
 
         // Login
-        if (url === '/api/v1/auth/login' && method === 'POST') {
+        if ((path === '/api/v1/auth/login' || pathFromQuery === 'v1/auth/login') && method === 'POST') {
             if (!supabase) {
                 return res.status(500).json({ message: 'Banco de dados não configurado' });
             }
@@ -151,7 +148,7 @@ module.exports = async (req, res) => {
         }
 
         // Extension Login
-        if (url === '/api/v1/auth/extension-login' && method === 'POST') {
+        if ((path === '/api/v1/auth/extension-login' || pathFromQuery === 'v1/auth/extension-login') && method === 'POST') {
             if (!supabase) {
                 return res.status(500).json({ message: 'Banco de dados não configurado' });
             }
@@ -213,7 +210,7 @@ module.exports = async (req, res) => {
         }
 
         // License Validate
-        if (url === '/api/v1/license/validate' && method === 'POST') {
+        if ((path === '/api/v1/license/validate' || pathFromQuery === 'v1/license/validate') && method === 'POST') {
             const { email } = req.body || {};
 
             if (!email || !supabase) {
@@ -253,7 +250,7 @@ module.exports = async (req, res) => {
         }
 
         // Not found
-        return res.status(404).json({ message: 'Rota não encontrada', path: url });
+        return res.status(404).json({ message: 'Rota não encontrada', path: path, pathFromQuery: pathFromQuery });
 
     } catch (error) {
         console.error('Erro na API:', error);
