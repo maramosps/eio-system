@@ -196,12 +196,18 @@ function initializeButtons() {
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" onclick="document.getElementById('settingsModal').style.display='none'">Cancelar</button>
-                        <button class="eio-btn eio-btn-primary" style="flex: 1;" onclick="saveSettings()">Salvar</button>
+                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="cancelSettingsBtn">Cancelar</button>
+                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="saveSettingsBtn">Salvar</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(settingsModal);
+
+            // Adicionar event listeners
+            document.getElementById('cancelSettingsBtn').addEventListener('click', () => {
+                document.getElementById('settingsModal').style.display = 'none';
+            });
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
         }
 
         // Mostrar modal
@@ -600,10 +606,9 @@ function updateUI() {
     loadActiveFlows();
 }
 
-safeAddEventListener('refreshFlowsBtn', 'click', loadActiveFlows);
-safeAddEventListener('createFlowBtn', 'click', () => {
-    window.open('../frontend/dashboard.html#flows', '_blank');
-});
+// NOTA: As funções safeAddEventListener para refreshFlowsBtn e createFlowBtn
+// já estão definidas dentro de initializeButtons() (linhas 241-250)
+
 // Função para salvar configurações
 window.saveSettings = async function () {
     const speedSetting = document.getElementById('speedSetting')?.value || 'safe';

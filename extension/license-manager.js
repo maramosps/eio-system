@@ -221,8 +221,8 @@ class LicenseManager {
                     </p>
                 </div>
                 <div style="display: flex; gap: 12px;">
-                    <button class="eio-btn eio-btn-ghost" style="flex: 1;" onclick="window.close()">Fechar</button>
-                    <button class="eio-btn eio-btn-primary" style="flex: 2;" onclick="openDashboardPayment()">
+                    <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="closeExpiredBtn">Fechar</button>
+                    <button class="eio-btn eio-btn-primary" style="flex: 2;" id="activateLicenseBtn">
                         💳 Ativar Licença
                     </button>
                 </div>
@@ -231,12 +231,14 @@ class LicenseManager {
 
         document.body.appendChild(modal);
 
+        // Adicionar event listeners
+        modal.querySelector('#closeExpiredBtn').addEventListener('click', () => window.close());
+        modal.querySelector('#activateLicenseBtn').addEventListener('click', () => {
+            window.open(`${LICENSE_CONFIG.API_URL}/dashboard?action=payment&email=${encodeURIComponent(this.userEmail)}`, '_blank');
+        });
+
         // Desabilitar todas as funcionalidades
         this.disableExtension();
-
-        window.openDashboardPayment = () => {
-            window.open(`${LICENSE_CONFIG.API_URL}/dashboard?action=payment&email=${encodeURIComponent(this.userEmail)}`, '_blank');
-        };
     }
 
     /**
@@ -315,7 +317,7 @@ class LicenseManager {
                     <input type="password" id="loginPassword" class="eio-input" placeholder="••••••••" style="width: 100%;">
                 </div>
                 
-                <button class="eio-btn eio-btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="submitLogin()">
+                <button class="eio-btn eio-btn-primary" style="width: 100%; margin-bottom: 16px;" id="submitLoginBtn">
                     Entrar
                 </button>
                 
@@ -347,6 +349,9 @@ class LicenseManager {
 
             window.handleLogin(email, password);
         };
+
+        // Adicionar event listener ao botão
+        modal.querySelector('#submitLoginBtn').addEventListener('click', window.submitLogin);
 
         return modal;
     }
