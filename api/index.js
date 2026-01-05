@@ -249,6 +249,34 @@ module.exports = async (req, res) => {
             });
         }
 
+        // Extension Info
+        if ((path === '/api/v1/extension/info' || pathFromQuery === 'v1/extension/info') && method === 'GET') {
+            return res.json({
+                success: true,
+                data: {
+                    version: '1.0.0',
+                    size: '2.5 MB',
+                    available: true,
+                    lastUpdate: new Date().toISOString(),
+                    downloadUrl: 'https://github.com/ms-assessoria-digital/eio-extension/releases/latest/download/eio-extension.zip'
+                }
+            });
+        }
+
+        // Extension Download - Retorna instruções
+        if ((path === '/api/v1/extension/download' || pathFromQuery === 'v1/extension/download') && method === 'GET') {
+            // Por enquanto, retornar instruções de como obter a extensão
+            return res.json({
+                success: true,
+                message: 'Para baixar a extensão, entre em contato com o suporte ou acesse o painel administrativo.',
+                instructions: [
+                    '1. Entre em contato com suporte@eio.com',
+                    '2. Ou acesse: https://github.com/ms-assessoria-digital/eio-extension',
+                    '3. Baixe o arquivo .zip da última versão'
+                ]
+            });
+        }
+
         // Not found
         return res.status(404).json({ message: 'Rota não encontrada', path: path, pathFromQuery: pathFromQuery });
 
