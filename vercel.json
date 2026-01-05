@@ -8,12 +8,20 @@
         {
             "src": "frontend/**/*",
             "use": "@vercel/static"
+        },
+        {
+            "src": "public/**/*",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
         {
             "src": "/api/(.*)",
             "dest": "/api/index.js?path=$1"
+        },
+        {
+            "src": "/downloads/(.*)",
+            "dest": "/public/downloads/$1"
         },
         {
             "src": "/(.*\\.html)",
@@ -42,6 +50,10 @@
         {
             "src": "/(.*\\.ico)",
             "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.zip)",
+            "dest": "/public/downloads/$1"
         },
         {
             "src": "/",
