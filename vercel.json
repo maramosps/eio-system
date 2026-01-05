@@ -21,7 +21,7 @@
         },
         {
             "src": "/downloads/(.*)",
-            "dest": "/public/downloads/$1"
+            "dest": "/frontend/downloads/$1"
         },
         {
             "src": "/(.*\\.html)",
