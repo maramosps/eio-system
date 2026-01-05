@@ -1,5 +1,4 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
 
 // Verificar variáveis de ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -7,14 +6,9 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ ERRO: Variáveis de ambiente do Supabase não configuradas!');
-    console.error('');
-    console.error('Configure no arquivo .env:');
-    console.error('  SUPABASE_URL=https://xxxxx.supabase.co');
-    console.error('  SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-    console.error('');
-    console.error('Veja SUPABASE_SETUP.md para instruções completas');
-    console.error('');
-    process.exit(1);
+    console.error('SUPABASE_URL:', supabaseUrl ? 'OK' : 'FALTANDO');
+    console.error('SUPABASE_SERVICE_KEY:', supabaseKey ? 'OK' : 'FALTANDO');
+    // Não usar process.exit() na Vercel - vai retornar erro 500 naturalmente
 }
 
 // Criar cliente Supabase
