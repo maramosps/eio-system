@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
                 .insert([{
                     name,
                     email,
-                    password: hashedPassword,
+                    password_hash: hashedPassword,
                     created_at: new Date().toISOString(),
                     is_active: true
                 }])
@@ -128,7 +128,7 @@ module.exports = async (req, res) => {
             }
 
             // Verificar senha
-            const isMatch = await bcrypt.compare(password, user.password);
+            const isMatch = await bcrypt.compare(password, user.password_hash);
             if (!isMatch) {
                 return res.status(401).json({ message: 'Credenciais inválidas' });
             }
@@ -169,7 +169,7 @@ module.exports = async (req, res) => {
                 return res.status(401).json({ message: 'Credenciais inválidas' });
             }
 
-            const isMatch = await bcrypt.compare(password, user.password);
+            const isMatch = await bcrypt.compare(password, user.password_hash);
             if (!isMatch) {
                 return res.status(401).json({ message: 'Credenciais inválidas' });
             }
