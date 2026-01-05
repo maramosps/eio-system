@@ -1,9 +1,51 @@
 {
     "version": 2,
-    "rewrites": [
+    "builds": [
         {
-            "source": "/api/:path*",
-            "destination": "/api"
+            "src": "api/index.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "frontend/**/*",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/index.js?path=$1"
+        },
+        {
+            "src": "/(.*\\.html)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.css)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.js)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.png)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.jpg)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.svg)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/(.*\\.ico)",
+            "dest": "/frontend/$1"
+        },
+        {
+            "src": "/",
+            "dest": "/frontend/index.html"
         }
     ]
 }
