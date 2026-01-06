@@ -1711,3 +1711,368 @@ window.shouldStopSequence = function (messageText) {
     const lowerMessage = messageText.toLowerCase();
     return stopWords.some(word => lowerMessage.includes(word));
 };
+
+// ═══════════════════════════════════════════════════════════
+// PRO TOOLS - FERRAMENTAS AVANÇADAS
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    initProToolsTabs();
+    initProToolsToggles();
+    initProToolsSaveButtons();
+    initBioOptimizer();
+    loadProToolsConfigs();
+});
+
+// Tab navigation for Pro Tools
+function initProToolsTabs() {
+    const tabs = document.querySelectorAll('.eio-protools-tab');
+    const contents = document.querySelectorAll('.eio-protools-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.getAttribute('data-ptab');
+
+            // Update tab styles
+            tabs.forEach(t => {
+                t.style.background = 'rgba(255,255,255,0.05)';
+                t.style.border = '1px solid rgba(255,255,255,0.1)';
+                t.style.color = '#aaa';
+                t.style.fontWeight = 'normal';
+            });
+            tab.style.background = '#6246ea';
+            tab.style.border = 'none';
+            tab.style.color = '#fff';
+            tab.style.fontWeight = '600';
+
+            // Show/hide content
+            contents.forEach(content => {
+                if (content.getAttribute('data-pcontent') === targetTab) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// Toggle switches for Pro Tools sections
+function initProToolsToggles() {
+    const toggleIds = ['toggleFingerprint', 'toggleActionBlock', 'toggleContentSpy', 'toggleMentions', 'toggleWeeklyReport'];
+
+    toggleIds.forEach(id => {
+        const toggle = document.getElementById(id);
+        if (!toggle) return;
+
+        const savedState = localStorage.getItem(`eio_${id}_enabled`);
+        let isActive = savedState !== 'false';
+
+        updateToggleVisual(toggle, isActive);
+
+        toggle.addEventListener('click', () => {
+            isActive = !isActive;
+            updateToggleVisual(toggle, isActive);
+            localStorage.setItem(`eio_${id}_enabled`, isActive.toString());
+            console.log(`${id} ${isActive ? 'ativado' : 'desativado'}`);
+        });
+    });
+}
+
+// Pro Tools save buttons
+function initProToolsSaveButtons() {
+    // Save Security Settings
+    document.getElementById('btnSaveSecurity')?.addEventListener('click', () => {
+        const securityConfig = {
+            fingerprint: {
+                scrollRandomly: document.getElementById('scrollRandomly')?.checked,
+                readBeforeLike: document.getElementById('readBeforeLike')?.checked,
+                typoCorrection: document.getElementById('typoCorrection')?.checked,
+                mouseNatural: document.getElementById('mouseNatural')?.checked
+            },
+            breaks: {
+                lunchStart: document.getElementById('breakStart')?.value,
+                lunchEnd: document.getElementById('breakEnd')?.value,
+                sleepStart: document.getElementById('sleepStart')?.value,
+                sleepEnd: document.getElementById('sleepEnd')?.value
+            }
+        };
+        localStorage.setItem('eio_security_config', JSON.stringify(securityConfig));
+        alert('✅ Configurações de Segurança salvas!');
+    });
+
+    // Save Content Spy
+    document.getElementById('btnSaveContentSpy')?.addEventListener('click', () => {
+        const profiles = [];
+        document.querySelectorAll('#spyProfilesList span').forEach(span => {
+            const text = span.textContent.replace(' ✕', '').trim();
+            if (text && text.startsWith('@')) profiles.push(text);
+        });
+        localStorage.setItem('eio_content_spy_profiles', JSON.stringify(profiles));
+        alert('✅ Perfis para monitorar salvos!');
+    });
+
+    // Save Mentions
+    document.getElementById('btnSaveMentions')?.addEventListener('click', () => {
+        const mentionResponses = {};
+        document.querySelectorAll('.mention-response').forEach(textarea => {
+            const type = textarea.getAttribute('data-type');
+            mentionResponses[type] = textarea.value;
+        });
+        localStorage.setItem('eio_mention_responses', JSON.stringify(mentionResponses));
+        alert('✅ Configurações de Menções salvas!');
+    });
+
+    // Add Competitor
+    document.getElementById('btnAddCompetitor')?.addEventListener('click', () => {
+        const input = document.getElementById('competitorInput');
+        const list = document.getElementById('competitorsList');
+        if (!input || !list) return;
+
+        let username = input.value.trim();
+        if (!username) return;
+        if (!username.startsWith('@')) username = '@' + username;
+
+        // Clear empty state if present
+        if (list.children[0]?.textContent?.includes('Adicione até')) {
+            list.innerHTML = '';
+        }
+
+        const tag = document.createElement('div');
+        tag.style.cssText = 'display: flex; justify-content: space-between; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 8px;';
+        tag.innerHTML = `
+            <span style="color: #2196F3; font-weight: 500;">${username}</span>
+            <button class="eio-btn eio-btn-ghost eio-btn-sm remove-competitor" style="color: #F44336;">✕</button>
+        `;
+        list.appendChild(tag);
+        input.value = '';
+
+        tag.querySelector('.remove-competitor')?.addEventListener('click', () => tag.remove());
+    });
+
+    // Add Spy Profile
+    document.getElementById('btnAddSpyProfile')?.addEventListener('click', () => {
+        const input = document.getElementById('spyProfileInput');
+        const list = document.getElementById('spyProfilesList');
+        if (!input || !list) return;
+
+        let username = input.value.trim();
+        if (!username) return;
+        if (!username.startsWith('@')) username = '@' + username;
+
+        const tag = document.createElement('span');
+        tag.style.cssText = 'background: rgba(156, 39, 176, 0.2); color: #9C27B0; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;';
+        tag.textContent = `${username} ✕`;
+        tag.addEventListener('click', () => tag.remove());
+        list.appendChild(tag);
+        input.value = '';
+    });
+}
+
+// Bio Optimizer functionality
+function initBioOptimizer() {
+    document.getElementById('btnAnalyzeBio')?.addEventListener('click', () => {
+        const bio = document.getElementById('currentBio')?.value || '';
+        const problemsContainer = document.getElementById('bioProblems');
+        const suggestionContainer = document.getElementById('bioSuggestion');
+
+        if (!problemsContainer || !suggestionContainer) return;
+
+        const problems = [];
+
+        // Check for common issues
+        if (!bio.includes('DM') && !bio.includes('dm') && !bio.includes('mensagem')) {
+            problems.push({ icon: '❌', text: 'Sem call-to-action para DM' });
+        }
+        if (!/[\u{1F300}-\u{1F9FF}]/u.test(bio)) {
+            problems.push({ icon: '❌', text: 'Sem emojis para destaque visual' });
+        }
+        if (!bio.includes('link') && !bio.includes('⬇') && !bio.includes('👇')) {
+            problems.push({ icon: '❌', text: 'Sem indicação do link na bio' });
+        }
+        if (bio.length < 30) {
+            problems.push({ icon: '❌', text: 'Bio muito curta - não comunica valor' });
+        }
+        if (bio.length > 0 && !bio.includes(' a ') && !bio.includes(' te ') && !bio.includes(' você ')) {
+            problems.push({ icon: '⚠️', text: 'Não fala diretamente com o público' });
+        }
+
+        // Display problems
+        if (problems.length === 0) {
+            problemsContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(76, 175, 80, 0.1); border-radius: 8px;">
+                    <span style="color: #4CAF50;">✅</span>
+                    <span style="color: rgba(255,255,255,0.7);">Sua bio parece estar bem otimizada!</span>
+                </div>
+            `;
+        } else {
+            problemsContainer.innerHTML = problems.map(p => `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(244, 67, 54, 0.1); border-radius: 8px;">
+                    <span style="color: #F44336;">${p.icon}</span>
+                    <span style="color: rgba(255,255,255,0.7);">${p.text}</span>
+                </div>
+            `).join('');
+        }
+
+        // Generate suggestion based on analysis
+        if (bio.length > 0) {
+            suggestionContainer.innerHTML = `
+                🚀 ${bio.split(' ').slice(0, 3).join(' ')} | Resultados reais<br>
+                📩 DM "QUERO" para consultoria GRÁTIS<br>
+                🔗 Link exclusivo na bio ⬇️
+            `;
+        }
+    });
+
+    // Copy bio button
+    document.getElementById('btnCopyBio')?.addEventListener('click', () => {
+        const suggestion = document.getElementById('bioSuggestion')?.innerText || '';
+        navigator.clipboard.writeText(suggestion).then(() => {
+            alert('✅ Bio copiada para a área de transferência!');
+        });
+    });
+}
+
+// Load saved Pro Tools configs
+function loadProToolsConfigs() {
+    // Load security config
+    try {
+        const securityConfig = JSON.parse(localStorage.getItem('eio_security_config') || '{}');
+        if (securityConfig.fingerprint) {
+            if (document.getElementById('scrollRandomly')) document.getElementById('scrollRandomly').checked = securityConfig.fingerprint.scrollRandomly !== false;
+            if (document.getElementById('readBeforeLike')) document.getElementById('readBeforeLike').checked = securityConfig.fingerprint.readBeforeLike !== false;
+            if (document.getElementById('typoCorrection')) document.getElementById('typoCorrection').checked = securityConfig.fingerprint.typoCorrection !== false;
+            if (document.getElementById('mouseNatural')) document.getElementById('mouseNatural').checked = securityConfig.fingerprint.mouseNatural !== false;
+        }
+        if (securityConfig.breaks) {
+            if (document.getElementById('breakStart')) document.getElementById('breakStart').value = securityConfig.breaks.lunchStart || '12:00';
+            if (document.getElementById('breakEnd')) document.getElementById('breakEnd').value = securityConfig.breaks.lunchEnd || '14:00';
+            if (document.getElementById('sleepStart')) document.getElementById('sleepStart').value = securityConfig.breaks.sleepStart || '23:00';
+            if (document.getElementById('sleepEnd')) document.getElementById('sleepEnd').value = securityConfig.breaks.sleepEnd || '07:00';
+        }
+    } catch (e) { console.log('No security config saved'); }
+
+    // Load mention responses
+    try {
+        const mentionResponses = JSON.parse(localStorage.getItem('eio_mention_responses') || '{}');
+        document.querySelectorAll('.mention-response').forEach(textarea => {
+            const type = textarea.getAttribute('data-type');
+            if (mentionResponses[type]) textarea.value = mentionResponses[type];
+        });
+    } catch (e) { console.log('No mention config saved'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECURITY HELPER FUNCTIONS (For extension integration)
+// ═══════════════════════════════════════════════════════════
+
+// Get human behavior configuration
+window.getHumanBehaviorConfig = function () {
+    const config = JSON.parse(localStorage.getItem('eio_security_config') || '{}');
+    return {
+        scrollRandomly: config.fingerprint?.scrollRandomly !== false,
+        readBeforeLike: config.fingerprint?.readBeforeLike !== false,
+        typoCorrection: config.fingerprint?.typoCorrection !== false,
+        mouseMovements: config.fingerprint?.mouseNatural !== false ? 'natural' : 'linear',
+        breakTimes: [`${config.breaks?.lunchStart || '12:00'}-${config.breaks?.lunchEnd || '14:00'}`],
+        sleepHours: [`${config.breaks?.sleepStart || '23:00'}-${config.breaks?.sleepEnd || '07:00'}`]
+    };
+};
+
+// Check if currently in break/sleep time
+window.isInBreakTime = function () {
+    const config = JSON.parse(localStorage.getItem('eio_security_config') || '{}');
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Check lunch break
+    const lunchStart = (config.breaks?.lunchStart || '12:00').split(':').map(Number);
+    const lunchEnd = (config.breaks?.lunchEnd || '14:00').split(':').map(Number);
+    const lunchStartMinutes = lunchStart[0] * 60 + lunchStart[1];
+    const lunchEndMinutes = lunchEnd[0] * 60 + lunchEnd[1];
+
+    if (currentMinutes >= lunchStartMinutes && currentMinutes <= lunchEndMinutes) {
+        return { inBreak: true, reason: 'lunch', resumeAt: config.breaks?.lunchEnd };
+    }
+
+    // Check sleep time
+    const sleepStart = (config.breaks?.sleepStart || '23:00').split(':').map(Number);
+    const sleepEnd = (config.breaks?.sleepEnd || '07:00').split(':').map(Number);
+    const sleepStartMinutes = sleepStart[0] * 60 + sleepStart[1];
+    const sleepEndMinutes = sleepEnd[0] * 60 + sleepEnd[1];
+
+    // Handle overnight sleep (e.g., 23:00-07:00)
+    if (sleepStartMinutes > sleepEndMinutes) {
+        if (currentMinutes >= sleepStartMinutes || currentMinutes <= sleepEndMinutes) {
+            return { inBreak: true, reason: 'sleep', resumeAt: config.breaks?.sleepEnd };
+        }
+    } else {
+        if (currentMinutes >= sleepStartMinutes && currentMinutes <= sleepEndMinutes) {
+            return { inBreak: true, reason: 'sleep', resumeAt: config.breaks?.sleepEnd };
+        }
+    }
+
+    return { inBreak: false };
+};
+
+// Detect action block from Instagram response
+window.detectActionBlock = function (responseText) {
+    const response = responseText.toLowerCase();
+
+    if (response.includes('try again later')) {
+        return { blocked: true, severity: 'low', pauseHours: 2, message: 'Limite temporário atingido' };
+    }
+    if (response.includes('we limit how often')) {
+        return { blocked: true, severity: 'medium', pauseHours: 24, message: 'Limite de ações do Instagram' };
+    }
+    if (response.includes('suspicious activity') || response.includes('atividade suspeita')) {
+        return { blocked: true, severity: 'high', pauseHours: 48, message: 'Atividade suspeita detectada - ALERTA!' };
+    }
+
+    return { blocked: false };
+};
+
+// Log action block
+window.logActionBlock = function (blockInfo) {
+    const history = JSON.parse(localStorage.getItem('eio_block_history') || '[]');
+    history.unshift({
+        date: new Date().toISOString(),
+        severity: blockInfo.severity,
+        message: blockInfo.message,
+        pauseHours: blockInfo.pauseHours
+    });
+    // Keep only last 30 entries
+    localStorage.setItem('eio_block_history', JSON.stringify(history.slice(0, 30)));
+
+    // Show notification
+    if (typeof showNotification === 'function') {
+        showNotification(`⚠️ ${blockInfo.message} - Pausando por ${blockInfo.pauseHours}h`);
+    }
+};
+
+// Get random delay for human-like behavior
+window.getHumanDelay = function (minMs = 2000, maxMs = 5000) {
+    return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+};
+
+// Simulate typing with typos
+window.simulateTyping = function (text) {
+    const config = JSON.parse(localStorage.getItem('eio_security_config') || '{}');
+    if (!config.fingerprint?.typoCorrection) return [{ text, delay: 0 }];
+
+    const steps = [];
+    const typoChance = 0.1; // 10% chance of typo
+
+    for (let i = 0; i < text.length; i++) {
+        // Occasionally make a typo
+        if (Math.random() < typoChance && i > 0 && i < text.length - 1) {
+            // Type wrong character
+            steps.push({ text: text.substring(0, i) + 'x', delay: 100 + Math.random() * 100 });
+            // Delete it
+            steps.push({ text: text.substring(0, i), delay: 300 + Math.random() * 200 });
+        }
+        steps.push({ text: text.substring(0, i + 1), delay: 50 + Math.random() * 150 });
+    }
+
+    return steps;
+};
