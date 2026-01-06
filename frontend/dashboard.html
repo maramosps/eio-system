@@ -118,10 +118,11 @@
 
                 <div class="eio-user-wrapper" style="position: relative;">
                     <div class="eio-user-menu" id="userMenuBtn" style="cursor: pointer;">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="User" class="eio-avatar">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="User" class="eio-avatar"
+                            id="userAvatar">
                         <div class="eio-user-info">
-                            <span class="eio-user-name">João Silva</span>
-                            <span class="eio-user-email">joao@email.com</span>
+                            <span class="eio-user-name" id="userName">Carregando...</span>
+                            <span class="eio-user-email" id="userEmail">...</span>
                         </div>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -203,13 +204,9 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="eio-stat-value">+127</div>
-                        <div class="eio-stat-change eio-stat-positive">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                            +23% vs ontem
+                        <div class="eio-stat-value" id="statFollowers">0</div>
+                        <div class="eio-stat-change eio-stat-neutral" id="statFollowersChange">
+                            <span>Comece a usar para ver estatísticas</span>
                         </div>
                     </div>
 
@@ -225,13 +222,9 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="eio-stat-value">423</div>
-                        <div class="eio-stat-change eio-stat-positive">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                            +18% vs ontem
+                        <div class="eio-stat-value" id="statLikes">0</div>
+                        <div class="eio-stat-change eio-stat-neutral" id="statLikesChange">
+                            <span>Sem atividade ainda</span>
                         </div>
                     </div>
 
@@ -247,13 +240,9 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="eio-stat-value">89</div>
-                        <div class="eio-stat-change eio-stat-positive">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                            +12% vs ontem
+                        <div class="eio-stat-value" id="statComments">0</div>
+                        <div class="eio-stat-change eio-stat-neutral" id="statCommentsChange">
+                            <span>Sem atividade ainda</span>
                         </div>
                     </div>
 
@@ -267,13 +256,9 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="eio-stat-value">4.8%</div>
-                        <div class="eio-stat-change eio-stat-positive">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                            +0.5% vs ontem
+                        <div class="eio-stat-value" id="statEngagement">0%</div>
+                        <div class="eio-stat-change eio-stat-neutral" id="statEngagementChange">
+                            <span>Sem atividade ainda</span>
                         </div>
                     </div>
                 </div>
@@ -357,48 +342,24 @@
                     <div class="eio-card">
                         <div class="eio-card-header">
                             <h3>Fluxos Ativos</h3>
-                            <a href="#flows" class="eio-link">Ver todos</a>
+                            <a href="flow-builder.html" class="eio-link">Criar fluxo</a>
                         </div>
-                        <div class="eio-flow-list">
-                            <div class="eio-flow-item eio-flow-active">
-                                <div class="eio-flow-icon">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                        <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                                        <path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                </div>
-                                <div class="eio-flow-info">
-                                    <span class="eio-flow-name">Crescimento Fitness</span>
-                                    <span class="eio-flow-status">Em execução • 67% completo</span>
-                                </div>
-                                <div class="eio-flow-stats">
-                                    <span class="eio-badge eio-badge-success">ATIVO</span>
-                                </div>
-                            </div>
-
-                            <div class="eio-flow-item">
-                                <div class="eio-flow-icon">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                        <rect x="4" y="4" width="4" height="4" stroke="currentColor" stroke-width="2" />
-                                        <rect x="4" y="12" width="4" height="4" stroke="currentColor"
-                                            stroke-width="2" />
-                                        <rect x="12" y="8" width="4" height="4" stroke="currentColor"
-                                            stroke-width="2" />
-                                    </svg>
-                                </div>
-                                <div class="eio-flow-info">
-                                    <span class="eio-flow-name">Engajamento Nutrição</span>
-                                    <span class="eio-flow-status">Pausado</span>
-                                </div>
-                                <div class="eio-flow-stats">
-                                    <span class="eio-badge eio-badge-warning">PAUSADO</span>
-                                </div>
-                            </div>
-
-                            <div class="eio-empty-state">
-                                <p>Crie novos fluxos para começar a automatizar</p>
-                                <a href="flow-builder.html" class="eio-btn eio-btn-primary eio-btn-sm">Criar Fluxo</a>
+                        <div class="eio-flow-list" id="flowsList">
+                            <!-- Estado vazio por padrão -->
+                            <div class="eio-empty-state" style="padding: 40px 20px; text-align: center;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                                    stroke="rgba(255,255,255,0.3)" stroke-width="1.5" style="margin-bottom: 15px;">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                                </svg>
+                                <p style="color: rgba(255,255,255,0.5); margin-bottom: 15px;">Nenhum fluxo ativo ainda
+                                </p>
+                                <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-bottom: 20px;">
+                                    Instale a extensão e comece a criar automações
+                                </p>
+                                <a href="flow-builder.html" class="eio-btn eio-btn-primary eio-btn-sm">Criar Primeiro
+                                    Fluxo</a>
                             </div>
                         </div>
                     </div>
@@ -407,45 +368,18 @@
                         <div class="eio-card-header">
                             <h3>Atividade Recente</h3>
                         </div>
-                        <div class="eio-activity-list">
-                            <div class="eio-activity-item">
-                                <div class="eio-activity-icon eio-activity-success">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <path d="M13.333 4L6 11.333L2.667 8" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                </div>
-                                <div class="eio-activity-content">
-                                    <span class="eio-activity-text">Seguiu <strong>@usuario_fitness</strong></span>
-                                    <span class="eio-activity-time">Há 2 minutos</span>
-                                </div>
-                            </div>
-
-                            <div class="eio-activity-item">
-                                <div class="eio-activity-icon eio-activity-success">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <path d="M13.333 4L6 11.333L2.667 8" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                </div>
-                                <div class="eio-activity-content">
-                                    <span class="eio-activity-text">Curtiu post de <strong>@academia_top</strong></span>
-                                    <span class="eio-activity-time">Há 5 minutos</span>
-                                </div>
-                            </div>
-
-                            <div class="eio-activity-item">
-                                <div class="eio-activity-icon eio-activity-info">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" />
-                                        <path d="M8 5V8L10 10" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                </div>
-                                <div class="eio-activity-content">
-                                    <span class="eio-activity-text">Comentou em post #fitness</span>
-                                    <span class="eio-activity-time">Há 8 minutos</span>
-                                </div>
+                        <div class="eio-activity-list" id="activityList">
+                            <!-- Estado vazio por padrão -->
+                            <div class="eio-empty-state" style="padding: 40px 20px; text-align: center;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                                    stroke="rgba(255,255,255,0.3)" stroke-width="1.5" style="margin-bottom: 15px;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <p style="color: rgba(255,255,255,0.5); margin-bottom: 10px;">Sem atividade recente</p>
+                                <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem;">
+                                    Suas ações aparecerão aqui quando você começar a usar a extensão
+                                </p>
                             </div>
                         </div>
                     </div>

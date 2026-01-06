@@ -1,31 +1,36 @@
 // Dashboard functionality
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication (BYPASS FOR TESTING)
-    const token = localStorage.getItem('accessToken');
+    // Check authentication - redirect to login if not authenticated
+    const token = localStorage.getItem('eio_token');
     if (!token) {
-        // Auto-login logic for testing purposes
-        console.warn('⚠️ No token found. Creating mock session for testing.');
-        localStorage.setItem('accessToken', 'mock_token_123');
-        localStorage.setItem('user', JSON.stringify({
-            name: 'Usuário Teste',
-            email: 'teste@eio.com',
-            instagram_handle: '@usuario_teste',
-            role: 'client'
-        }));
-        // Reload page to apply changes
-        // window.location.reload(); 
-        // Or just let it proceed since we just set the values, 
-        // but 'token' var above is still null in this execution scope.
-        // Let's just proceed with mock data in this run:
+        console.warn('⚠️ Usuário não autenticado. Redirecionando para login...');
+        window.location.href = 'login.html';
+        return;
     }
 
+    // Load user info from local storage
+    const user = JSON.parse(localStorage.getItem('eio_user') || '{}');
 
-    // Load user info
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.name) {
-        document.querySelector('.eio-user-name').textContent = user.name;
-        document.querySelector('.eio-user-email').textContent = user.email;
+    // Update UI with user data
+    const userNameEl = document.getElementById('userName');
+    const userEmailEl = document.getElementById('userEmail');
+    const userAvatarEl = document.getElementById('userAvatar');
+
+    if (user.name && userNameEl) {
+        userNameEl.textContent = user.name;
     }
+    if (user.email && userEmailEl) {
+        userEmailEl.textContent = user.email;
+    }
+    if (user.email && userAvatarEl) {
+        userAvatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email)}`;
+    }
+
+    // Also update any legacy selectors
+    const legacyName = document.querySelector('.eio-user-name:not(#userName)');
+    const legacyEmail = document.querySelector('.eio-user-email:not(#userEmail)');
+    if (legacyName && user.name) legacyName.textContent = user.name;
+    if (legacyEmail && user.email) legacyEmail.textContent = user.email;
 
     // Navigation
     const navItems = document.querySelectorAll('.eio-nav-item');
@@ -158,8 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLogout) {
         btnLogout.addEventListener('click', (e) => {
             e.preventDefault();
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('user');
+            localStorage.removeItem('eio_token');
+            localStorage.removeItem('eio_user');
             window.location.href = 'login.html';
         });
     }
