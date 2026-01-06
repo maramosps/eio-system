@@ -1134,3 +1134,248 @@ window.processTemplate = function (template, userData) {
         .replace(/{dia_semana}/g, diaSemana)
         .replace(/{seguidores}/g, userData.followers || '0');
 };
+
+// ═══════════════════════════════════════════════════════════
+// ANALYTICS & SMART PROTECTION MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAnalyticsTabs();
+    initAnalyticsSaveButtons();
+    initCSVUpload();
+    loadAnalyticsConfigs();
+});
+
+// Tab navigation for analytics
+function initAnalyticsTabs() {
+    const tabs = document.querySelectorAll('.eio-analytics-tab');
+    const contents = document.querySelectorAll('.eio-analytics-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.getAttribute('data-atab');
+
+            // Update tab styles
+            tabs.forEach(t => {
+                t.style.background = 'rgba(255,255,255,0.05)';
+                t.style.border = '1px solid rgba(255,255,255,0.1)';
+                t.style.color = '#aaa';
+                t.style.fontWeight = 'normal';
+            });
+            tab.style.background = '#6246ea';
+            tab.style.border = 'none';
+            tab.style.color = '#fff';
+            tab.style.fontWeight = '600';
+
+            // Show/hide content
+            contents.forEach(content => {
+                if (content.getAttribute('data-acontent') === targetTab) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// Analytics save buttons
+function initAnalyticsSaveButtons() {
+    // Save Timing config
+    document.getElementById('btnSaveTiming')?.addEventListener('click', () => {
+        const config = {
+            intensityNight: document.getElementById('intensityNight')?.value || '0',
+            intensityDay: document.getElementById('intensityDay')?.value || '100',
+            intensityPeak: document.getElementById('intensityPeak')?.value || '120',
+            enabled: true
+        };
+        localStorage.setItem('eio_analytics_timing', JSON.stringify(config));
+        alert('✅ Configurações de Horários salvas!');
+    });
+
+    // Save Protection config
+    document.getElementById('btnSaveProtection')?.addEventListener('click', () => {
+        const config = {
+            pauseBlocked: document.getElementById('pauseBlocked')?.value || '24',
+            pauseCaptcha: document.getElementById('pauseCaptcha')?.value || '4',
+            pauseLimit: document.getElementById('pauseLimit')?.value || '1',
+            notifyPause: document.getElementById('notifyPause')?.checked,
+            notifyBlock: document.getElementById('notifyBlock')?.checked,
+            notifyEmail: document.getElementById('notifyEmail')?.checked,
+            enabled: true
+        };
+        localStorage.setItem('eio_analytics_protection', JSON.stringify(config));
+        alert('✅ Configurações de Proteção salvas!');
+    });
+
+    // Save Hotleads config
+    document.getElementById('btnSaveHotleads')?.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('[data-acontent="hotleads"] input[type="checkbox"]');
+        const config = {
+            triggers: Array.from(checkboxes).slice(0, 5).map(cb => cb.checked),
+            actions: Array.from(checkboxes).slice(5).map(cb => cb.checked),
+            enabled: true
+        };
+        localStorage.setItem('eio_analytics_hotleads', JSON.stringify(config));
+        alert('✅ Configurações de Leads Quentes salvas!');
+    });
+}
+
+// CSV Upload handling
+function initCSVUpload() {
+    document.getElementById('csvUpload')?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target.result;
+            const lines = content.split('\n').filter(l => l.trim());
+            const usernames = lines.map(l => l.trim().replace('@', ''));
+
+            if (usernames.length > 0) {
+                alert(`📥 ${usernames.length} usernames importados!\n\nPrimeiros 5:\n${usernames.slice(0, 5).map(u => '@' + u).join('\n')}\n\nOs leads serão enriquecidos quando a extensão estiver ativa.`);
+
+                // Store imported leads
+                const existingLeads = JSON.parse(localStorage.getItem('eio_imported_leads') || '[]');
+                const newLeads = usernames.map(u => ({
+                    username: u,
+                    importedAt: new Date().toISOString(),
+                    source: 'csv_import',
+                    enriched: false
+                }));
+                localStorage.setItem('eio_imported_leads', JSON.stringify([...existingLeads, ...newLeads]));
+            }
+        };
+
+        reader.readAsText(file);
+    });
+}
+
+// Load saved analytics configs
+function loadAnalyticsConfigs() {
+    // Load Timing
+    try {
+        const timingConfig = JSON.parse(localStorage.getItem('eio_analytics_timing') || '{}');
+        if (timingConfig.intensityNight) document.getElementById('intensityNight').value = timingConfig.intensityNight;
+        if (timingConfig.intensityDay) document.getElementById('intensityDay').value = timingConfig.intensityDay;
+        if (timingConfig.intensityPeak) document.getElementById('intensityPeak').value = timingConfig.intensityPeak;
+    } catch (e) { console.log('No timing config saved'); }
+
+    // Load Protection
+    try {
+        const protectionConfig = JSON.parse(localStorage.getItem('eio_analytics_protection') || '{}');
+        if (protectionConfig.pauseBlocked) document.getElementById('pauseBlocked').value = protectionConfig.pauseBlocked;
+        if (protectionConfig.pauseCaptcha) document.getElementById('pauseCaptcha').value = protectionConfig.pauseCaptcha;
+        if (protectionConfig.pauseLimit) document.getElementById('pauseLimit').value = protectionConfig.pauseLimit;
+        if (protectionConfig.notifyPause !== undefined) document.getElementById('notifyPause').checked = protectionConfig.notifyPause;
+        if (protectionConfig.notifyBlock !== undefined) document.getElementById('notifyBlock').checked = protectionConfig.notifyBlock;
+        if (protectionConfig.notifyEmail !== undefined) document.getElementById('notifyEmail').checked = protectionConfig.notifyEmail;
+    } catch (e) { console.log('No protection config saved'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SMART PROTECTION HELPER FUNCTIONS (For extension integration)
+// ═══════════════════════════════════════════════════════════
+
+// Get current intensity based on time
+window.getIntensityMultiplier = function () {
+    const config = JSON.parse(localStorage.getItem('eio_analytics_timing') || '{}');
+    const hour = new Date().getHours();
+
+    // Night: 23h - 7h
+    if (hour >= 23 || hour < 7) {
+        return parseInt(config.intensityNight || '0') / 100;
+    }
+    // Peak: 18h - 23h
+    if (hour >= 18 && hour < 23) {
+        return parseInt(config.intensityPeak || '120') / 100;
+    }
+    // Day: 7h - 18h
+    return parseInt(config.intensityDay || '100') / 100;
+};
+
+// Check if should pause based on protection rules
+window.checkProtection = function (eventType) {
+    const config = JSON.parse(localStorage.getItem('eio_analytics_protection') || '{}');
+    const now = Date.now();
+    const pauseUntil = parseInt(localStorage.getItem('eio_pause_until') || '0');
+
+    // Check if currently paused
+    if (now < pauseUntil) {
+        const minutesLeft = Math.ceil((pauseUntil - now) / 60000);
+        return {
+            paused: true,
+            reason: 'Pausa preventiva ativa',
+            minutesLeft
+        };
+    }
+
+    // Handle new events
+    const pauseDurations = {
+        'blocked': parseInt(config.pauseBlocked || '24') * 60,
+        'captcha': parseInt(config.pauseCaptcha || '4') * 60,
+        'limit': parseInt(config.pauseLimit || '1') * 60
+    };
+
+    if (eventType && pauseDurations[eventType]) {
+        const pauseMinutes = pauseDurations[eventType];
+        const newPauseUntil = now + (pauseMinutes * 60000);
+        localStorage.setItem('eio_pause_until', newPauseUntil.toString());
+
+        // Notify if enabled
+        if (config.notifyPause) {
+            showNotification(`🛡️ Pausa preventiva ativada por ${Math.floor(pauseMinutes / 60)}h para proteger sua conta`);
+        }
+
+        return {
+            paused: true,
+            reason: `Detectado: ${eventType}`,
+            minutesLeft: pauseMinutes
+        };
+    }
+
+    return { paused: false };
+};
+
+// Check if lead is hot
+window.isHotLead = function (leadData) {
+    const config = JSON.parse(localStorage.getItem('eio_analytics_hotleads') || '{}');
+    const triggers = config.triggers || [true, true, true, true, true];
+
+    let score = 0;
+    const points = [5, 4, 4, 5, 6]; // Points for each trigger
+
+    if (triggers[0] && leadData.repliedUnder1h) score += points[0];
+    if (triggers[1] && leadData.profileVisits >= 3) score += points[1];
+    if (triggers[2] && leadData.savedContent) score += points[2];
+    if (triggers[3] && leadData.sharedContent) score += points[3];
+    if (triggers[4] && leadData.mentionedInStory) score += points[4];
+
+    const isHot = score >= 10;
+
+    if (isHot && config.actions?.[0]) {
+        showNotification(`🔥 Lead quente detectado! @${leadData.username}`);
+    }
+
+    return {
+        isHot,
+        score,
+        shouldMoveToCRM: isHot && config.actions?.[1],
+        shouldSendDM: isHot && config.actions?.[2]
+    };
+};
+
+// Show desktop notification
+function showNotification(message) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('E.I.O - Engajamento Inteligente', { body: message, icon: '/downloads/eio-extension.zip' });
+    } else {
+        console.log('Notification:', message);
+    }
+}
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
