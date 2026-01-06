@@ -80,22 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
         activateSection(hash);
     }
 
-    // Notifications Logic
-    const notifications = [
-        { id: 1, title: 'Alerta de Segurança', text: 'Pausa preventiva de 2h ativada para proteger sua conta.', time: 'Há 10 min', type: 'warning', icon: '🛡️' },
-        { id: 2, title: 'Novo Lead Quente', text: '@mariasilva respondeu sua DM de boas-vindas!', time: 'Há 30 min', type: 'success', icon: '🔥' },
-        { id: 3, title: 'Agente Concluiu', text: 'Ciclo de boas-vindas finalizado (45 envios).', time: 'Há 2h', type: 'info', icon: '🤖' },
-        { id: 4, title: 'Assinatura', text: 'Seu período de teste acaba em 2 dias. Aproveite o desconto!', time: 'Há 5h', type: 'alert', icon: '💳' }
-    ];
+    // Notifications Logic - Empty for new users
+    const notifications = []; // Será preenchido com dados reais do servidor
 
     const btnNotifications = document.getElementById('btnNotifications');
     const notificationDropdown = document.getElementById('notificationDropdown');
     const notificationList = document.getElementById('notificationList');
     const notifyBadge = document.getElementById('notifyBadge');
 
-    // Show badge dot if notifications exist
-    if (notifications.length > 0 && notifyBadge) {
-        notifyBadge.style.display = 'block';
+    // Hide badge when no notifications
+    if (notifications.length === 0 && notifyBadge) {
+        notifyBadge.style.display = 'none';
     }
 
     if (btnNotifications && notificationDropdown) {
@@ -121,6 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderNotifications() {
         if (!notificationList) return;
+
+        if (notifications.length === 0) {
+            // Empty state for new users
+            notificationList.innerHTML = `
+                <div style="padding: 40px 20px; text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3;">🔔</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 5px;">Nenhuma notificação</div>
+                    <div style="color: rgba(255,255,255,0.3); font-size: 0.8rem;">As notificações aparecerão aqui quando você usar a extensão</div>
+                </div>
+            `;
+            return;
+        }
 
         notificationList.innerHTML = notifications.map(n => `
             <div class="eio-notification-item" style="padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: start; cursor: pointer; transition: background 0.2s;">
