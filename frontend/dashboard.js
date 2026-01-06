@@ -406,10 +406,11 @@ async function initExtensionDownload() {
     const extensionSize = document.getElementById('extensionSize');
     const extensionVersion = document.getElementById('extensionVersion');
 
-    // Fetch extension info
-    await fetchExtensionInfo();
+    // Set default values
+    if (extensionSize) extensionSize.textContent = '~5 MB';
+    if (extensionVersion) extensionVersion.textContent = '1.0.0';
 
-    // Download button
+    // Download button - Direct download approach (works on all browsers)
     if (btnDownload) {
         btnDownload.addEventListener('click', async () => {
             try {
@@ -419,33 +420,17 @@ async function initExtensionDownload() {
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M12 6v6l4 2"></path>
                     </svg>
-                    Baixando...
+                    Preparando download...
                 `;
 
-                const token = localStorage.getItem('accessToken');
-                const API_URL = window.EIO_CONFIG?.API_BASE_URL?.replace('/api/v1', '') || 'https://eio-system.vercel.app';
-
-                const response = await fetch(`${API_URL}/api/v1/extension/download`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Erro ao baixar extensão');
-                }
-
-                // Download file
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
+                // Direct download using anchor tag - works on all browsers
+                const downloadUrl = 'downloads/eio-extension.zip';
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = downloadUrl;
                 a.download = 'eio-extension.zip';
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
                 // Success feedback
@@ -454,7 +439,7 @@ async function initExtensionDownload() {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    Download Concluído!
+                    Download Iniciado!
                 `;
 
                 setTimeout(() => {
@@ -480,7 +465,7 @@ async function initExtensionDownload() {
                     </svg>
                     Erro no Download
                 `;
-                alert(`Erro ao baixar extensão: ${error.message}`);
+                alert('Erro ao baixar extensão. Tente novamente.');
 
                 setTimeout(() => {
                     btnDownload.innerHTML = `
@@ -505,75 +490,72 @@ async function initExtensionDownload() {
     }
 }
 
-async function fetchExtensionInfo() {
-    try {
-        const token = localStorage.getItem('accessToken');
-        const API_URL = window.EIO_CONFIG?.API_BASE_URL?.replace('/api/v1', '') || 'https://eio-system.vercel.app';
-
-        const response = await fetch(`${API_URL}/api/v1/extension/info`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                document.getElementById('extensionSize').textContent = data.data.size;
-                document.getElementById('extensionVersion').textContent = data.data.version;
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching extension info:', error);
-        document.getElementById('extensionSize').textContent = '~2 MB';
-    }
-}
-
 function showInstructionsModal() {
     const modal = document.createElement('div');
     modal.className = 'eio-modal active';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="eio-modal-content" style="max-width: 700px;">
+        <div class="eio-modal-content" style="max-width: 750px;">
             <div class="eio-modal-header">
                 <h3>📖 Como Instalar a Extensão E.I.O</h3>
-                <button class="eio-modal-close" onclick="this.closest('.eio-modal').remove()">×</button>
+                <button class="eio-modal-close" id="closeInstructionsModal">×</button>
             </div>
             <div class="eio-modal-body">
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid rgba(76, 175, 80, 0.2);">
+                    <p style="color: #4CAF50; margin: 0; font-size: 0.95rem;">
+                        ✅ <strong>Compatível com:</strong> Google Chrome, Microsoft Edge, Brave, Opera e outros navegadores baseados em Chromium.
+                    </p>
+                </div>
+                
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
                         Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension.zip</code> 
-                        na pasta de Downloads e extraia todo o conteúdo para uma pasta no seu computador.
+                        na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
 
                 <div style="margin-bottom: 25px;">
-                    <h4 style="color: #6246ea; margin-bottom: 10px;">🌐 Passo 2: Abrir Configurações do Chrome</h4>
-                    <p style="color: #aaa; line-height: 1.6;">
-                        Abra o Google Chrome e digite na barra de endereços:<br>
-                        <code style="background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 8px;">chrome://extensions/</code>
-                    </p>
+                    <h4 style="color: #6246ea; margin-bottom: 10px;">🌐 Passo 2: Abrir Página de Extensões</h4>
+                    <p style="color: #aaa; line-height: 1.6;">Abra seu navegador e digite na barra de endereços:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                            <strong style="color: #fff; font-size: 0.85rem;">🔵 Chrome</strong>
+                            <code style="display: block; margin-top: 5px; font-size: 0.8rem; color: #6246ea;">chrome://extensions/</code>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                            <strong style="color: #fff; font-size: 0.85rem;">🔷 Edge</strong>
+                            <code style="display: block; margin-top: 5px; font-size: 0.8rem; color: #6246ea;">edge://extensions/</code>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                            <strong style="color: #fff; font-size: 0.85rem;">🟠 Brave</strong>
+                            <code style="display: block; margin-top: 5px; font-size: 0.8rem; color: #6246ea;">brave://extensions/</code>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                            <strong style="color: #fff; font-size: 0.85rem;">🔴 Opera</strong>
+                            <code style="display: block; margin-top: 5px; font-size: 0.8rem; color: #6246ea;">opera://extensions/</code>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🔧 Passo 3: Ativar Modo Desenvolvedor</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        No canto superior direito da página, ative o botão <strong>"Modo do desenvolvedor"</strong>.
+                        No canto superior direito da página, ative o botão <strong>"Modo do desenvolvedor"</strong> ou <strong>"Developer mode"</strong>.
                     </p>
                 </div>
 
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">📂 Passo 4: Carregar Extensão</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Clique no botão <strong>"Carregar sem compactação"</strong> e selecione a pasta que você extraiu no Passo 1.
+                        Clique no botão <strong>"Carregar sem compactação"</strong> (ou "Load unpacked") e selecione a pasta que você extraiu no Passo 1.
                     </p>
                 </div>
 
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">✅ Passo 5: Pronto!</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        A extensão E.I.O agora está instalada! Você verá o ícone do foguete 🚀 na barra de extensões do Chrome.
+                        A extensão E.I.O agora está instalada! Você verá o ícone do foguete 🚀 na barra de extensões.
                         Clique nele para fazer login e começar a automatizar.
                     </p>
                 </div>
@@ -586,15 +568,18 @@ function showInstructionsModal() {
                 </div>
             </div>
             <div class="eio-modal-footer">
-                <button class="eio-btn eio-btn-primary" onclick="this.closest('.eio-modal').remove()">Entendi!</button>
+                <button class="eio-btn eio-btn-primary" id="closeInstructionsBtn">Entendi!</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 
-    // Close on click outside
+    // Close handlers using proper event listeners (no inline onclick)
+    const closeModal = () => modal.remove();
+    modal.querySelector('#closeInstructionsModal').addEventListener('click', closeModal);
+    modal.querySelector('#closeInstructionsBtn').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
+        if (e.target === modal) closeModal();
     });
 }
 

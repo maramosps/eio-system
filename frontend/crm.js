@@ -1,21 +1,53 @@
-// CRM JavaScript
+// CRM JavaScript - Production Ready
 let leads = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadMockLeads();
+    // Check authentication
+    const token = localStorage.getItem('eio_token');
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Initialize with empty state - leads are loaded from API/localStorage
+    loadLeads();
     renderKanban();
     initializeEventListeners();
+    updateStats();
 });
 
-function loadMockLeads() {
-    leads = [
-        { id: 1, name: 'João Silva', username: '@joaosilva', status: 'new', tags: ['cliente', 'fitness'], notes: 'Interessado em consultoria', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=joao' },
-        { id: 2, name: 'Maria Santos', username: '@mariasantos', status: 'contacted', tags: ['lead', 'nutrição'], notes: 'Respondeu DM', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=maria' },
-        { id: 3, name: 'Pedro Costa', username: '@pedrocosta', status: 'qualified', tags: ['hot', 'premium'], notes: 'Pediu proposta', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pedro' },
-        { id: 4, name: 'Ana Lima', username: '@analima', status: 'converted', tags: ['cliente', 'vip'], notes: 'Fechou pacote premium', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ana' },
-        { id: 5, name: 'Carlos Souza', username: '@carlossouza', status: 'new', tags: ['lead'], notes: 'Curtiu vários posts', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=carlos' },
-        { id: 6, name: 'Julia Ferreira', username: '@juliaferreira', status: 'contacted', tags: ['cliente', 'iniciante'], notes: 'Marcou reunião', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=julia' }
-    ];
+function loadLeads() {
+    // Try to load from localStorage (will be empty for new users)
+    const savedLeads = localStorage.getItem('eio_leads');
+    if (savedLeads) {
+        leads = JSON.parse(savedLeads);
+    } else {
+        leads = []; // Empty for new users
+    }
+}
+
+function saveLeads() {
+    localStorage.setItem('eio_leads', JSON.stringify(leads));
+}
+
+function updateStats() {
+    // Update sidebar stats
+    const totalStat = document.querySelector('.eio-stat-mini:nth-child(1) .eio-stat-value');
+    const pendingStat = document.querySelector('.eio-stat-mini:nth-child(2) .eio-stat-value');
+    const monthStat = document.querySelector('.eio-stat-mini:nth-child(3) .eio-stat-value');
+
+    if (totalStat) totalStat.textContent = leads.length;
+    if (pendingStat) pendingStat.textContent = leads.filter(l => l.status === 'new').length;
+    if (monthStat) monthStat.textContent = leads.length; // Simplificado para MVP
+
+    // Update column counts
+    const statuses = ['new', 'contacted', 'qualified', 'converted'];
+    statuses.forEach(status => {
+        const badge = document.querySelector(`.eio-kanban-column[data-status="${status}"] .eio-badge-count`);
+        if (badge) {
+            badge.textContent = leads.filter(l => l.status === status).length;
+        }
+    });
 }
 
 function renderKanban() {
@@ -23,15 +55,34 @@ function renderKanban() {
 
     statuses.forEach(status => {
         const column = document.getElementById(`column-${status}`);
+        if (!column) return;
+
         column.innerHTML = '';
 
         const statusLeads = leads.filter(lead => lead.status === status);
 
-        statusLeads.forEach(lead => {
-            const card = createLeadCard(lead);
-            column.appendChild(card);
-        });
+        if (statusLeads.length === 0) {
+            // Empty state for each column
+            column.innerHTML = `
+                <div class="eio-empty-column" style="padding: 30px 15px; text-align: center; color: rgba(255,255,255,0.3);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 10px; opacity: 0.3;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                    </svg>
+                    <p style="font-size: 0.85rem; margin: 0;">Nenhum lead aqui</p>
+                </div>
+            `;
+        } else {
+            statusLeads.forEach(lead => {
+                const card = createLeadCard(lead);
+                column.appendChild(card);
+            });
+        }
     });
+
+    updateStats();
 }
 
 const defaultAvatar = 'https://ui-avatars.com/api/?background=2196F3&color=fff&name=';
@@ -68,58 +119,116 @@ function createLeadCard(lead) {
 function openLeadModal(lead) {
     const modal = document.getElementById('leadModal');
     modal.classList.add('active');
+    modal.dataset.leadId = lead.id;
+    modal.dataset.isNew = lead.isNew ? 'true' : 'false';
 
     const avatarUrl = lead.avatar || `${defaultAvatar}${encodeURIComponent(lead.name)}`;
     const avatarImg = document.getElementById('leadAvatar');
     avatarImg.src = avatarUrl;
     avatarImg.onerror = () => { avatarImg.src = `${defaultAvatar}${encodeURIComponent(lead.name)}`; };
 
-    document.getElementById('leadName').textContent = lead.name;
-    document.getElementById('leadUsername').textContent = lead.username;
-    document.getElementById('leadUsername').href = `https://instagram.com/${lead.username.substring(1)}`;
-    document.getElementById('leadTags').value = lead.tags.join(', ');
-    document.getElementById('leadNotes').value = lead.notes;
+    document.getElementById('leadName').textContent = lead.name || 'Novo Lead';
+    document.getElementById('leadUsername').textContent = lead.username || '@usuario';
+    document.getElementById('leadUsername').href = lead.username ? `https://instagram.com/${lead.username.substring(1)}` : '#';
+    document.getElementById('leadTags').value = lead.tags ? lead.tags.join(', ') : '';
+    document.getElementById('leadNotes').value = lead.notes || '';
 
-    // Mock timeline
-    document.getElementById('leadTimeline').innerHTML = `
-    <div class="eio-timeline-item">
-      <div class="eio-timeline-content">Enviado DM de boas-vindas</div>
-      <div class="eio-timeline-date">23/12/2024 10:30</div>
-    </div>
-    <div class="eio-timeline-item">
-      <div class="eio-timeline-content">Lead respondeu mensagem</div>
-      <div class="eio-timeline-date">23/12/2024 15:45</div>
-    </div>
-    <div class="eio-timeline-item">
-      <div class="eio-timeline-content">Curtiu últimos 3 posts</div>
-      <div class="eio-timeline-date">22/12/2024 18:20</div>
-    </div>
-  `;
+    // Timeline - empty for new leads
+    const timeline = document.getElementById('leadTimeline');
+    if (lead.timeline && lead.timeline.length > 0) {
+        timeline.innerHTML = lead.timeline.map(item => `
+            <div class="eio-timeline-item">
+                <div class="eio-timeline-content">${item.content}</div>
+                <div class="eio-timeline-date">${item.date}</div>
+            </div>
+        `).join('');
+    } else {
+        timeline.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.4);">
+                <p style="margin: 0; font-size: 0.9rem;">Nenhuma interação registrada</p>
+            </div>
+        `;
+    }
 }
 
 function initializeEventListeners() {
     // Modal close
-    document.querySelector('.eio-modal-close').addEventListener('click', () => {
-        document.getElementById('leadModal').classList.remove('active');
-    });
+    const closeBtn = document.querySelector('.eio-modal-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('leadModal').classList.remove('active');
+        });
+    }
 
-    document.getElementById('btnCloseLead').addEventListener('click', () => {
-        document.getElementById('leadModal').classList.remove('active');
-    });
+    const closeLead = document.getElementById('btnCloseLead');
+    if (closeLead) {
+        closeLead.addEventListener('click', () => {
+            document.getElementById('leadModal').classList.remove('active');
+        });
+    }
+
+    // Save Lead
+    const saveLead = document.getElementById('btnSaveLead');
+    if (saveLead) {
+        saveLead.addEventListener('click', () => {
+            const modal = document.getElementById('leadModal');
+            const leadId = parseInt(modal.dataset.leadId);
+            const isNew = modal.dataset.isNew === 'true';
+
+            const updatedData = {
+                tags: document.getElementById('leadTags').value.split(',').map(t => t.trim()).filter(t => t),
+                notes: document.getElementById('leadNotes').value
+            };
+
+            if (isNew) {
+                // Add new lead
+                const newLead = {
+                    id: leadId,
+                    name: document.getElementById('leadName').textContent,
+                    username: document.getElementById('leadUsername').textContent,
+                    status: 'new',
+                    ...updatedData,
+                    timeline: [{
+                        content: 'Lead adicionado ao CRM',
+                        date: new Date().toLocaleString('pt-BR')
+                    }]
+                };
+                leads.push(newLead);
+            } else {
+                // Update existing
+                const lead = leads.find(l => l.id === leadId);
+                if (lead) {
+                    Object.assign(lead, updatedData);
+                }
+            }
+
+            saveLeads();
+            renderKanban();
+            modal.classList.remove('active');
+        });
+    }
 
     // Open Add Lead Modal
-    document.getElementById('btnAddLead').addEventListener('click', () => {
-        const newLead = {
-            id: Date.now(),
-            name: 'Novo Lead',
-            username: '@novo_usuario',
-            status: 'new',
-            tags: [],
-            notes: '',
-            avatar: ''
-        };
-        openLeadModal(newLead);
-    });
+    const addLead = document.getElementById('btnAddLead');
+    if (addLead) {
+        addLead.addEventListener('click', () => {
+            const username = prompt("Digite o @ do usuário do Instagram:", "@");
+            if (username && username !== '@') {
+                const newLead = {
+                    id: Date.now(),
+                    name: username.replace('@', '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                    username: username.startsWith('@') ? username : '@' + username,
+                    status: 'new',
+                    tags: [],
+                    notes: '',
+                    avatar: '',
+                    isNew: true,
+                    timeline: []
+                };
+                openLeadModal(newLead);
+            }
+        });
+    }
 
     // Drag and drop between columns
     const columns = document.querySelectorAll('.eio-column-content');
@@ -143,6 +252,7 @@ function initializeEventListeners() {
             const lead = leads.find(l => l.id === leadId);
             if (lead) {
                 lead.status = newStatus;
+                saveLeads();
                 renderKanban();
             }
         });
@@ -176,5 +286,21 @@ function initializeEventListeners() {
             });
         });
     });
-}
 
+    // Search functionality
+    const searchInput = document.getElementById('searchLeads');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.eio-lead-card').forEach(card => {
+                const name = card.querySelector('h5')?.textContent.toLowerCase() || '';
+                const username = card.querySelector('.eio-lead-info span')?.textContent.toLowerCase() || '';
+                if (name.includes(query) || username.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+}
