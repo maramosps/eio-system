@@ -1433,3 +1433,281 @@ function showNotification(message) {
 if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
 }
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGES & AUTOMATION TABS
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    initMessagesTabs();
+    initMessagesToggles();
+    initMessagesSaveButtons();
+    loadMessagesConfigs();
+});
+
+// Tab navigation for messages
+function initMessagesTabs() {
+    const tabs = document.querySelectorAll('.eio-messages-tab');
+    const contents = document.querySelectorAll('.eio-messages-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.getAttribute('data-mtab');
+
+            // Update tab styles
+            tabs.forEach(t => {
+                t.style.background = 'rgba(255,255,255,0.05)';
+                t.style.border = '1px solid rgba(255,255,255,0.1)';
+                t.style.color = '#aaa';
+                t.style.fontWeight = 'normal';
+            });
+            tab.style.background = '#6246ea';
+            tab.style.border = 'none';
+            tab.style.color = '#fff';
+            tab.style.fontWeight = '600';
+
+            // Show/hide content
+            contents.forEach(content => {
+                if (content.getAttribute('data-mcontent') === targetTab) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// Toggle switches for messages sections
+function initMessagesToggles() {
+    const toggleIds = ['toggleSequences', 'toggleStoryReply'];
+
+    toggleIds.forEach(id => {
+        const toggle = document.getElementById(id);
+        if (!toggle) return;
+
+        const savedState = localStorage.getItem(`eio_${id}_enabled`);
+        let isActive = savedState !== 'false';
+
+        updateToggleVisual(toggle, isActive);
+
+        toggle.addEventListener('click', () => {
+            isActive = !isActive;
+            updateToggleVisual(toggle, isActive);
+            localStorage.setItem(`eio_${id}_enabled`, isActive.toString());
+
+            const featureName = {
+                'toggleSequences': 'Sequências de Follow-up',
+                'toggleStoryReply': 'Auto-Responder Stories'
+            }[id];
+
+            console.log(`${featureName} ${isActive ? 'ativado' : 'desativado'}`);
+        });
+    });
+}
+
+// Messages save buttons
+function initMessagesSaveButtons() {
+    // Save Sequences
+    document.getElementById('btnSaveSequences')?.addEventListener('click', () => {
+        const messages = document.querySelectorAll('.sequence-message');
+        const sequences = Array.from(messages).map(m => ({
+            day: m.getAttribute('data-day'),
+            message: m.value
+        }));
+
+        const stopConditions = document.querySelectorAll('[data-mcontent="sequences"] input[type="checkbox"]:not(.sequence-message)');
+        const conditions = Array.from(stopConditions).map(c => c.checked);
+
+        localStorage.setItem('eio_dm_sequences', JSON.stringify({ sequences, stopConditions: conditions }));
+        alert('✅ Sequências de Follow-up salvas!');
+    });
+
+    // Save Quick Replies
+    document.getElementById('btnSaveQuickReplies')?.addEventListener('click', () => {
+        const templates = document.querySelectorAll('.quick-template');
+        const quickReplies = Array.from(templates).map(t => ({
+            name: t.closest('div').querySelector('input')?.value || 'Template',
+            content: t.value
+        }));
+
+        localStorage.setItem('eio_quick_replies', JSON.stringify(quickReplies));
+        alert('✅ Templates de Respostas Rápidas salvos!');
+    });
+
+    // Save Story Reply
+    document.getElementById('btnSaveStoryReply')?.addEventListener('click', () => {
+        const responses = document.querySelectorAll('.story-response');
+        const checkboxes = document.querySelectorAll('[data-mcontent="storyreply"] input[type="checkbox"]');
+
+        const storyReply = {
+            mention: {
+                enabled: checkboxes[0]?.checked || false,
+                response: responses[0]?.value || ''
+            },
+            hashtag: {
+                enabled: checkboxes[1]?.checked || false,
+                tags: document.getElementById('storyHashtags')?.value || '',
+                response: responses[1]?.value || ''
+            },
+            location: {
+                enabled: checkboxes[2]?.checked || false,
+                locations: document.getElementById('storyLocations')?.value || '',
+                response: responses[2]?.value || ''
+            }
+        };
+
+        localStorage.setItem('eio_story_reply', JSON.stringify(storyReply));
+        alert('✅ Configurações de Auto-Responder Stories salvas!');
+    });
+
+    // Add sequence step button
+    document.getElementById('btnAddSequenceStep')?.addEventListener('click', () => {
+        const container = document.getElementById('sequenceSteps');
+        if (!container) return;
+
+        const lastDay = container.querySelectorAll('[data-day]').length;
+        const newDay = [0, 2, 5, 7, 10, 14, 21, 30][lastDay] || (lastDay * 3);
+
+        const newStep = document.createElement('div');
+        newStep.style.cssText = 'padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;';
+        newStep.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="background: #9C27B0; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">DIA ${newDay}</span>
+                <button class="eio-btn eio-btn-ghost eio-btn-sm remove-step" style="color: #F44336;">🗑️</button>
+            </div>
+            <textarea class="eio-input sequence-message" rows="3" style="width: 100%; padding: 12px;" data-day="${newDay}">{hora_do_dia}, {primeiro_nome}! 
+
+Sua mensagem aqui...</textarea>
+        `;
+        container.appendChild(newStep);
+
+        // Add remove handler
+        newStep.querySelector('.remove-step')?.addEventListener('click', () => newStep.remove());
+    });
+
+    // Add quick reply template button
+    document.getElementById('btnAddQuickReply')?.addEventListener('click', () => {
+        const container = document.getElementById('quickReplyTemplates');
+        if (!container) return;
+
+        const newTemplate = document.createElement('div');
+        newTemplate.style.cssText = 'padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;';
+        newTemplate.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <input type="text" class="eio-input" value="Novo Template" style="background: transparent; border: none; color: #fff; font-weight: 600; padding: 0;">
+                <button class="eio-btn eio-btn-ghost eio-btn-sm remove-template" style="color: #F44336;">🗑️</button>
+            </div>
+            <textarea class="eio-input quick-template" rows="4" style="width: 100%; padding: 12px;">{hora_do_dia}, {primeiro_nome}!
+
+Digite sua mensagem aqui usando as variáveis disponíveis.</textarea>
+        `;
+        container.appendChild(newTemplate);
+
+        // Add remove handler
+        newTemplate.querySelector('.remove-template')?.addEventListener('click', () => newTemplate.remove());
+    });
+}
+
+// Load saved messages configs
+function loadMessagesConfigs() {
+    // Load Sequences
+    try {
+        const seqConfig = JSON.parse(localStorage.getItem('eio_dm_sequences') || '{}');
+        if (seqConfig.sequences) {
+            seqConfig.sequences.forEach(seq => {
+                const textarea = document.querySelector(`.sequence-message[data-day="${seq.day}"]`);
+                if (textarea) textarea.value = seq.message;
+            });
+        }
+    } catch (e) { console.log('No sequence config saved'); }
+
+    // Load Story Reply
+    try {
+        const storyConfig = JSON.parse(localStorage.getItem('eio_story_reply') || '{}');
+        if (storyConfig.mention) {
+            const checkboxes = document.querySelectorAll('[data-mcontent="storyreply"] input[type="checkbox"]');
+            const responses = document.querySelectorAll('.story-response');
+
+            if (checkboxes[0]) checkboxes[0].checked = storyConfig.mention.enabled;
+            if (responses[0]) responses[0].value = storyConfig.mention.response;
+
+            if (checkboxes[1]) checkboxes[1].checked = storyConfig.hashtag?.enabled;
+            if (document.getElementById('storyHashtags')) document.getElementById('storyHashtags').value = storyConfig.hashtag?.tags || '';
+            if (responses[1]) responses[1].value = storyConfig.hashtag?.response || '';
+
+            if (checkboxes[2]) checkboxes[2].checked = storyConfig.location?.enabled;
+            if (document.getElementById('storyLocations')) document.getElementById('storyLocations').value = storyConfig.location?.locations || '';
+            if (responses[2]) responses[2].value = storyConfig.location?.response || '';
+        }
+    } catch (e) { console.log('No story reply config saved'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DM AUTOMATION HELPER FUNCTIONS (For extension integration)
+// ═══════════════════════════════════════════════════════════
+
+// Get follow-up sequence for a user
+window.getFollowUpSequence = function () {
+    const config = JSON.parse(localStorage.getItem('eio_dm_sequences') || '{}');
+    return config.sequences || [];
+};
+
+// Process DM template with user data
+window.processDMTemplate = function (template, userData) {
+    const hour = new Date().getHours();
+    const saudacao = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+
+    const followDays = userData.followedDaysAgo || 0;
+    const tempoSeguindo = followDays === 0 ? 'desde hoje' :
+        followDays === 1 ? 'há 1 dia' :
+            `há ${followDays} dias`;
+
+    return template
+        .replace(/{primeiro_nome}/g, userData.firstName || userData.name?.split(' ')[0] || userData.username || 'você')
+        .replace(/{hora_do_dia}/g, saudacao)
+        .replace(/{ultimo_post}/g, userData.lastPost || 'nosso conteúdo')
+        .replace(/{tempo_seguindo}/g, tempoSeguindo)
+        .replace(/{username}/g, userData.username || '')
+        .replace(/{seguidores}/g, userData.followers || '0')
+        .replace(/{produto}/g, userData.product || 'nosso serviço');
+};
+
+// Check if should send story reply
+window.checkStoryReplyTrigger = function (storyData) {
+    const config = JSON.parse(localStorage.getItem('eio_story_reply') || '{}');
+
+    // Check mention
+    if (config.mention?.enabled && storyData.hasMention) {
+        return { shouldReply: true, response: config.mention.response, trigger: 'mention' };
+    }
+
+    // Check hashtag
+    if (config.hashtag?.enabled && storyData.hashtags) {
+        const monitoredTags = (config.hashtag.tags || '').toLowerCase().split(',').map(t => t.trim());
+        const storyTags = storyData.hashtags.map(t => t.toLowerCase());
+        const matched = monitoredTags.some(tag => storyTags.includes(tag));
+        if (matched) {
+            return { shouldReply: true, response: config.hashtag.response, trigger: 'hashtag' };
+        }
+    }
+
+    // Check location
+    if (config.location?.enabled && storyData.location) {
+        const monitoredLocs = (config.location.locations || '').toLowerCase().split(',').map(l => l.trim());
+        const storyLoc = storyData.location.toLowerCase();
+        const matched = monitoredLocs.some(loc => storyLoc.includes(loc));
+        if (matched) {
+            return { shouldReply: true, response: config.location.response, trigger: 'location' };
+        }
+    }
+
+    return { shouldReply: false };
+};
+
+// Check if should stop sequence
+window.shouldStopSequence = function (messageText) {
+    const stopWords = ['parar', 'stop', 'não quero', 'para', 'cancelar', 'unsubscribe'];
+    const lowerMessage = messageText.toLowerCase();
+    return stopWords.some(word => lowerMessage.includes(word));
+};

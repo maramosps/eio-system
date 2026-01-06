@@ -1442,168 +1442,517 @@ Conta com a gente sempre! ❤️</textarea>
                 </div>
             </div>
 
-            <!-- Messages Section (Central de DMs) -->
+            <!-- Messages Section (Central de DMs + Automação) -->
             <div class="eio-content-section" data-section="messages">
                 <div class="eio-section-header-dash">
-                    <h2 class="eio-section-title-dash">Central de Mensagens</h2>
-                    <p>Visualize e responda as DMs extraídas pela extensão</p>
+                    <h2 class="eio-section-title-dash">📧 Central de Mensagens & Automação</h2>
+                    <p>Gerencie conversas, sequências automáticas e respostas inteligentes</p>
                 </div>
 
-                <!-- Aviso sobre funcionamento -->
-                <div class="eio-card"
-                    style="margin-top: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
-                    <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
-                        <div style="font-size: 2rem;">💬</div>
-                        <div>
-                            <h4 style="color: #fff; margin: 0 0 8px;">Como funciona a Central de Mensagens</h4>
-                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
-                                Quando você usa a extensão E.I.O para extrair leads ou enviar DMs automáticas,
-                                todas as conversas são sincronizadas aqui para você visualizar e responder.
-                            </p>
-                            <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 0.85rem;">
-                                📱 As mensagens são atualizadas em tempo real quando a extensão está ativa.
-                            </p>
-                        </div>
-                    </div>
+                <!-- Tabs de navegação -->
+                <div class="eio-messages-tabs" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                    <button class="eio-messages-tab active" data-mtab="conversations"
+                        style="padding: 12px 20px; background: #6246ea; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;">
+                        💬 Conversas
+                    </button>
+                    <button class="eio-messages-tab" data-mtab="sequences"
+                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                        📧 Sequências Follow-up
+                    </button>
+                    <button class="eio-messages-tab" data-mtab="quickreplies"
+                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                        ⚡ Respostas Rápidas
+                    </button>
+                    <button class="eio-messages-tab" data-mtab="storyreply"
+                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                        📸 Auto-Responder Stories
+                    </button>
                 </div>
 
-                <!-- Lista de conversas -->
-                <div class="eio-card" style="margin-top: 20px;">
-                    <div class="eio-card-header">
-                        <div>
-                            <h3>Conversas</h3>
-                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
-                                <span id="messagesCount">0</span> conversas
-                            </p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" class="eio-input" placeholder="Buscar por @..."
-                                style="width: 200px; padding: 8px 12px; font-size: 0.9rem;" id="searchMessages">
-                            <select class="eio-input" style="padding: 8px 12px; font-size: 0.9rem;" id="filterMessages">
-                                <option value="all">Todas</option>
-                                <option value="unread">Não lidas</option>
-                                <option value="replied">Respondidas</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="eio-messages-list" id="messagesList" style="margin-top: 10px;">
-                        <!-- Estado vazio por padrão -->
-                        <div class="eio-empty-messages" style="padding: 60px 20px; text-align: center;">
-                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)"
-                                stroke-width="1" style="margin-bottom: 20px;">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                            <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 12px;">Nenhuma conversa ainda</h4>
-                            <p
-                                style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 8px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                                As conversas de DM aparecerão aqui quando você usar a extensão para:
-                            </p>
-                            <ul
-                                style="color: rgba(255,255,255,0.5); font-size: 0.85rem; text-align: left; display: inline-block; margin: 15px 0;">
-                                <li style="margin-bottom: 8px;">Enviar mensagens automáticas de boas-vindas</li>
-                                <li style="margin-bottom: 8px;">Responder stories com automação</li>
-                                <li>Extrair leads de perfis ou hashtags</li>
-                            </ul>
-                            <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin: 20px 0 0;">
-                                💡 Dica: Ative a extensão no Instagram e inicie uma automação de DM
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preview de conversa (quando selecionar uma) -->
-                <div class="eio-card" style="margin-top: 20px; display: none;" id="conversationPreview">
-                    <div class="eio-card-header">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <img id="conversationAvatar" src=""
-                                style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid #6246ea;">
+                <!-- TAB 1: CONVERSAS -->
+                <div class="eio-messages-content" data-mcontent="conversations" style="margin-top: 20px;">
+                    <!-- Aviso sobre funcionamento -->
+                    <div class="eio-card"
+                        style="background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
+                        <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
+                            <div style="font-size: 2rem;">💬</div>
                             <div>
-                                <h3 id="conversationName" style="margin: 0;">@username</h3>
-                                <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);"
-                                    id="conversationStatus">Online</span>
+                                <h4 style="color: #fff; margin: 0 0 8px;">Como funciona a Central de Mensagens</h4>
+                                <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
+                                    Quando você usa a extensão E.I.O para extrair leads ou enviar DMs automáticas,
+                                    todas as conversas são sincronizadas aqui para você visualizar e responder.
+                                </p>
                             </div>
                         </div>
-                        <button class="eio-btn eio-btn-ghost eio-btn-sm"
-                            onclick="document.getElementById('conversationPreview').style.display='none'">
-                            Fechar
-                        </button>
                     </div>
-                    <div id="conversationMessages" style="padding: 20px; max-height: 400px; overflow-y: auto;">
-                        <!-- Mensagens serão renderizadas aqui -->
+
+                    <!-- Lista de conversas -->
+                    <div class="eio-card" style="margin-top: 20px;">
+                        <div class="eio-card-header">
+                            <div>
+                                <h3>Conversas</h3>
+                                <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                                    <span id="messagesCount">0</span> conversas
+                                </p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" class="eio-input" placeholder="Buscar por @..."
+                                    style="width: 200px; padding: 8px 12px;">
+                            </div>
+                        </div>
+                        <div id="conversationsList" style="padding: 20px;">
+                            <div style="text-align: center; padding: 40px 20px;">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none"
+                                    stroke="rgba(255,255,255,0.2)" stroke-width="1.5" style="margin-bottom: 15px;">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <p style="color: rgba(255,255,255,0.5); margin: 0 0 10px;">Nenhuma conversa ainda</p>
+                                <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin: 0;">
+                                    Use a extensão para enviar DMs e elas aparecerão aqui
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
-                        <input type="text" class="eio-input" placeholder="Digite sua resposta..."
-                            style="flex: 1; padding: 12px;" id="replyInput">
-                        <button class="eio-btn eio-btn-primary" id="btnSendReply">
-                            Enviar
-                        </button>
+                </div>
+
+                <!-- TAB 2: SEQUÊNCIAS DE FOLLOW-UP -->
+                <div class="eio-messages-content" data-mcontent="sequences" style="margin-top: 20px; display: none;">
+                    <div class="eio-card" style="border: 2px solid #4CAF50;">
+                        <div class="eio-card-header">
+                            <div>
+                                <h3>📧 Sequências de Follow-up Automático</h3>
+                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                    Crie sequências de mensagens automáticas ao longo do tempo
+                                </p>
+                            </div>
+                            <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
+                                <div class="eio-toggle" id="toggleSequences"
+                                    style="width: 50px; height: 26px; background: #4CAF50; border-radius: 13px; position: relative; cursor: pointer;">
+                                    <div
+                                        style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sequência Boas-vindas -->
+                        <div style="margin-top: 25px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="color: #4CAF50; margin: 0;">🎉 Sequência "Boas-vindas"</h4>
+                                <span
+                                    style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Ativa</span>
+                            </div>
+
+                            <div id="sequenceSteps" style="display: grid; gap: 15px;">
+                                <!-- Dia 0 -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <span
+                                            style="background: #4CAF50; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">DIA
+                                            0</span>
+                                        <span
+                                            style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">Imediatamente</span>
+                                    </div>
+                                    <textarea class="eio-input sequence-message" rows="3"
+                                        style="width: 100%; padding: 12px;" data-day="0">Olá {primeiro_nome}! 👋 Vi que você se interessou pelo nosso conteúdo. Seja muito bem-vindo(a)! 🚀
+
+Quer saber mais sobre como podemos te ajudar?</textarea>
+                                </div>
+
+                                <!-- Dia 2 -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <span
+                                            style="background: #FF9800; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">DIA
+                                            2</span>
+                                        <span style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">Após 2
+                                            dias</span>
+                                    </div>
+                                    <textarea class="eio-input sequence-message" rows="3"
+                                        style="width: 100%; padding: 12px;" data-day="2">Oi de novo, {primeiro_nome}! 😊
+
+Preparei um conteúdo exclusivo pra você. Dá uma olhada no nosso último post sobre {ultimo_post}!
+
+O que achou?</textarea>
+                                </div>
+
+                                <!-- Dia 5 -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <span
+                                            style="background: #F44336; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">DIA
+                                            5</span>
+                                        <span style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">Após 5
+                                            dias</span>
+                                    </div>
+                                    <textarea class="eio-input sequence-message" rows="3"
+                                        style="width: 100%; padding: 12px;" data-day="5">{hora_do_dia}, {primeiro_nome}! 👋
+
+Última chance! 🔥 Temos uma oferta especial que vai acabar em breve.
+
+Posso te contar mais? É só responder essa mensagem!</textarea>
+                                </div>
+                            </div>
+
+                            <button class="eio-btn eio-btn-ghost" id="btnAddSequenceStep" style="margin-top: 15px;">+
+                                Adicionar etapa</button>
+                        </div>
+
+                        <!-- Condições de parada -->
+                        <div
+                            style="margin-top: 25px; padding: 20px; background: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.2); border-radius: 12px;">
+                            <h4 style="color: #F44336; margin: 0 0 15px;">⏸️ Parar sequência se:</h4>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;">
+                                    <input type="checkbox" checked
+                                        style="width: 18px; height: 18px; accent-color: #F44336;"> Usuário responder a
+                                    mensagem
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;">
+                                    <input type="checkbox" checked
+                                        style="width: 18px; height: 18px; accent-color: #F44336;"> Usuário deixar de
+                                    seguir
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;">
+                                    <input type="checkbox" checked
+                                        style="width: 18px; height: 18px; accent-color: #F44336;"> Usuário pedir para
+                                    parar (palavras-chave: "parar", "stop", "não quero")
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                            <button class="eio-btn eio-btn-primary" id="btnSaveSequences">💾 Salvar Sequências</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: RESPOSTAS RÁPIDAS COM VARIÁVEIS -->
+                <div class="eio-messages-content" data-mcontent="quickreplies" style="margin-top: 20px; display: none;">
+                    <div class="eio-card" style="border: 2px solid #2196F3;">
+                        <div class="eio-card-header">
+                            <div>
+                                <h3>⚡ Respostas Rápidas com Variáveis</h3>
+                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                    Templates de mensagem que se adaptam automaticamente
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Variáveis disponíveis -->
+                        <div
+                            style="margin-top: 25px; padding: 20px; background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 12px;">
+                            <h4 style="color: #2196F3; margin: 0 0 15px;">📝 Variáveis Disponíveis</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #4CAF50;">{primeiro_nome}</code>
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #FF9800;">{hora_do_dia}</code>
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #9C27B0;">{ultimo_post}</code>
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #F44336;">{tempo_seguindo}</code>
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #00BCD4;">{username}</code>
+                                <code
+                                    style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px; color: #E91E63;">{seguidores}</code>
+                            </div>
+                            <p style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 10px;">
+                                💡 Clique em uma variável para copiar
+                            </p>
+                        </div>
+
+                        <!-- Templates de respostas -->
+                        <div style="margin-top: 25px;">
+                            <h4 style="color: #fff; margin: 0 0 15px;">💬 Seus Templates</h4>
+                            <div id="quickReplyTemplates" style="display: grid; gap: 15px;">
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <input type="text" class="eio-input" value="Interesse em Produto"
+                                            style="background: transparent; border: none; color: #fff; font-weight: 600; padding: 0;">
+                                        <button class="eio-btn eio-btn-ghost eio-btn-sm"
+                                            style="color: #F44336;">🗑️</button>
+                                    </div>
+                                    <textarea class="eio-input quick-template" rows="4"
+                                        style="width: 100%; padding: 12px;">Olá {primeiro_nome}! 👋 
+
+Vi que você curtiu nosso post sobre {ultimo_post}. 
+
+Quer saber mais sobre {produto}? Posso te explicar melhor!</textarea>
+                                </div>
+
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <input type="text" class="eio-input" value="Agradecimento"
+                                            style="background: transparent; border: none; color: #fff; font-weight: 600; padding: 0;">
+                                        <button class="eio-btn eio-btn-ghost eio-btn-sm"
+                                            style="color: #F44336;">🗑️</button>
+                                    </div>
+                                    <textarea class="eio-input quick-template" rows="4"
+                                        style="width: 100%; padding: 12px;">{hora_do_dia}, {primeiro_nome}! 🙏
+
+Muito obrigado por estar com a gente há {tempo_seguindo}! 
+
+Significa muito pra nós ter você aqui ❤️</textarea>
+                                </div>
+                            </div>
+                            <button class="eio-btn eio-btn-ghost" id="btnAddQuickReply" style="margin-top: 15px;">+ Novo
+                                Template</button>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                            <button class="eio-btn eio-btn-primary" id="btnSaveQuickReplies">💾 Salvar
+                                Templates</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: AUTO-RESPONDER STORIES ⭐ -->
+                <div class="eio-messages-content" data-mcontent="storyreply" style="margin-top: 20px; display: none;">
+                    <div class="eio-card" style="border: 2px solid #E91E63;">
+                        <div class="eio-card-header">
+                            <div>
+                                <h3>📸 Auto-Responder Stories ⭐ DIFERENCIAL</h3>
+                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                    Envie DMs automáticas quando alguém postar story com menção, hashtag ou localização
+                                </p>
+                            </div>
+                            <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
+                                <div class="eio-toggle" id="toggleStoryReply"
+                                    style="width: 50px; height: 26px; background: #E91E63; border-radius: 13px; position: relative; cursor: pointer;">
+                                    <div
+                                        style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gatilhos -->
+                        <div style="margin-top: 25px;">
+                            <h4 style="color: #fff; margin: 0 0 15px;">🎯 Gatilhos de Story</h4>
+                            <div style="display: grid; gap: 15px;">
+                                <!-- Menção -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                        <input type="checkbox" checked
+                                            style="width: 20px; height: 20px; accent-color: #E91E63;">
+                                        <span style="font-size: 1.5rem;">@</span>
+                                        <div>
+                                            <div style="color: #E91E63; font-weight: 600;">Menção ao seu @</div>
+                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Quando alguém
+                                                mencionar você no story</div>
+                                        </div>
+                                    </div>
+                                    <textarea class="eio-input story-response" rows="2"
+                                        style="width: 100%; padding: 12px;"
+                                        data-trigger="mention">Opa! Vi que você me mencionou no story! 🔥 Adorei! Muito obrigado pelo carinho ❤️</textarea>
+                                </div>
+
+                                <!-- Hashtag -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                        <input type="checkbox"
+                                            style="width: 20px; height: 20px; accent-color: #E91E63;">
+                                        <span style="font-size: 1.5rem;">#️⃣</span>
+                                        <div>
+                                            <div style="color: #9C27B0; font-weight: 600;">Hashtag específica</div>
+                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Quando usar
+                                                uma hashtag monitorada</div>
+                                        </div>
+                                    </div>
+                                    <input type="text" class="eio-input"
+                                        placeholder="Digite as hashtags (separadas por vírgula)"
+                                        style="width: 100%; padding: 12px; margin-bottom: 10px;" id="storyHashtags"
+                                        value="#suamarca, #seuproduto">
+                                    <textarea class="eio-input story-response" rows="2"
+                                        style="width: 100%; padding: 12px;"
+                                        data-trigger="hashtag">Ei! Vi que você usou nossa hashtag! 🚀 Adoramos ver! Quer participar de algo especial?</textarea>
+                                </div>
+
+                                <!-- Localização -->
+                                <div
+                                    style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                        <input type="checkbox"
+                                            style="width: 20px; height: 20px; accent-color: #E91E63;">
+                                        <span style="font-size: 1.5rem;">📍</span>
+                                        <div>
+                                            <div style="color: #FF9800; font-weight: 600;">Localização específica</div>
+                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Quando marcar
+                                                uma localização monitorada</div>
+                                        </div>
+                                    </div>
+                                    <input type="text" class="eio-input"
+                                        placeholder="Digite as localizações (separadas por vírgula)"
+                                        style="width: 100%; padding: 12px; margin-bottom: 10px;" id="storyLocations"
+                                        value="Sua Loja, Seu Escritório">
+                                    <textarea class="eio-input story-response" rows="2"
+                                        style="width: 100%; padding: 12px;"
+                                        data-trigger="location">Que legal que você passou por aqui! 📍 Espero que tenha gostado! Conta pra gente como foi 😊</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dica -->
+                        <div
+                            style="margin-top: 25px; padding: 15px; background: rgba(233, 30, 99, 0.1); border-radius: 8px;">
+                            <p style="color: #E91E63; font-size: 0.9rem; margin: 0;">
+                                ⭐ <strong>Diferencial:</strong> Esta função aumenta muito o engajamento! Responder
+                                stories automaticamente gera conexão e confiança.
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                            <button class="eio-btn eio-btn-primary" id="btnSaveStoryReply">💾 Salvar
+                                Configurações</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            style="width: 200px; padding: 8px 12px; font-size: 0.9rem;" id="searchMessages">
+            <select class="eio-input" style="padding: 8px 12px; font-size: 0.9rem;" id="filterMessages">
+                <option value="all">Todas</option>
+                <option value="unread">Não lidas</option>
+                <option value="replied">Respondidas</option>
+            </select>
+        </div>
+        </div>
+        <div class="eio-messages-list" id="messagesList" style="margin-top: 10px;">
+            <!-- Estado vazio por padrão -->
+            <div class="eio-empty-messages" style="padding: 60px 20px; text-align: center;">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1" style="margin-bottom: 20px;">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 12px;">Nenhuma conversa ainda</h4>
+                <p
+                    style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 8px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    As conversas de DM aparecerão aqui quando você usar a extensão para:
+                </p>
+                <ul
+                    style="color: rgba(255,255,255,0.5); font-size: 0.85rem; text-align: left; display: inline-block; margin: 15px 0;">
+                    <li style="margin-bottom: 8px;">Enviar mensagens automáticas de boas-vindas</li>
+                    <li style="margin-bottom: 8px;">Responder stories com automação</li>
+                    <li>Extrair leads de perfis ou hashtags</li>
+                </ul>
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin: 20px 0 0;">
+                    💡 Dica: Ative a extensão no Instagram e inicie uma automação de DM
+                </p>
+            </div>
+        </div>
+        </div>
+
+        <!-- Preview de conversa (quando selecionar uma) -->
+        <div class="eio-card" style="margin-top: 20px; display: none;" id="conversationPreview">
+            <div class="eio-card-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img id="conversationAvatar" src=""
+                        style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid #6246ea;">
+                    <div>
+                        <h3 id="conversationName" style="margin: 0;">@username</h3>
+                        <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);"
+                            id="conversationStatus">Online</span>
+                    </div>
+                </div>
+                <button class="eio-btn eio-btn-ghost eio-btn-sm"
+                    onclick="document.getElementById('conversationPreview').style.display='none'">
+                    Fechar
+                </button>
+            </div>
+            <div id="conversationMessages" style="padding: 20px; max-height: 400px; overflow-y: auto;">
+                <!-- Mensagens serão renderizadas aqui -->
+            </div>
+            <div style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+                <input type="text" class="eio-input" placeholder="Digite sua resposta..."
+                    style="flex: 1; padding: 12px;" id="replyInput">
+                <button class="eio-btn eio-btn-primary" id="btnSendReply">
+                    Enviar
+                </button>
+            </div>
+        </div>
+        </div>
+
+        <!-- Accounts Section (New) -->
+        <div class="eio-content-section" data-section="accounts">
+            <div class="eio-section-header-dash">
+                <h2 class="eio-section-title-dash">Contas Instagram</h2>
+                <p>Cadastre até <strong>2 perfis</strong> do Instagram para fazer login na extensão</p>
+            </div>
+
+            <!-- Aviso importante sobre o sistema de login -->
+            <div class="eio-card"
+                style="margin-top: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
+                <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
+                    <div style="font-size: 2rem;">💡</div>
+                    <div>
+                        <h4 style="color: #fff; margin: 0 0 8px;">Como funciona o login na extensão</h4>
+                        <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
+                            Para usar a extensão E.I.O, você deve cadastrar seu <strong>@ do Instagram</strong>
+                            aqui
+                            no dashboard.
+                            Na extensão, você fará login usando apenas o <strong>@</strong> cadastrado - sem
+                            precisar de email ou senha.
+                        </p>
+                        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 0.85rem;">
+                            ⚠️ Limite: máximo de <strong>2 perfis</strong> por conta. Isso evita o
+                            compartilhamento
+                            indevido da extensão.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Accounts Section (New) -->
-            <div class="eio-content-section" data-section="accounts">
-                <div class="eio-section-header-dash">
-                    <h2 class="eio-section-title-dash">Contas Instagram</h2>
-                    <p>Cadastre até <strong>2 perfis</strong> do Instagram para fazer login na extensão</p>
-                </div>
-
-                <!-- Aviso importante sobre o sistema de login -->
-                <div class="eio-card"
-                    style="margin-top: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
-                    <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
-                        <div style="font-size: 2rem;">💡</div>
-                        <div>
-                            <h4 style="color: #fff; margin: 0 0 8px;">Como funciona o login na extensão</h4>
-                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
-                                Para usar a extensão E.I.O, você deve cadastrar seu <strong>@ do Instagram</strong>
-                                aqui
-                                no dashboard.
-                                Na extensão, você fará login usando apenas o <strong>@</strong> cadastrado - sem
-                                precisar de email ou senha.
-                            </p>
-                            <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 0.85rem;">
-                                ⚠️ Limite: máximo de <strong>2 perfis</strong> por conta. Isso evita o
-                                compartilhamento
-                                indevido da extensão.
-                            </p>
-                        </div>
+            <div class="eio-card" style="margin-top: 20px;">
+                <div class="eio-card-header">
+                    <div>
+                        <h3>Contas Cadastradas</h3>
+                        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                            <span id="accountsCount">0</span>/2 contas utilizadas
+                        </p>
                     </div>
+                    <button class="eio-btn eio-btn-primary eio-btn-sm" id="btnConnectAccount">
+                        + Adicionar Conta
+                    </button>
                 </div>
-
-                <div class="eio-card" style="margin-top: 20px;">
-                    <div class="eio-card-header">
-                        <div>
-                            <h3>Contas Cadastradas</h3>
-                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
-                                <span id="accountsCount">0</span>/2 contas utilizadas
-                            </p>
-                        </div>
-                        <button class="eio-btn eio-btn-primary eio-btn-sm" id="btnConnectAccount">
-                            + Adicionar Conta
+                <div class="eio-account-list" id="accountsList" style="margin-top: 20px;">
+                    <!-- Estado vazio por padrão -->
+                    <div class="eio-empty-accounts" style="padding: 50px 20px; text-align: center;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)"
+                            stroke-width="1.5" style="margin-bottom: 20px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M16 12H8"></path>
+                            <path d="M12 8v8"></path>
+                        </svg>
+                        <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta cadastrada
+                        </h4>
+                        <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 20px;">
+                            Cadastre seu @ do Instagram para poder fazer login na extensão
+                        </p>
+                        <button class="eio-btn eio-btn-primary" id="btnAddFirstAccount">
+                            + Cadastrar meu primeiro @
                         </button>
-                    </div>
-                    <div class="eio-account-list" id="accountsList" style="margin-top: 20px;">
-                        <!-- Estado vazio por padrão -->
-                        <div class="eio-empty-accounts" style="padding: 50px 20px; text-align: center;">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)"
-                                stroke-width="1.5" style="margin-bottom: 20px;">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M16 12H8"></path>
-                                <path d="M12 8v8"></path>
-                            </svg>
-                            <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta cadastrada
-                            </h4>
-                            <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 20px;">
-                                Cadastre seu @ do Instagram para poder fazer login na extensão
-                            </p>
-                            <button class="eio-btn eio-btn-primary" id="btnAddFirstAccount">
-                                + Cadastrar meu primeiro @
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
         </div>
 
