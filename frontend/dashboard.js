@@ -1141,6 +1141,7 @@ window.processTemplate = function (template, userData) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initAnalyticsTabs();
+    initAnalyticsToggles();
     initAnalyticsSaveButtons();
     initCSVUpload();
     loadAnalyticsConfigs();
@@ -1177,6 +1178,59 @@ function initAnalyticsTabs() {
             });
         });
     });
+}
+
+// Toggle switches for analytics sections
+function initAnalyticsToggles() {
+    const toggleIds = ['toggleTiming', 'toggleProtection', 'toggleHotleads'];
+
+    toggleIds.forEach(id => {
+        const toggle = document.getElementById(id);
+        if (!toggle) return;
+
+        // Load saved state
+        const savedState = localStorage.getItem(`eio_${id}_enabled`);
+        let isActive = savedState !== 'false'; // Default to true
+
+        // Set initial visual state
+        updateToggleVisual(toggle, isActive);
+
+        toggle.addEventListener('click', () => {
+            isActive = !isActive;
+            updateToggleVisual(toggle, isActive);
+            localStorage.setItem(`eio_${id}_enabled`, isActive.toString());
+
+            // Show feedback
+            const statusText = isActive ? 'ativado' : 'desativado';
+            const featureName = {
+                'toggleTiming': 'Engajamento por Horário',
+                'toggleProtection': 'Descanso Inteligente',
+                'toggleHotleads': 'Detector de Leads Quentes'
+            }[id];
+
+            // Visual feedback - brief color flash
+            toggle.style.transition = 'all 0.3s ease';
+            console.log(`${featureName} ${statusText}`);
+        });
+    });
+}
+
+function updateToggleVisual(toggle, isActive) {
+    const dot = toggle.querySelector('div');
+    if (isActive) {
+        toggle.style.background = toggle.id === 'toggleProtection' ? '#F44336' :
+            toggle.id === 'toggleHotleads' ? '#FF5722' : '#6246ea';
+        if (dot) {
+            dot.style.right = '2px';
+            dot.style.left = 'auto';
+        }
+    } else {
+        toggle.style.background = 'rgba(255,255,255,0.2)';
+        if (dot) {
+            dot.style.left = '2px';
+            dot.style.right = 'auto';
+        }
+    }
 }
 
 // Analytics save buttons
