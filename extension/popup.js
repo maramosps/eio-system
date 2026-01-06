@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             console.warn('Executando fora do contexto de extensão. Usando modo de demonstração.');
             // Simular estado para preview
-            document.getElementById('extractionResults').style.display = 'none';
+            const extractionResults = document.getElementById('extractionResults');
+            if (extractionResults) extractionResults.style.display = 'none';
         }
     } catch (e) {
         console.error('Erro na inicialização segura:', e);
@@ -82,6 +83,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeButtons();
     updateUI();
 
+    // Atualizar UIs dinâmicas
+    updateStatsUI();
+    updateHistoryUI();
+
     // Inicializar Flow Builder integrado
     setTimeout(() => {
         if (typeof initializeFlowBuilder === 'function') {
@@ -89,9 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 500);
 });
-
 /**
- * Autodetectar o perfil ou post atual
+ * Autodetectar o perfil ou post atual e exibir card de perfil
  */
 async function autoDetectTarget() {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
@@ -101,20 +105,53 @@ async function autoDetectTarget() {
         if (tabs[0] && tabs[0].url.includes('instagram.com')) {
             const url = tabs[0].url;
             const targetInput = document.getElementById('extractTarget');
+            const targetProfile = document.getElementById('targetProfile');
             const sourceSelect = document.getElementById('extractSource');
+            const profileCard = document.getElementById('currentProfileCard');
 
             if (url.includes('/p/') || url.includes('/reels/')) {
                 if (targetInput) targetInput.value = url;
                 if (sourceSelect) sourceSelect.value = 'likes';
+                if (profileCard) profileCard.style.display = 'none';
             } else {
                 const profileMatch = url.match(/instagram\.com\/([^/?#&]+)/);
-                if (profileMatch && !['explore', 'reels', 'direct', 'stories'].includes(profileMatch[1])) {
-                    if (targetInput) targetInput.value = `@${profileMatch[1]}`;
+                if (profileMatch && !['explore', 'reels', 'direct', 'stories', 'accounts'].includes(profileMatch[1])) {
+                    const username = profileMatch[1];
+                    if (targetInput) targetInput.value = `@${username}`;
+                    if (targetProfile) targetProfile.value = `@${username}`;
                     if (sourceSelect) sourceSelect.value = 'followers';
+
+                    // Atualizar card de perfil
+                    updateCurrentProfileCard(username);
+
+                    // Salvar perfil atual no estado
+                    extensionState.currentProfile = username;
+                    saveExtensionState();
+                } else {
+                    if (profileCard) profileCard.style.display = 'none';
                 }
             }
         }
     } catch (e) { console.error('AutoDetect failed', e); }
+}
+
+/**
+ * Atualizar card de perfil atual
+ */
+function updateCurrentProfileCard(username) {
+    const profileCard = document.getElementById('currentProfileCard');
+    const profileName = document.getElementById('currentProfileName');
+    const profileUsername = document.getElementById('currentProfileUsername');
+
+    if (profileCard) {
+        profileCard.style.display = 'flex';
+    }
+    if (profileName) {
+        profileName.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+    }
+    if (profileUsername) {
+        profileUsername.textContent = `@${username}`;
+    }
 }
 
 // Carregar estado salvo
@@ -303,6 +340,247 @@ function initializeButtons() {
             window.open('../frontend/flow-builder.html', '_blank');
         }
     });
+
+    // ═══════════════════════════════════════════════════════════
+    // BOTÃO POP-OUT - Destacar janela fixa na tela
+    // ═══════════════════════════════════════════════════════════
+    safeAddEventListener('popoutBtn', 'click', () => {
+        if (typeof chrome !== 'undefined' && chrome.windows) {
+            chrome.windows.create({
+                url: chrome.runtime.getURL('popup.html'),
+                type: 'popup',
+                width: 450,
+                height: 650,
+                top: 50,
+                left: screen.width - 500
+            });
+            // Fechar popup atual
+            window.close();
+        } else {
+            showToast('Pop-out disponível apenas na extensão', 'warning');
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // AÇÕES RÁPIDAS
+    // ═══════════════════════════════════════════════════════════
+    safeAddEventListener('quickFollowBtn', 'click', async () => {
+        showToast('🔄 Seguindo perfil...', 'info');
+        await executeQuickAction('follow');
+    });
+
+    safeAddEventListener('quickLikeBtn', 'click', async () => {
+        showToast('🔄 Curtindo posts...', 'info');
+        await executeQuickAction('like');
+    });
+
+    safeAddEventListener('quickDmBtn', 'click', async () => {
+        showToast('💬 Abrindo DM...', 'info');
+        await executeQuickAction('dm');
+    });
+
+    safeAddEventListener('quickExtractBtn', 'click', () => {
+        // Mudar para aba Assistente e iniciar
+        document.querySelector('[data-tab="assistant"]')?.click();
+        showToast('📥 Vá para a aba Assistente para extrair', 'info');
+    });
+
+    // Limpar histórico
+    safeAddEventListener('clearHistoryBtn', 'click', () => {
+        extensionState.actionHistory = [];
+        saveExtensionState();
+        updateHistoryUI();
+        showToast('🗑️ Histórico limpo', 'success');
+    });
+}
+
+/**
+ * Executar ação rápida
+ */
+async function executeQuickAction(actionType) {
+    if (typeof chrome === 'undefined' || !chrome.tabs) {
+        showToast('Execute no Instagram', 'error');
+        return;
+    }
+
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs[0] || !tabs[0].url.includes('instagram.com')) {
+            showToast('Abra o Instagram primeiro', 'error');
+            return;
+        }
+
+        const result = await chrome.tabs.sendMessage(tabs[0].id, {
+            action: 'execute',
+            payload: { type: actionType }
+        });
+
+        if (result && result.success) {
+            addToHistory(actionType, extensionState.currentProfile || 'perfil');
+            incrementStat(actionType);
+            showToast(`✅ ${getActionLabel(actionType)} realizado!`, 'success');
+        } else {
+            showToast(`❌ Falha ao ${getActionLabel(actionType).toLowerCase()}`, 'error');
+        }
+    } catch (e) {
+        console.error('Quick action error:', e);
+        showToast('⚠️ Recarregue a página do Instagram', 'error');
+    }
+}
+
+/**
+ * Adicionar ação ao histórico
+ */
+function addToHistory(actionType, target) {
+    if (!extensionState.actionHistory) {
+        extensionState.actionHistory = [];
+    }
+
+    extensionState.actionHistory.unshift({
+        type: actionType,
+        target: target,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    });
+
+    // Manter apenas últimas 20 ações
+    if (extensionState.actionHistory.length > 20) {
+        extensionState.actionHistory.pop();
+    }
+
+    saveExtensionState();
+    updateHistoryUI();
+}
+
+/**
+ * Atualizar UI do histórico
+ */
+function updateHistoryUI() {
+    const container = document.getElementById('actionHistory');
+    if (!container) return;
+
+    if (!extensionState.actionHistory || extensionState.actionHistory.length === 0) {
+        container.innerHTML = `
+            <div class="eio-history-empty">
+                <span>Nenhuma ação realizada ainda</span>
+            </div>
+        `;
+        return;
+    }
+
+    const iconMap = {
+        'follow': '👤',
+        'like': '❤️',
+        'comment': '💬',
+        'dm': '✉️'
+    };
+
+    container.innerHTML = extensionState.actionHistory.map(item => `
+        <div class="eio-history-item">
+            <div class="eio-history-icon ${item.type}">${iconMap[item.type] || '📌'}</div>
+            <span class="eio-history-text">${getActionLabel(item.type)} @${item.target}</span>
+            <span class="eio-history-time">${item.time}</span>
+        </div>
+    `).join('');
+}
+
+/**
+ * Incrementar estatística
+ */
+function incrementStat(actionType) {
+    const today = new Date().toDateString();
+    if (extensionState.statsDate !== today) {
+        extensionState.stats = { followsToday: 0, likesToday: 0, commentsToday: 0, dmsToday: 0 };
+        extensionState.statsDate = today;
+    }
+
+    switch (actionType) {
+        case 'follow': extensionState.stats.followsToday++; break;
+        case 'like': extensionState.stats.likesToday++; break;
+        case 'comment': extensionState.stats.commentsToday++; break;
+        case 'dm': extensionState.stats.dmsToday = (extensionState.stats.dmsToday || 0) + 1; break;
+    }
+
+    updateStatsUI();
+    saveExtensionState();
+}
+
+/**
+ * Atualizar UI de estatísticas
+ */
+function updateStatsUI() {
+    const follows = document.getElementById('followsToday');
+    const likes = document.getElementById('likesToday');
+    const comments = document.getElementById('commentsToday');
+    const dms = document.getElementById('dmsToday');
+    const actionsToday = document.getElementById('actionsToday');
+
+    if (follows) follows.textContent = extensionState.stats?.followsToday || 0;
+    if (likes) likes.textContent = extensionState.stats?.likesToday || 0;
+    if (comments) comments.textContent = extensionState.stats?.commentsToday || 0;
+    if (dms) dms.textContent = extensionState.stats?.dmsToday || 0;
+
+    const total = (extensionState.stats?.followsToday || 0) +
+        (extensionState.stats?.likesToday || 0) +
+        (extensionState.stats?.commentsToday || 0) +
+        (extensionState.stats?.dmsToday || 0);
+    if (actionsToday) actionsToday.textContent = total;
+}
+
+/**
+ * Obter label da ação
+ */
+function getActionLabel(actionType) {
+    const labels = {
+        'follow': 'Seguido',
+        'like': 'Curtido',
+        'comment': 'Comentado',
+        'dm': 'DM enviado'
+    };
+    return labels[actionType] || actionType;
+}
+
+/**
+ * Mostrar toast de notificação
+ */
+function showToast(message, type = 'info') {
+    let toast = document.getElementById('eio-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'eio-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+        `;
+        document.body.appendChild(toast);
+    }
+
+    const colors = {
+        'success': { bg: 'rgba(76, 175, 80, 0.95)', color: 'white' },
+        'error': { bg: 'rgba(244, 67, 54, 0.95)', color: 'white' },
+        'warning': { bg: 'rgba(255, 152, 0, 0.95)', color: 'white' },
+        'info': { bg: 'rgba(33, 150, 243, 0.95)', color: 'white' }
+    };
+
+    const style = colors[type] || colors.info;
+    toast.style.background = style.bg;
+    toast.style.color = style.color;
+    toast.textContent = message;
+    toast.style.opacity = '1';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 2500);
 }
 
 /**

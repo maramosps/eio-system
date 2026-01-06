@@ -21,20 +21,31 @@
                     <span class="eio-subtitle">Decole seu Instagram</span>
                 </div>
             </div>
-            <button class="eio-icon-btn" id="settingsBtn" title="Configurações">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
-                </svg>
-            </button>
+            <div class="eio-header-actions">
+                <button class="eio-icon-btn" id="popoutBtn" title="Destacar Janela (Fixa na Tela)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+                <button class="eio-icon-btn" id="settingsBtn" title="Configurações">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Barra de Status Conectado -->
         <div class="eio-connection-bar">
             <div class="eio-status-dot"></div>
             <span class="eio-connection-text">Conectado ao Instagram</span>
+            <div class="eio-quick-stats">
+                <span class="eio-mini-stat" title="Ações Hoje"><span id="actionsToday">0</span> ações</span>
+            </div>
         </div>
 
         <!-- Navegação -->
@@ -75,24 +86,88 @@
         <main class="eio-main-scroll">
             <!-- Aba Dashboard -->
             <div class="eio-tab-content eio-tab-content-active" id="dashboardTab">
-                <div class="eio-stats-grid">
-                    <div class="eio-stat-item">
-                        <span class="eio-stat-val" id="followsToday">0</span>
-                        <span class="eio-stat-label">Seguidores</span>
+                <!-- Perfil Atual Detectado -->
+                <div class="eio-current-profile" id="currentProfileCard" style="display: none;">
+                    <div class="eio-profile-avatar">
+                        <img id="currentProfilePic" src=""
+                            onerror="this.parentElement.innerHTML='<div class=\'eio-avatar-placeholder\'>@</div>'">
                     </div>
-                    <div class="eio-stat-item">
-                        <span class="eio-stat-val" id="likesToday">0</span>
-                        <span class="eio-stat-label">Curtidas</span>
+                    <div class="eio-profile-info">
+                        <span class="eio-profile-name" id="currentProfileName">Perfil Detectado</span>
+                        <span class="eio-profile-username" id="currentProfileUsername">@username</span>
                     </div>
-                    <div class="eio-stat-item">
-                        <span class="eio-stat-val" id="commentsToday">0</span>
-                        <span class="eio-stat-label">Comentários</span>
+                    <div class="eio-profile-stats">
+                        <span id="currentProfileFollowers">-</span>
                     </div>
                 </div>
 
+                <!-- Estatísticas do Dia -->
+                <div class="eio-stats-grid">
+                    <div class="eio-stat-item eio-stat-follows">
+                        <span class="eio-stat-val" id="followsToday">0</span>
+                        <span class="eio-stat-label">Seguidos</span>
+                    </div>
+                    <div class="eio-stat-item eio-stat-likes">
+                        <span class="eio-stat-val" id="likesToday">0</span>
+                        <span class="eio-stat-label">Curtidas</span>
+                    </div>
+                    <div class="eio-stat-item eio-stat-comments">
+                        <span class="eio-stat-val" id="commentsToday">0</span>
+                        <span class="eio-stat-label">Comentários</span>
+                    </div>
+                    <div class="eio-stat-item eio-stat-dms">
+                        <span class="eio-stat-val" id="dmsToday">0</span>
+                        <span class="eio-stat-label">DMs</span>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
                 <div class="eio-section">
                     <div class="eio-section-header">
-                        <h3 class="eio-section-title">Controle Geral</h3>
+                        <h3 class="eio-section-title">⚡ Ações Rápidas</h3>
+                    </div>
+                    <div class="eio-quick-actions">
+                        <button class="eio-quick-btn" id="quickFollowBtn" title="Seguir perfil atual">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span>Seguir</span>
+                        </button>
+                        <button class="eio-quick-btn" id="quickLikeBtn" title="Curtir posts recentes">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                            <span>Curtir</span>
+                        </button>
+                        <button class="eio-quick-btn" id="quickDmBtn" title="Enviar DM">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>DM</span>
+                        </button>
+                        <button class="eio-quick-btn" id="quickExtractBtn" title="Extrair leads deste perfil">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span>Extrair</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controle Geral -->
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">🤖 Automação</h3>
                     </div>
                     <div style="display: flex; gap: 12px;">
                         <button class="eio-btn eio-btn-primary" style="flex: 1;" id="startAutomationBtn">
@@ -107,6 +182,19 @@
                             </svg>
                             Pausar
                         </button>
+                    </div>
+                </div>
+
+                <!-- Histórico Recente -->
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">📋 Últimas Ações</h3>
+                        <button class="eio-btn eio-btn-ghost eio-btn-mini" id="clearHistoryBtn">Limpar</button>
+                    </div>
+                    <div class="eio-history-list" id="actionHistory">
+                        <div class="eio-history-empty">
+                            <span>Nenhuma ação realizada ainda</span>
+                        </div>
                     </div>
                 </div>
             </div>
