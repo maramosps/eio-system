@@ -853,3 +853,284 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay to ensure other scripts have loaded
     setTimeout(initInstagramAccountsManagement, 500);
 });
+
+// ═══════════════════════════════════════════════════════════
+// AI AGENTS MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAgentTabs();
+    initAgentSaveButtons();
+    initFaqManagement();
+    initToggleSwitches();
+    loadAgentConfigs();
+});
+
+// Tab navigation for agents
+function initAgentTabs() {
+    const tabs = document.querySelectorAll('.eio-agent-tab');
+    const contents = document.querySelectorAll('.eio-agent-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.getAttribute('data-tab');
+
+            // Update tab styles
+            tabs.forEach(t => {
+                t.style.background = 'rgba(255,255,255,0.05)';
+                t.style.border = '1px solid rgba(255,255,255,0.1)';
+                t.style.color = '#aaa';
+                t.style.fontWeight = 'normal';
+            });
+            tab.style.background = '#6246ea';
+            tab.style.border = 'none';
+            tab.style.color = '#fff';
+            tab.style.fontWeight = '600';
+
+            // Show/hide content
+            contents.forEach(content => {
+                if (content.getAttribute('data-content') === targetTab) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// Toggle switches
+function initToggleSwitches() {
+    document.querySelectorAll('.eio-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const ball = toggle.querySelector('div');
+            const isActive = ball.style.right === '2px';
+
+            if (isActive) {
+                // Turn off
+                ball.style.right = 'auto';
+                ball.style.left = '2px';
+                toggle.style.background = '#333';
+            } else {
+                // Turn on
+                ball.style.left = 'auto';
+                ball.style.right = '2px';
+                // Keep original color based on toggle type
+                const colors = {
+                    'toggleAssistant': '#6246ea',
+                    'toggleQualifier': '#FF9800',
+                    'toggleFaq': '#4CAF50'
+                };
+                toggle.style.background = colors[toggle.id] || '#6246ea';
+            }
+        });
+    });
+}
+
+// Save buttons
+function initAgentSaveButtons() {
+    // Save Assistant config
+    document.getElementById('btnSaveAssistant')?.addEventListener('click', () => {
+        const config = {
+            keywordsInterest: document.getElementById('keywordsInterest')?.value || '',
+            keywordsQuestion: document.getElementById('keywordsQuestion')?.value || '',
+            keywordsComplaint: document.getElementById('keywordsComplaint')?.value || '',
+            keywordsSpam: document.getElementById('keywordsSpam')?.value || '',
+            replyInterest: document.getElementById('replyInterest')?.value || '',
+            replyQuestion: document.getElementById('replyQuestion')?.value || '',
+            replyComplaint: document.getElementById('replyComplaint')?.value || ''
+        };
+        localStorage.setItem('eio_agent_assistant', JSON.stringify(config));
+        alert('✅ Configurações do Assistente salvas!');
+    });
+
+    // Save Qualifier config
+    document.getElementById('btnSaveQualifier')?.addEventListener('click', () => {
+        const inputs = document.querySelectorAll('[data-content="qualifier"] input[type="number"]');
+        const scores = Array.from(inputs).map(i => parseInt(i.value) || 0);
+        localStorage.setItem('eio_agent_qualifier', JSON.stringify({ scores }));
+        alert('✅ Configurações do Qualificador salvas!');
+    });
+
+    // Save FAQ config
+    document.getElementById('btnSaveFaq')?.addEventListener('click', () => {
+        const faqs = [];
+        document.querySelectorAll('.faq-item').forEach(item => {
+            const triggers = item.querySelector('.faq-triggers')?.value || '';
+            const response = item.querySelector('.faq-response')?.value || '';
+            if (triggers && response) {
+                faqs.push({ triggers, response });
+            }
+        });
+        localStorage.setItem('eio_agent_faq', JSON.stringify(faqs));
+        alert('✅ Configurações do Chatbot FAQ salvas!');
+    });
+
+    // Save Templates
+    document.getElementById('btnSaveTemplates')?.addEventListener('click', () => {
+        const templates = [];
+        document.querySelectorAll('[data-content="templates"] textarea').forEach(textarea => {
+            const label = textarea.closest('div')?.querySelector('span')?.textContent || 'Template';
+            templates.push({ label, content: textarea.value });
+        });
+        localStorage.setItem('eio_agent_templates', JSON.stringify(templates));
+        alert('✅ Templates salvos!');
+    });
+}
+
+// FAQ Management
+function initFaqManagement() {
+    // Add new FAQ
+    document.getElementById('btnAddFaq')?.addEventListener('click', () => {
+        const faqList = document.getElementById('faqList');
+        const newFaq = document.createElement('div');
+        newFaq.className = 'faq-item';
+        newFaq.style.cssText = 'padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;';
+        newFaq.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <label style="color: #4CAF50; font-weight: 600; font-size: 0.9rem;">Gatilhos (palavras-chave):</label>
+                <button class="btn-remove-faq" style="background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.2rem;">×</button>
+            </div>
+            <input type="text" class="eio-input faq-triggers" placeholder="palavra1, palavra2, palavra3..." 
+                style="width: 100%; margin-bottom: 15px; padding: 10px;">
+            <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 8px;">Resposta automática:</label>
+            <textarea class="eio-input faq-response" rows="3" 
+                style="width: 100%; padding: 10px;" placeholder="Digite a resposta que será enviada quando detectar as palavras-chave..."></textarea>
+        `;
+        faqList.appendChild(newFaq);
+
+        // Add remove listener
+        newFaq.querySelector('.btn-remove-faq').addEventListener('click', () => {
+            newFaq.remove();
+        });
+    });
+
+    // Remove FAQ listeners
+    document.querySelectorAll('.btn-remove-faq').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.faq-item').remove();
+        });
+    });
+}
+
+// Load saved configs
+function loadAgentConfigs() {
+    // Load Assistant
+    try {
+        const assistantConfig = JSON.parse(localStorage.getItem('eio_agent_assistant') || '{}');
+        if (assistantConfig.keywordsInterest) document.getElementById('keywordsInterest').value = assistantConfig.keywordsInterest;
+        if (assistantConfig.keywordsQuestion) document.getElementById('keywordsQuestion').value = assistantConfig.keywordsQuestion;
+        if (assistantConfig.keywordsComplaint) document.getElementById('keywordsComplaint').value = assistantConfig.keywordsComplaint;
+        if (assistantConfig.keywordsSpam) document.getElementById('keywordsSpam').value = assistantConfig.keywordsSpam;
+        if (assistantConfig.replyInterest) document.getElementById('replyInterest').value = assistantConfig.replyInterest;
+        if (assistantConfig.replyQuestion) document.getElementById('replyQuestion').value = assistantConfig.replyQuestion;
+        if (assistantConfig.replyComplaint) document.getElementById('replyComplaint').value = assistantConfig.replyComplaint;
+    } catch (e) { console.log('No assistant config saved'); }
+
+    // Load FAQ
+    try {
+        const faqConfig = JSON.parse(localStorage.getItem('eio_agent_faq') || '[]');
+        // For now, just log - could rebuild FAQ list from saved data
+        console.log('Loaded FAQ config:', faqConfig.length, 'items');
+    } catch (e) { console.log('No FAQ config saved'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI HELPER FUNCTIONS (For extension integration)
+// ═══════════════════════════════════════════════════════════
+
+// Detect intention from message text
+window.detectIntention = function (messageText) {
+    const text = messageText.toLowerCase();
+
+    const config = JSON.parse(localStorage.getItem('eio_agent_assistant') || '{}');
+
+    const interests = (config.keywordsInterest || 'preço,valor,comprar').split(',').map(k => k.trim());
+    const questions = (config.keywordsQuestion || 'como,quando,onde').split(',').map(k => k.trim());
+    const complaints = (config.keywordsComplaint || 'problema,não funciona').split(',').map(k => k.trim());
+    const spams = (config.keywordsSpam || 'ganhe dinheiro,clique aqui').split(',').map(k => k.trim());
+
+    if (spams.some(k => text.includes(k))) return { type: 'spam', icon: '🚫', color: '#9E9E9E' };
+    if (complaints.some(k => text.includes(k))) return { type: 'complaint', icon: '😕', color: '#FF9800' };
+    if (interests.some(k => text.includes(k))) return { type: 'interest', icon: '🔥', color: '#4CAF50' };
+    if (questions.some(k => text.includes(k))) return { type: 'question', icon: '❓', color: '#2196F3' };
+
+    return { type: 'neutral', icon: '💬', color: '#aaa' };
+};
+
+// Get auto-reply based on intention
+window.getAutoReply = function (intention, userName) {
+    const config = JSON.parse(localStorage.getItem('eio_agent_assistant') || '{}');
+
+    const replies = {
+        interest: config.replyInterest || 'Obrigado pelo interesse!',
+        question: config.replyQuestion || 'Vou te ajudar com isso!',
+        complaint: config.replyComplaint || 'Sentimos muito, vamos resolver!',
+        spam: null, // Don't reply to spam
+        neutral: null
+    };
+
+    let reply = replies[intention.type];
+    if (reply && userName) {
+        reply = reply.replace(/{nome}/g, userName).replace(/{username}/g, userName);
+    }
+
+    return reply;
+};
+
+// Calculate lead score
+window.calculateLeadScore = function (leadData) {
+    const config = JSON.parse(localStorage.getItem('eio_agent_qualifier') || '{}');
+    const scores = config.scores || [2, 3, 2, 5, 3, 4]; // Default scores
+
+    let totalScore = 0;
+
+    // Followers 500-5000
+    if (leadData.followers >= 500 && leadData.followers <= 5000) totalScore += scores[0];
+    // Email in bio
+    if (leadData.bio && leadData.bio.includes('@') && leadData.bio.includes('.')) totalScore += scores[1];
+    // Recent posts
+    if (leadData.recentPosts > 0) totalScore += scores[2];
+    // Replied to DM
+    if (leadData.repliedDM) totalScore += scores[3];
+    // Business profile
+    if (leadData.isBusinessProfile) totalScore += scores[4];
+    // Fast response
+    if (leadData.responseTimeMinutes && leadData.responseTimeMinutes < 60) totalScore += scores[5];
+
+    return {
+        score: totalScore,
+        category: totalScore <= 5 ? 'cold' : totalScore <= 10 ? 'warm' : 'hot',
+        emoji: totalScore <= 5 ? '❄️' : totalScore <= 10 ? '🌡️' : '🔥'
+    };
+};
+
+// Match FAQ
+window.matchFaq = function (messageText) {
+    const faqs = JSON.parse(localStorage.getItem('eio_agent_faq') || '[]');
+    const text = messageText.toLowerCase();
+
+    for (const faq of faqs) {
+        const triggers = faq.triggers.split(',').map(t => t.trim().toLowerCase());
+        if (triggers.some(t => text.includes(t))) {
+            return faq.response;
+        }
+    }
+
+    return null;
+};
+
+// Process template with variables
+window.processTemplate = function (template, userData) {
+    const hour = new Date().getHours();
+    const saudacao = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const diaSemana = dias[new Date().getDay()];
+
+    return template
+        .replace(/{nome}/g, userData.name || userData.username || 'você')
+        .replace(/{username}/g, userData.username || '')
+        .replace(/{saudacao}/g, saudacao)
+        .replace(/{dia_semana}/g, diaSemana)
+        .replace(/{seguidores}/g, userData.followers || '0');
+};
