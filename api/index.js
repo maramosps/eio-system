@@ -209,6 +209,168 @@ module.exports = async (req, res) => {
             });
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // NOVO: Extension Login por @ do Instagram
+        // Verifica se o @ está cadastrado em algum usuário
+        // ═══════════════════════════════════════════════════════════
+        if ((path === '/api/v1/auth/instagram-login' || pathFromQuery === 'v1/auth/instagram-login') && method === 'POST') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            const { instagram_handle } = req.body || {};
+
+            if (!instagram_handle) {
+                return res.status(400).json({ message: '@ do Instagram é obrigatório' });
+            }
+
+            // Normalizar o handle (remover @ se existir, lowercase)
+            const normalizedHandle = instagram_handle.replace('@', '').toLowerCase().trim();
+
+            if (!normalizedHandle) {
+                return res.status(400).json({ message: '@ do Instagram inválido' });
+            }
+
+            // Buscar se existe uma conta com este Instagram cadastrado
+            const { data: account, error: accountError } = await supabase
+                .from('instagram_accounts')
+                .select('*, users(*)')
+                .eq('instagram_handle', normalizedHandle)
+                .single();
+
+            if (accountError || !account) {
+                // Tentar buscar na tabela users pelo campo instagram_handle
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('instagram_handle', normalizedHandle)
+                    .single();
+
+                if (userError || !user) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Este @ do Instagram não está cadastrado no sistema. Entre em contato com o suporte ou cadastre-se pelo dashboard.',
+                        code: 'INSTAGRAM_NOT_FOUND'
+                    });
+                }
+
+                // Usuário encontrado pelo campo instagram_handle na tabela users
+                const { data: subscription } = await supabase
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+
+                const trialStartDate = new Date(user.created_at);
+                const trialEndDate = new Date(trialStartDate);
+                trialEndDate.setDate(trialEndDate.getDate() + 5);
+
+                const now = new Date();
+                const isTrialActive = now < trialEndDate;
+                const isPaid = subscription && subscription.status === 'active' && subscription.plan !== 'trial';
+
+                if (!isTrialActive && !isPaid) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Sua licença expirou. Renove sua assinatura para continuar usando.',
+                        code: 'LICENSE_EXPIRED'
+                    });
+                }
+
+                const token = jwt.sign(
+                    { userId: user.id, email: user.email, instagram: normalizedHandle },
+                    jwtSecret,
+                    { expiresIn: '30d' }
+                );
+
+                return res.json({
+                    success: true,
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        instagram_handle: normalizedHandle
+                    },
+                    subscription: subscription ? {
+                        status: subscription.status,
+                        plan: subscription.plan,
+                        expiresAt: subscription.expires_at
+                    } : null,
+                    isTrialActive,
+                    isPaid,
+                    daysRemaining: isTrialActive ? Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24)) : 0
+                });
+            }
+
+            // Conta Instagram encontrada com usuário vinculado
+            const user = account.users;
+
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Conta Instagram não está vinculada a nenhum usuário.',
+                    code: 'NO_USER_LINKED'
+                });
+            }
+
+            // Verificar se a conta está ativa
+            if (account.status !== 'active') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Esta conta Instagram está desativada. Entre em contato com o suporte.',
+                    code: 'ACCOUNT_DISABLED'
+                });
+            }
+
+            const { data: subscription } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            const trialStartDate = new Date(user.created_at);
+            const trialEndDate = new Date(trialStartDate);
+            trialEndDate.setDate(trialEndDate.getDate() + 5);
+
+            const now = new Date();
+            const isTrialActive = now < trialEndDate;
+            const isPaid = subscription && subscription.status === 'active' && subscription.plan !== 'trial';
+
+            if (!isTrialActive && !isPaid) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Sua licença expirou. Renove sua assinatura para continuar usando.',
+                    code: 'LICENSE_EXPIRED'
+                });
+            }
+
+            const token = jwt.sign(
+                { userId: user.id, email: user.email, instagram: normalizedHandle },
+                jwtSecret,
+                { expiresIn: '30d' }
+            );
+
+            return res.json({
+                success: true,
+                token,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    instagram_handle: normalizedHandle
+                },
+                subscription: subscription ? {
+                    status: subscription.status,
+                    plan: subscription.plan,
+                    expiresAt: subscription.expires_at
+                } : null,
+                isTrialActive,
+                isPaid,
+                daysRemaining: isTrialActive ? Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24)) : 0
+            });
+        }
+
         // License Validate
         if ((path === '/api/v1/license/validate' || pathFromQuery === 'v1/license/validate') && method === 'POST') {
             const { email } = req.body || {};
@@ -275,6 +437,163 @@ module.exports = async (req, res) => {
                     '3. Baixe o arquivo .zip da última versão'
                 ]
             });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // GERENCIAMENTO DE CONTAS INSTAGRAM (Dashboard)
+        // ═══════════════════════════════════════════════════════════
+
+        // Listar contas Instagram do usuário
+        if ((path === '/api/v1/instagram/accounts' || pathFromQuery === 'v1/instagram/accounts') && method === 'GET') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            // Verificar token
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ message: 'Token não fornecido' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+
+                const { data: accounts, error } = await supabase
+                    .from('instagram_accounts')
+                    .select('*')
+                    .eq('user_id', decoded.userId)
+                    .order('created_at', { ascending: false });
+
+                return res.json({
+                    success: true,
+                    accounts: accounts || [],
+                    count: (accounts || []).length,
+                    limit: 2
+                });
+            } catch (err) {
+                return res.status(401).json({ message: 'Token inválido' });
+            }
+        }
+
+        // Adicionar conta Instagram
+        if ((path === '/api/v1/instagram/accounts' || pathFromQuery === 'v1/instagram/accounts') && method === 'POST') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ message: 'Token não fornecido' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+
+                const { instagram_handle } = req.body || {};
+
+                if (!instagram_handle) {
+                    return res.status(400).json({ message: '@ do Instagram é obrigatório' });
+                }
+
+                // Normalizar handle
+                const normalizedHandle = instagram_handle.replace('@', '').toLowerCase().trim();
+
+                if (!/^[a-z0-9_.]+$/.test(normalizedHandle)) {
+                    return res.status(400).json({ message: '@ do Instagram inválido. Use apenas letras, números, _ e .' });
+                }
+
+                // Verificar limite de 2 contas
+                const { data: existingAccounts } = await supabase
+                    .from('instagram_accounts')
+                    .select('id')
+                    .eq('user_id', decoded.userId);
+
+                if ((existingAccounts || []).length >= 2) {
+                    return res.status(400).json({
+                        message: 'Limite de 2 contas atingido. Remova uma conta antes de adicionar outra.',
+                        code: 'LIMIT_REACHED'
+                    });
+                }
+
+                // Verificar se já existe este @ para qualquer usuário
+                const { data: alreadyExists } = await supabase
+                    .from('instagram_accounts')
+                    .select('id')
+                    .eq('instagram_handle', normalizedHandle)
+                    .single();
+
+                if (alreadyExists) {
+                    return res.status(400).json({
+                        message: 'Este @ já está cadastrado em outra conta.',
+                        code: 'ALREADY_EXISTS'
+                    });
+                }
+
+                // Inserir nova conta
+                const { data: newAccount, error } = await supabase
+                    .from('instagram_accounts')
+                    .insert([{
+                        user_id: decoded.userId,
+                        instagram_handle: normalizedHandle,
+                        status: 'active',
+                        connected_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Erro ao inserir conta:', error);
+                    return res.status(500).json({ message: 'Erro ao cadastrar conta', error: error.message });
+                }
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'Conta cadastrada com sucesso!',
+                    account: newAccount
+                });
+            } catch (err) {
+                console.error('Erro:', err);
+                return res.status(401).json({ message: 'Token inválido' });
+            }
+        }
+
+        // Remover conta Instagram
+        if ((path.startsWith('/api/v1/instagram/accounts/') || pathFromQuery.startsWith('v1/instagram/accounts/')) && method === 'DELETE') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ message: 'Token não fornecido' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+
+                // Extrair o ID ou handle da URL
+                const accountId = path.split('/').pop() || pathFromQuery.split('/').pop();
+
+                const { error } = await supabase
+                    .from('instagram_accounts')
+                    .delete()
+                    .eq('user_id', decoded.userId)
+                    .eq('id', accountId);
+
+                if (error) {
+                    return res.status(500).json({ message: 'Erro ao remover conta', error: error.message });
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'Conta removida com sucesso!'
+                });
+            } catch (err) {
+                return res.status(401).json({ message: 'Token inválido' });
+            }
         }
 
         // Not found

@@ -506,14 +506,41 @@
             <div class="eio-content-section" data-section="accounts">
                 <div class="eio-section-header-dash">
                     <h2 class="eio-section-title-dash">Contas Instagram</h2>
-                    <p>Gerencie as contas conectadas ao sistema E.I.O.</p>
+                    <p>Cadastre até <strong>2 perfis</strong> do Instagram para fazer login na extensão</p>
+                </div>
+
+                <!-- Aviso importante sobre o sistema de login -->
+                <div class="eio-card"
+                    style="margin-top: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
+                    <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
+                        <div style="font-size: 2rem;">💡</div>
+                        <div>
+                            <h4 style="color: #fff; margin: 0 0 8px;">Como funciona o login na extensão</h4>
+                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
+                                Para usar a extensão E.I.O, você deve cadastrar seu <strong>@ do Instagram</strong> aqui
+                                no dashboard.
+                                Na extensão, você fará login usando apenas o <strong>@</strong> cadastrado - sem
+                                precisar de email ou senha.
+                            </p>
+                            <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 0.85rem;">
+                                ⚠️ Limite: máximo de <strong>2 perfis</strong> por conta. Isso evita o compartilhamento
+                                indevido da extensão.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="eio-card" style="margin-top: 20px;">
                     <div class="eio-card-header">
-                        <h3>Contas Conectadas</h3>
-                        <button class="eio-btn eio-btn-primary eio-btn-sm" id="btnConnectAccount">+ Conectar Nova
-                            Conta</button>
+                        <div>
+                            <h3>Contas Cadastradas</h3>
+                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                                <span id="accountsCount">0</span>/2 contas utilizadas
+                            </p>
+                        </div>
+                        <button class="eio-btn eio-btn-primary eio-btn-sm" id="btnConnectAccount">
+                            + Adicionar Conta
+                        </button>
                     </div>
                     <div class="eio-account-list" id="accountsList" style="margin-top: 20px;">
                         <!-- Estado vazio por padrão -->
@@ -524,13 +551,13 @@
                                 <path d="M16 12H8"></path>
                                 <path d="M12 8v8"></path>
                             </svg>
-                            <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta conectada</h4>
+                            <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta cadastrada</h4>
                             <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 20px;">
-                                Conecte sua conta do Instagram para começar a usar as automações
+                                Cadastre seu @ do Instagram para poder fazer login na extensão
                             </p>
-                            <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin: 0;">
-                                A conexão é feita através da extensão do navegador
-                            </p>
+                            <button class="eio-btn eio-btn-primary" id="btnAddFirstAccount">
+                                + Cadastrar meu primeiro @
+                            </button>
                         </div>
                     </div>
                 </div>

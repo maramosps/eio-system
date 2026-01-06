@@ -592,3 +592,257 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ═══════════════════════════════════════════════════════════
+// INSTAGRAM ACCOUNTS MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+async function initInstagramAccountsManagement() {
+    const token = localStorage.getItem('eio_token');
+    if (!token) return;
+
+    const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+
+    // Event listeners for add buttons
+    const btnConnect = document.getElementById('btnConnectAccount');
+    const btnAddFirst = document.getElementById('btnAddFirstAccount');
+
+    if (btnConnect) btnConnect.addEventListener('click', showAddAccountModal);
+    if (btnAddFirst) btnAddFirst.addEventListener('click', showAddAccountModal);
+
+    // Load accounts on page load
+    await loadInstagramAccounts();
+}
+
+async function loadInstagramAccounts() {
+    const token = localStorage.getItem('eio_token');
+    if (!token) return;
+
+    const accountsList = document.getElementById('accountsList');
+    const accountsCount = document.getElementById('accountsCount');
+
+    if (!accountsList) return;
+
+    try {
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+
+        const response = await fetch(`${API_URL}/instagram/accounts`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            console.error('Erro ao carregar contas');
+            return;
+        }
+
+        const data = await response.json();
+
+        if (accountsCount) {
+            accountsCount.textContent = data.count || 0;
+        }
+
+        if (!data.accounts || data.accounts.length === 0) {
+            // Show empty state
+            accountsList.innerHTML = `
+                <div class="eio-empty-accounts" style="padding: 50px 20px; text-align: center;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)"
+                        stroke-width="1.5" style="margin-bottom: 20px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M16 12H8"></path>
+                        <path d="M12 8v8"></path>
+                    </svg>
+                    <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta cadastrada</h4>
+                    <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 20px;">
+                        Cadastre seu @ do Instagram para poder fazer login na extensão
+                    </p>
+                    <button class="eio-btn eio-btn-primary" onclick="showAddAccountModal()">
+                        + Cadastrar meu primeiro @
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Render accounts
+        accountsList.innerHTML = data.accounts.map(account => `
+            <div class="eio-account-item" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="https://ui-avatars.com/api/?background=6246ea&color=fff&name=${encodeURIComponent(account.instagram_handle)}" 
+                        style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #6246ea;">
+                    <div>
+                        <div style="font-weight: 600; color: #fff;">@${account.instagram_handle}</div>
+                        <div style="font-size: 0.85rem; color: ${account.status === 'active' ? '#4CAF50' : '#aaa'};">
+                            ${account.status === 'active' ? '● Ativo' : '○ Inativo'}
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="eio-btn eio-btn-danger eio-btn-sm" 
+                        onclick="removeInstagramAccount('${account.id}')"
+                        style="background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.2);">
+                        Remover
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        // Disable add button if limit reached
+        const btnConnect = document.getElementById('btnConnectAccount');
+        if (btnConnect && data.count >= 2) {
+            btnConnect.disabled = true;
+            btnConnect.textContent = 'Limite atingido (2/2)';
+            btnConnect.style.opacity = '0.5';
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar contas Instagram:', error);
+    }
+}
+
+function showAddAccountModal() {
+    const modal = document.createElement('div');
+    modal.className = 'eio-modal active';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+
+    modal.innerHTML = `
+        <div class="eio-modal-content" style="max-width: 450px; background: #1a1a23; border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="eio-modal-header" style="margin-bottom: 20px;">
+                <h3 style="color: #fff; margin: 0;">➕ Adicionar Conta Instagram</h3>
+            </div>
+            <div class="eio-modal-body">
+                <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px; line-height: 1.6;">
+                    Digite o @ do Instagram que você quer usar para fazer login na extensão.
+                </p>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 8px;">
+                        @ DO INSTAGRAM
+                    </label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6246ea; font-weight: 600; font-size: 1.1rem;">@</span>
+                        <input type="text" id="newInstagramHandle" class="eio-input" 
+                            placeholder="seu_instagram" 
+                            style="width: 100%; padding: 12px 12px 12px 35px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 1rem;">
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.2); padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="font-size: 0.85rem; color: #FFC107; margin: 0;">
+                        ⚠️ <strong>Importante:</strong> Use exatamente o mesmo @ que você usa no Instagram. Este será seu login na extensão.
+                    </p>
+                </div>
+            </div>
+            <div class="eio-modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="eio-btn eio-btn-ghost" id="cancelAddAccount">Cancelar</button>
+                <button class="eio-btn eio-btn-primary" id="confirmAddAccount">Adicionar Conta</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Event listeners
+    modal.querySelector('#cancelAddAccount').addEventListener('click', () => modal.remove());
+    modal.querySelector('#confirmAddAccount').addEventListener('click', () => addInstagramAccount(modal));
+    modal.querySelector('#newInstagramHandle').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addInstagramAccount(modal);
+    });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+
+    // Focus input
+    setTimeout(() => modal.querySelector('#newInstagramHandle').focus(), 100);
+}
+
+async function addInstagramAccount(modal) {
+    const token = localStorage.getItem('eio_token');
+    if (!token) return;
+
+    const input = modal.querySelector('#newInstagramHandle');
+    const instagram_handle = input.value.replace('@', '').trim().toLowerCase();
+
+    if (!instagram_handle) {
+        alert('Por favor, digite o @ do Instagram');
+        return;
+    }
+
+    const btn = modal.querySelector('#confirmAddAccount');
+    btn.disabled = true;
+    btn.textContent = 'Adicionando...';
+
+    try {
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+
+        const response = await fetch(`${API_URL}/instagram/accounts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ instagram_handle })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || 'Erro ao adicionar conta');
+            btn.disabled = false;
+            btn.textContent = 'Adicionar Conta';
+            return;
+        }
+
+        modal.remove();
+        await loadInstagramAccounts();
+
+        // Show success message
+        alert(`✅ Conta @${instagram_handle} cadastrada com sucesso!\n\nAgora você pode usar este @ para fazer login na extensão.`);
+
+    } catch (error) {
+        console.error('Erro ao adicionar conta:', error);
+        alert('Erro de conexão. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = 'Adicionar Conta';
+    }
+}
+
+async function removeInstagramAccount(accountId) {
+    if (!confirm('Tem certeza que deseja remover esta conta?\n\nVocê não poderá mais usar este @ para fazer login na extensão.')) {
+        return;
+    }
+
+    const token = localStorage.getItem('eio_token');
+    if (!token) return;
+
+    try {
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+
+        const response = await fetch(`${API_URL}/instagram/accounts/${accountId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            alert(data.message || 'Erro ao remover conta');
+            return;
+        }
+
+        await loadInstagramAccounts();
+        alert('✅ Conta removida com sucesso!');
+
+    } catch (error) {
+        console.error('Erro ao remover conta:', error);
+        alert('Erro de conexão. Tente novamente.');
+    }
+}
+
+// Initialize Instagram accounts management when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Delay to ensure other scripts have loaded
+    setTimeout(initInstagramAccountsManagement, 500);
+});

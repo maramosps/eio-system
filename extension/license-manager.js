@@ -85,39 +85,58 @@ class LicenseManager {
             const modal = this.createLoginModal();
             document.body.appendChild(modal);
 
-            window.handleLogin = async (email, password) => {
+            window.handleInstagramLogin = async (instagram_handle) => {
                 try {
-                    const response = await fetch(`${LICENSE_CONFIG.API_URL}/api/v1/auth/extension-login`, {
+                    const response = await fetch(`${LICENSE_CONFIG.API_URL}/api/v1/auth/instagram-login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
+                        body: JSON.stringify({ instagram_handle })
                     });
-
-                    if (!response.ok) {
-                        throw new Error('Credenciais inválidas');
-                    }
 
                     const data = await response.json();
 
+                    if (!response.ok) {
+                        // Mensagem de erro personalizada baseada no código
+                        let errorMessage = data.message || 'Erro ao fazer login';
+
+                        if (data.code === 'INSTAGRAM_NOT_FOUND') {
+                            errorMessage = '❌ Este @ não está cadastrado no sistema.\n\nCadastre-se no dashboard ou entre em contato com o suporte.';
+                        } else if (data.code === 'LICENSE_EXPIRED') {
+                            errorMessage = '⏰ Sua licença expirou!\n\nRenove sua assinatura para continuar usando.';
+                        } else if (data.code === 'ACCOUNT_DISABLED') {
+                            errorMessage = '🚫 Esta conta está desativada.\n\nEntre em contato com o suporte.';
+                        }
+
+                        alert(errorMessage);
+                        return;
+                    }
+
                     // Salvar licença
                     await this.saveLicense({
-                        userEmail: email,
+                        userEmail: data.user.email,
+                        instagramHandle: instagram_handle,
                         token: data.token,
                         subscription: data.subscription,
                         trialStartDate: data.trialStartDate || new Date().toISOString(),
-                        isPaid: data.isPaid || false
+                        isPaid: data.isPaid || false,
+                        userId: data.user.id
                     });
 
                     modal.remove();
                     this.isValid = true;
+                    this.userEmail = data.user.email;
                     resolve(true);
 
                     if (typeof showToast === 'function') {
-                        showToast('✅ Login realizado com sucesso!', 'success');
+                        showToast(`✅ Login realizado! Bem-vindo @${instagram_handle}`, 'success');
                     }
 
+                    // Recarregar a página para aplicar a licença
+                    window.location.reload();
+
                 } catch (error) {
-                    alert('❌ Erro ao fazer login: ' + error.message);
+                    console.error('Erro no login:', error);
+                    alert('❌ Erro de conexão. Verifique sua internet e tente novamente.');
                 }
             };
         });
@@ -303,29 +322,38 @@ class LicenseManager {
                     <div style="font-size: 3rem; margin-bottom: 12px;">🚀</div>
                     <h2 style="color: white; margin-bottom: 8px;">Bem-vindo ao E.I.O</h2>
                     <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
-                        Faça login com suas credenciais
+                        Faça login com o @ do seu Instagram
                     </p>
                 </div>
                 
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">Email</label>
-                    <input type="email" id="loginEmail" class="eio-input" placeholder="seu@email.com" style="width: 100%;">
-                </div>
-                
                 <div style="margin-bottom: 24px;">
-                    <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">Senha</label>
-                    <input type="password" id="loginPassword" class="eio-input" placeholder="••••••••" style="width: 100%;">
+                    <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
+                        @ DO INSTAGRAM CADASTRADO
+                    </label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6246ea; font-weight: 600;">@</span>
+                        <input type="text" id="loginInstagram" class="eio-input" placeholder="seu_instagram" style="width: 100%; padding-left: 30px;">
+                    </div>
+                    <p style="color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 8px;">
+                        Use o mesmo @ cadastrado no seu dashboard
+                    </p>
                 </div>
                 
                 <button class="eio-btn eio-btn-primary" style="width: 100%; margin-bottom: 16px;" id="submitLoginBtn">
                     Entrar
                 </button>
                 
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.2); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <p style="font-size: 0.8rem; color: #FFC107; margin: 0; line-height: 1.4;">
+                        ⚠️ <strong>Atenção:</strong> Você só poderá acessar se seu @ estiver cadastrado no dashboard do cliente. Limite de 2 perfis por conta.
+                    </p>
+                </div>
+                
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">
-                        Não tem uma conta?
+                        Não tem uma conta cadastrada?
                     </p>
-                    <a href="${LICENSE_CONFIG.API_URL}/register" target="_blank" style="color: #42A5F5; text-decoration: none; font-weight: 600;">
+                    <a href="${LICENSE_CONFIG.API_URL}/register.html" target="_blank" style="color: #42A5F5; text-decoration: none; font-weight: 600;">
                         Criar conta grátis (5 dias de teste)
                     </a>
                 </div>
@@ -339,19 +367,24 @@ class LicenseManager {
         `;
 
         window.submitLogin = () => {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            const instagramInput = document.getElementById('loginInstagram').value;
+            const instagram_handle = instagramInput.replace('@', '').trim().toLowerCase();
 
-            if (!email || !password) {
-                alert('Por favor, preencha todos os campos');
+            if (!instagram_handle) {
+                alert('Por favor, digite seu @ do Instagram');
                 return;
             }
 
-            window.handleLogin(email, password);
+            window.handleInstagramLogin(instagram_handle);
         };
 
         // Adicionar event listener ao botão
         modal.querySelector('#submitLoginBtn').addEventListener('click', window.submitLogin);
+
+        // Enter key para submeter
+        modal.querySelector('#loginInstagram').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.submitLogin();
+        });
 
         return modal;
     }
