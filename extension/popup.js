@@ -15,8 +15,24 @@ let extensionState = {
     },
     automations: [],
     connectionStatus: 'connected',
-    extractedLeads: []
+    extractedLeads: [],
+    lastExtractSource: 'followers',
+    lastTargetProfile: '',
+    lastExtractTarget: '',
+    lastFilters: {}
 };
+
+// Função para salvar estado no chrome.storage (persistência)
+async function saveExtensionState() {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+        try {
+            await chrome.storage.local.set({ extensionState });
+            console.log('📦 Estado salvo com sucesso');
+        } catch (e) {
+            console.error('Erro ao salvar estado:', e);
+        }
+    }
+}
 
 // Inicialização robusta COM VERIFICAÇÃO DE LICENÇA
 document.addEventListener('DOMContentLoaded', async () => {
@@ -108,6 +124,41 @@ async function loadSavedState() {
         const result = await chrome.storage.local.get(['extensionState']);
         if (result.extensionState) {
             extensionState = { ...extensionState, ...result.extensionState };
+
+            // Restaurar campos do formulário
+            const sourceSelect = document.getElementById('extractSource');
+            const targetProfile = document.getElementById('targetProfile');
+            const extractTarget = document.getElementById('extractTarget');
+
+            if (sourceSelect && extensionState.lastExtractSource) {
+                sourceSelect.value = extensionState.lastExtractSource;
+            }
+            if (targetProfile && extensionState.lastTargetProfile) {
+                targetProfile.value = extensionState.lastTargetProfile;
+            }
+            if (extractTarget && extensionState.lastExtractTarget) {
+                extractTarget.value = extensionState.lastExtractTarget;
+            }
+
+            // Restaurar filtros
+            if (extensionState.lastFilters) {
+                const filterBR = document.getElementById('filterBR');
+                const filterPhoto = document.getElementById('filterPhoto');
+                const filterPosts = document.getElementById('filterPosts');
+                const filterPublic = document.getElementById('filterPublic');
+
+                if (filterBR) filterBR.checked = extensionState.lastFilters.brOnly ?? true;
+                if (filterPhoto) filterPhoto.checked = extensionState.lastFilters.hasPhoto ?? true;
+                if (filterPosts) filterPosts.checked = extensionState.lastFilters.minPosts ?? false;
+                if (filterPublic) filterPublic.checked = extensionState.lastFilters.publicOnly ?? false;
+            }
+
+            // Restaurar leads extraídos
+            if (extensionState.extractedLeads && extensionState.extractedLeads.length > 0) {
+                updateResultsUI();
+            }
+
+            console.log('📂 Estado restaurado com sucesso:', extensionState);
         }
     } catch (error) {
         console.error('Error loading state:', error);
@@ -227,10 +278,8 @@ function initializeButtons() {
         }
     });
 
-    safeAddEventListener('dashboardLink', 'click', (e) => {
-        e.preventDefault();
-        window.open('../frontend/dashboard.html', '_blank');
-    });
+    // Dashboard Link agora tem href direto no HTML com URL correta
+    // Não precisa de handler de clique adicional
 
     safeAddEventListener('acceptTermsBtn', 'click', async () => {
         if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -269,7 +318,14 @@ async function checkTermsApproval() {
 // Iniciar extração de leads
 async function startExtraction() {
     const source = document.getElementById('extractSource').value;
-    const target = document.getElementById('extractTarget').value;
+    const targetProfile = document.getElementById('targetProfile')?.value || '';
+    const extractTarget = document.getElementById('extractTarget')?.value || '';
+
+    // Determinar o alvo correto baseado no tipo de fonte
+    let target = extractTarget;
+    if ((source === 'followers' || source === 'following') && targetProfile) {
+        target = targetProfile;
+    }
 
     // Coletar Filtros (Resiliente a elementos faltantes)
     const filters = {
@@ -280,9 +336,16 @@ async function startExtraction() {
     };
 
     if (!target) {
-        addConsoleEntry('error', 'Por favor, informe o alvo da extração');
+        addConsoleEntry('error', 'Por favor, informe o alvo da extração (perfil ou referência)');
         return;
     }
+
+    // Salvar configurações para persistência
+    extensionState.lastExtractSource = source;
+    extensionState.lastTargetProfile = targetProfile;
+    extensionState.lastExtractTarget = extractTarget;
+    extensionState.lastFilters = filters;
+    await saveExtensionState();
 
     try {
         extensionState.extractedLeads = [];
@@ -292,7 +355,15 @@ async function startExtraction() {
         document.getElementById('extractionResults').style.display = 'none';
 
         updateExtractionProgress(5, 0);
-        addConsoleEntry('info', `Solicitando extração inteligente de ${source}...`);
+
+        const sourceLabels = {
+            'followers': 'seguidores',
+            'following': 'seguindo',
+            'likes': 'curtidas',
+            'hashtags': 'hashtag',
+            'unfollow': 'deixar de seguir'
+        };
+        addConsoleEntry('info', `Solicitando extração de ${sourceLabels[source] || source}...`);
 
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -315,6 +386,9 @@ async function startExtraction() {
             updateExtractionProgress(100, result.data.length);
             updateResultsUI();
             addConsoleEntry('success', `Extração concluída: ${result.data.length} leads.`);
+
+            // Salvar leads extraídos
+            await saveExtensionState();
         } else {
             updateExtractionProgress(0, 0);
             addConsoleEntry('error', `Falha: ${result ? result.message : 'Sem resposta'}`);
@@ -364,16 +438,16 @@ function updateResultsUI() {
     const list = document.getElementById('resultsList');
     const selectedCountEl = document.getElementById('selectedCount');
     const controls = document.querySelector('.eio-results-controls');
-    const source = document.getElementById('extractSource').value;
+    const source = document.getElementById('extractSource')?.value || 'followers';
     const isUnfollow = source === 'unfollow';
 
     if (!extensionState.extractedLeads || extensionState.extractedLeads.length === 0) {
-        container.style.display = 'none';
+        if (container) container.style.display = 'none';
         return;
     }
 
-    container.style.display = 'block';
-    list.innerHTML = '';
+    if (container) container.style.display = 'block';
+    if (list) list.innerHTML = '';
 
     // Mostrar ou esconder controles de seleção (Só para Unfollow)
     if (controls) {
@@ -393,27 +467,46 @@ function updateResultsUI() {
             `<input type="checkbox" ${lead.selected ? 'checked' : ''} data-index="${index}">` :
             '';
 
-        const avatarHtml = lead.avatar ?
-            `<img src="${lead.avatar}" class="eio-lead-avatar-img">` :
-            `<div class="eio-lead-avatar"></div>`;
+        // Tratamento melhorado para avatares - usar placeholder quando imagem não carrega
+        const getAvatarHtml = (lead) => {
+            if (!lead.avatar || lead.avatar === '' || lead.avatar === 'undefined') {
+                // Avatar padrão com inicial do nome
+                const initial = (lead.name || lead.username || 'U').charAt(0).toUpperCase();
+                return `<div class="eio-lead-avatar eio-lead-avatar-placeholder">${initial}</div>`;
+            }
+            // Tentar carregar imagem com fallback
+            return `<img src="${lead.avatar}" 
+                         class="eio-lead-avatar-img" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                         alt="${lead.name || 'Avatar'}">
+                    <div class="eio-lead-avatar eio-lead-avatar-placeholder" style="display:none;">
+                        ${(lead.name || lead.username || 'U').charAt(0).toUpperCase()}
+                    </div>`;
+        };
 
         item.innerHTML = `
             ${checkboxHtml}
-            ${avatarHtml}
+            <div class="eio-lead-avatar-container">
+                ${getAvatarHtml(lead)}
+            </div>
             <div class="eio-lead-info">
-                <span class="eio-lead-name">${lead.name}</span>
-                <span class="eio-lead-username">${lead.username}</span>
+                <span class="eio-lead-name">${lead.name || 'Usuário Instagram'}</span>
+                <span class="eio-lead-username">${lead.username || '@unknown'}</span>
             </div>
         `;
 
         if (isUnfollow) {
-            item.querySelector('input').onchange = (e) => {
-                extensionState.extractedLeads[index].selected = e.target.checked;
-                updateSelectedCount();
-            };
+            const checkbox = item.querySelector('input');
+            if (checkbox) {
+                checkbox.onchange = (e) => {
+                    extensionState.extractedLeads[index].selected = e.target.checked;
+                    updateSelectedCount();
+                    saveExtensionState(); // Salvar ao mudar seleção
+                };
+            }
         }
 
-        list.appendChild(item);
+        if (list) list.appendChild(item);
     });
 
     if (selectedCountEl) {

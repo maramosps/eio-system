@@ -56,7 +56,8 @@
         "icons/*",
         "styles/*",
         "assets/*",
-        "scripts/*"
+        "scripts/*",
+        "public/*"
       ],
       "matches": [
         "https://*.instagram.com/*"

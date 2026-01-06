@@ -229,6 +229,7 @@
                         <label class="eio-label">Fonte de Leads</label>
                         <select class="eio-select" id="extractSource">
                             <option value="followers">Seguidores de (@perfil)</option>
+                            <option value="following">Seguindo de (@perfil)</option>
                             <option value="likes">Curtidas em (Post URL)</option>
                             <option value="hashtags">Hashtag (#tag)</option>
                             <option value="unfollow">Deixar de Seguir (Não me seguem)</option>
@@ -236,8 +237,16 @@
                     </div>
 
                     <div class="eio-form-group">
+                        <label class="eio-label">Perfil Alvo</label>
+                        <input type="text" class="eio-input" id="targetProfile" placeholder="@perfil para extrair">
+                        <small style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">Digite o @ do perfil que deseja
+                            usar como fonte</small>
+                    </div>
+
+                    <div class="eio-form-group">
                         <label class="eio-label">Alvo / Referência</label>
-                        <input type="text" class="eio-input" id="extractTarget" placeholder="@usuario ou link do post">
+                        <input type="text" class="eio-input" id="extractTarget"
+                            placeholder="@usuario, hashtag ou link do post">
                     </div>
 
                     <div class="eio-filters-box">
@@ -308,7 +317,8 @@
 
         <!-- Footer Profissional -->
         <footer class="eio-popup-footer">
-            <a href="#" class="eio-footer-link" id="dashboardLink">
+            <a href="https://eio-system.vercel.app/dashboard.html" target="_blank" class="eio-footer-link"
+                id="dashboardLink">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>

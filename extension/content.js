@@ -136,8 +136,19 @@ async function runExtractionFlow(payload) {
     const leads = [];
     const filters = payload.filters || {};
     const limit = payload.limit || 200;
+    const extractType = payload.type || 'followers';
 
-    addConsoleLog('info', `🚀 Iniciando extração (Limite: ${limit})...`);
+    // Determinar tipo de lista para mensagens
+    const listTypeLabels = {
+        'followers': 'Seguidores',
+        'following': 'Seguindo',
+        'likes': 'Curtidas',
+        'hashtags': 'Hashtag',
+        'unfollow': 'Não me seguem'
+    };
+    const listLabel = listTypeLabels[extractType] || 'leads';
+
+    addConsoleLog('info', `🚀 Iniciando extração de ${listLabel} (Limite: ${limit})...`);
     if (Object.values(filters).some(v => v)) {
         addConsoleLog('warning', '⚙️ Filtros Ativos: BR, Foto, Posts, Stories, Públicos');
     }
@@ -165,11 +176,18 @@ async function runExtractionFlow(payload) {
     }
 
     if (!scrollContainer) {
-        addConsoleLog('error', '❌ Lista não detectada. Por favor, clique em "Seguidores"!');
-        return { success: false, message: 'Lista não encontrada' };
+        const clickInstructions = {
+            'followers': 'Por favor, clique em "Seguidores" no perfil desejado!',
+            'following': 'Por favor, clique em "Seguindo" no perfil desejado!',
+            'likes': 'Por favor, clique no número de curtidas do post!',
+            'hashtags': 'Por favor, abra uma hashtag!',
+            'unfollow': 'Por favor, clique em "Seguindo" no seu perfil!'
+        };
+        addConsoleLog('error', `❌ Lista de ${listLabel} não detectada. ${clickInstructions[extractType] || 'Abra uma lista primeiro!'}`);
+        return { success: false, message: `Lista de ${listLabel} não encontrada` };
     }
 
-    addConsoleLog('success', '🎯 Lista pronta! Iniciando captura filtrada...');
+    addConsoleLog('success', `🎯 Lista de ${listLabel} pronta! Iniciando captura filtrada...`);
 
     let lastLeadCount = 0;
     let idleCount = 0;
