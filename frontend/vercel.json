@@ -1,32 +1,22 @@
 {
-    "cleanUrls": true,
+    "buildCommand": null,
+    "outputDirectory": ".",
+    "framework": null,
+    "cleanUrls": false,
     "trailingSlash": false,
     "headers": [
         {
             "source": "/downloads/(.*)",
             "headers": [
                 {
-                    "key": "Content-Type",
-                    "value": "application/zip"
-                },
-                {
                     "key": "Content-Disposition",
                     "value": "attachment"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0"
                 }
             ]
-        }
-    ],
-    "redirects": [
-        {
-            "source": "/",
-            "destination": "/index.html",
-            "permanent": false
-        }
-    ],
-    "rewrites": [
-        {
-            "source": "/api/:path*",
-            "destination": "/api/:path*"
         }
     ]
 }
