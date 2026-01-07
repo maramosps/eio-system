@@ -1,0 +1,32 @@
+{
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "headers": [
+        {
+            "source": "/downloads/(.*)",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "application/zip"
+                },
+                {
+                    "key": "Content-Disposition",
+                    "value": "attachment"
+                }
+            ]
+        }
+    ],
+    "redirects": [
+        {
+            "source": "/",
+            "destination": "/index.html",
+            "permanent": false
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "/api/:path*"
+        }
+    ]
+}

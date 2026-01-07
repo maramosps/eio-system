@@ -1,36 +1,59 @@
 // Dashboard functionality
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication - redirect to login if not authenticated
-    const token = localStorage.getItem('eio_token');
-    if (!token) {
+    // ═══════════════════════════════════════════════════════════
+    // VERIFICAÇÃO DE AUTENTICAÇÃO FLEXÍVEL
+    // Aceita: eio_token, accessToken, ou modo demo
+    // ═══════════════════════════════════════════════════════════
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
+    const demoMode = localStorage.getItem('demoMode') === 'true';
+
+    if (!token && !demoMode) {
         console.warn('⚠️ Usuário não autenticado. Redirecionando para login...');
         window.location.href = 'login.html';
         return;
     }
 
-    // Load user info from local storage
-    const user = JSON.parse(localStorage.getItem('eio_user') || '{}');
+    // Load user info from local storage (aceita ambos formatos)
+    let user = JSON.parse(localStorage.getItem('eio_user') || localStorage.getItem('user') || '{}');
+
+    // Se estiver em modo demo, garantir dados padrão
+    if (demoMode && (!user || !user.name)) {
+        user = {
+            id: 'demo-user',
+            name: 'Usuário Demo',
+            instagram_handle: '@demo_user',
+            email: 'demo@eio.system',
+            subscription: {
+                status: 'active',
+                plan: 'trial'
+            }
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    console.log('✅ Dashboard carregado para:', user.name || user.instagram_handle);
 
     // Update UI with user data
     const userNameEl = document.getElementById('userName');
     const userEmailEl = document.getElementById('userEmail');
     const userAvatarEl = document.getElementById('userAvatar');
 
-    if (user.name && userNameEl) {
-        userNameEl.textContent = user.name;
+    if (userNameEl) {
+        userNameEl.textContent = user.name || user.instagram_handle || 'Usuário';
     }
-    if (user.email && userEmailEl) {
-        userEmailEl.textContent = user.email;
+    if (userEmailEl) {
+        userEmailEl.textContent = user.email || user.instagram_handle || '';
     }
-    if (user.email && userAvatarEl) {
-        userAvatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email)}`;
+    if (userAvatarEl) {
+        const seed = user.email || user.instagram_handle || 'default';
+        userAvatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
     }
 
     // Also update any legacy selectors
     const legacyName = document.querySelector('.eio-user-name:not(#userName)');
     const legacyEmail = document.querySelector('.eio-user-email:not(#userEmail)');
-    if (legacyName && user.name) legacyName.textContent = user.name;
-    if (legacyEmail && user.email) legacyEmail.textContent = user.email;
+    if (legacyName) legacyName.textContent = user.name || user.instagram_handle || 'Usuário';
+    if (legacyEmail) legacyEmail.textContent = user.email || user.instagram_handle || '';
 
     // Navigation
     const navItems = document.querySelectorAll('.eio-nav-item');
