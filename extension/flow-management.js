@@ -5,12 +5,9 @@
 ═══════════════════════════════════════════════════════════
 */
 
-// Armazenamento de fluxos (simulado localmente)
+// Armazenamento de fluxos - inicializar vazio (sem fluxos mock)
 let savedFlows = [];
-let activeFlows = [
-    { id: 1, name: 'Engajamento Orgânico #1', status: 'active', steps: [] },
-    { id: 2, name: 'Boas-vindas para Seguidores', status: 'paused', steps: [] }
-];
+let activeFlows = [];
 
 // Carregar fluxos ativos e exibir
 async function loadActiveFlows() {
@@ -22,24 +19,31 @@ async function loadActiveFlows() {
         return;
     }
 
-    let flows = activeFlows;
+    let flows = [];
 
-    // Tentar buscar do Chrome Storage se disponível
+    // Buscar do Chrome Storage
     if (typeof chrome !== 'undefined' && chrome.storage) {
         try {
             const result = await chrome.storage.local.get(['activeFlows']);
-            if (result.activeFlows && result.activeFlows.length > 0) {
+            if (result.activeFlows && Array.isArray(result.activeFlows)) {
                 flows = result.activeFlows;
-                activeFlows = flows;
+                activeFlows = flows; // Atualizar variável global
+                window.activeFlows = flows; // Disponibilizar globalmente
             }
         } catch (e) {
-            console.log('Usando fluxos mock');
+            console.log('Erro ao carregar fluxos:', e);
         }
     }
 
+    console.log('📂 Fluxos carregados:', flows.length);
+
     if (flows.length === 0) {
+        list.innerHTML = '';
         list.style.display = 'none';
-        if (noFlows) noFlows.style.display = 'flex';
+        if (noFlows) {
+            noFlows.style.display = 'block';
+            noFlows.innerHTML = '<p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; text-align: center; padding: 20px;">Nenhum fluxo ativo no momento</p>';
+        }
     } else {
         list.style.display = 'block';
         if (noFlows) noFlows.style.display = 'none';
@@ -51,14 +55,15 @@ async function loadActiveFlows() {
                     <span class="eio-flow-status" style="color: ${flow.status === 'active' ? '#4CAF50' : '#FF9800'}">
                         ${flow.status === 'active' ? '✓ Rodando' : '⏳ Pausado'}
                     </span>
+                    <span style="font-size: 0.65rem; color: rgba(255,255,255,0.3);">${flow.steps?.length || 0} blocos</span>
                 </div>
                 <div class="eio-flow-actions">
                     <button class="eio-btn-mini ${flow.status === 'active' ? 'eio-btn-pause' : 'eio-btn-resume'}" 
                             onclick="toggleFlow(${flow.id})">
-                        ${flow.status === 'active' ? 'Pausar' : 'Retomar'}
+                        ${flow.status === 'active' ? '⏸️' : '▶️'}
                     </button>
                     <button class="eio-btn-mini eio-btn-stop" onclick="stopFlow(${flow.id})">
-                        Parar
+                        🗑️
                     </button>
                 </div>
             </div>

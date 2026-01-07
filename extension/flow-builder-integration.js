@@ -135,7 +135,7 @@ function initializeFlowBuilder() {
             }
 
             const flowData = {
-                id: flowIdCounter++,
+                id: Date.now(), // Usar timestamp como ID único
                 name: flowName,
                 steps: [...flowSteps],
                 createdAt: new Date().toISOString(),
@@ -149,44 +149,66 @@ function initializeFlowBuilder() {
             const originalHTML = saveBtn.innerHTML;
             saveBtn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span> Salvando...';
 
-            // Adicionar ao array de fluxos ativos
-            if (typeof window.activeFlows !== 'undefined') {
-                window.activeFlows = window.activeFlows || [];
-                window.activeFlows.push(flowData);
+            try {
+                // Carregar fluxos existentes do storage
+                let existingFlows = [];
 
-                // Salvar no Chrome Storage se disponível
                 if (typeof chrome !== 'undefined' && chrome.storage) {
                     try {
-                        await chrome.storage.local.set({ activeFlows: window.activeFlows });
+                        const result = await chrome.storage.local.get(['activeFlows']);
+                        existingFlows = result.activeFlows || [];
                     } catch (e) {
-                        console.log('Storage não disponível');
+                        console.log('Storage read error:', e);
                     }
                 }
-            }
 
-            setTimeout(() => {
+                // Adicionar novo fluxo
+                existingFlows.push(flowData);
+
+                // Salvar no Chrome Storage
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    await chrome.storage.local.set({ activeFlows: existingFlows });
+                    console.log('✅ Fluxos salvos no storage:', existingFlows);
+                }
+
+                // Atualizar variável global se existir
+                if (typeof window.activeFlows !== 'undefined') {
+                    window.activeFlows = existingFlows;
+                }
+
+                setTimeout(() => {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHTML;
+
+                    if (typeof showToast === 'function') {
+                        showToast(`✅ Fluxo "${flowName}" salvo e ativado!`, 'success');
+                    }
+
+                    if (typeof addConsoleEntry === 'function') {
+                        addConsoleEntry('success', `✅ Fluxo "${flowName}" salvo e ativado!`);
+                    }
+
+                    // Limpar formulário
+                    flowSteps = [];
+                    if (flowStepsContainer) flowStepsContainer.innerHTML = '';
+                    if (placeholder) placeholder.style.display = 'flex';
+                    if (flowNameInput) flowNameInput.value = 'Meu Fluxo';
+
+                    // Recarregar lista de fluxos ativos
+                    if (typeof loadActiveFlows === 'function') {
+                        loadActiveFlows();
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('Erro ao salvar fluxo:', error);
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = originalHTML;
 
                 if (typeof showToast === 'function') {
-                    showToast(`✅ Fluxo "${flowName}" salvo e ativado!`, 'success');
+                    showToast('❌ Erro ao salvar fluxo', 'error');
                 }
-
-                if (typeof addConsoleEntry === 'function') {
-                    addConsoleEntry('success', `✅ Fluxo "${flowName}" salvo e ativado!`);
-                }
-
-                // Limpar formulário
-                flowSteps = [];
-                if (flowStepsContainer) flowStepsContainer.innerHTML = '';
-                if (placeholder) placeholder.style.display = 'flex';
-                if (flowNameInput) flowNameInput.value = 'Meu Fluxo';
-
-                // Recarregar lista de fluxos ativos
-                if (typeof loadActiveFlows === 'function') {
-                    setTimeout(loadActiveFlows, 300);
-                }
-            }, 1500);
+            }
         });
     }
 }
