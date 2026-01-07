@@ -30,15 +30,30 @@ function randomDelay(min, max) {
 }
 
 /**
- * Adicionar log no console flutuante (azul)
+ * Adicionar log no console flutuante (azul) e sincronizar com extensão
  */
 function addConsoleLog(level, message) {
     console.log(`[E.I.O ${level.toUpperCase()}] ${message}`);
+
+    const time = new Date().toLocaleTimeString('pt-BR');
+
+    // Enviar log para a extensão (popup)
+    try {
+        chrome.runtime.sendMessage({
+            action: 'console_log',
+            level: level,
+            message: message,
+            time: time
+        }).catch(() => { }); // Ignorar se popup não está aberto
+    } catch (e) {
+        // Extensão não conectada
+    }
+
+    // Adicionar ao console flutuante na página
     const consoleLog = document.getElementById('eio-console-log');
     if (consoleLog) {
         const entry = document.createElement('div');
         entry.className = `eio-log-${level}`;
-        const time = new Date().toLocaleTimeString('pt-BR');
         entry.innerHTML = `<span class="eio-log-time">${time}</span> ${message}`;
         consoleLog.prepend(entry);
 

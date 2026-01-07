@@ -34,6 +34,17 @@ async function saveExtensionState() {
     }
 }
 
+// Listener para receber logs do content script
+if (typeof chrome !== 'undefined' && chrome.runtime) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'console_log') {
+            // Receber log do content script e exibir no console da extensão
+            addConsoleEntry(message.level, message.message);
+        }
+        return false;
+    });
+}
+
 // Inicialização robusta COM VERIFICAÇÃO DE LICENÇA
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('E.I.O Popup DOM Loaded');
@@ -86,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Atualizar UIs dinâmicas
     updateStatsUI();
     updateHistoryUI();
+    loadConsoleLogs();
 
     // Inicializar Flow Builder integrado
     setTimeout(() => {
@@ -94,6 +106,92 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 500);
 });
+
+/**
+ * Adicionar entrada no console da extensão
+ */
+function addConsoleEntry(level, message) {
+    const consoleLog = document.getElementById('consoleLog');
+    if (!consoleLog) return;
+
+    const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const entry = document.createElement('div');
+    entry.className = `eio-console-entry eio-console-${level}`;
+
+    const icons = {
+        'success': '✅',
+        'error': '❌',
+        'warning': '⚠️',
+        'info': 'ℹ️'
+    };
+
+    entry.innerHTML = `
+        <span class="eio-console-time">${time}</span>
+        <span class="eio-console-icon">${icons[level] || '📌'}</span>
+        <span class="eio-console-msg">${message}</span>
+    `;
+
+    consoleLog.prepend(entry);
+
+    // Limitar a 50 entradas
+    while (consoleLog.children.length > 50) {
+        consoleLog.lastChild.remove();
+    }
+
+    // Salvar logs
+    saveConsoleLogs();
+}
+
+/**
+ * Salvar logs do console
+ */
+async function saveConsoleLogs() {
+    if (typeof chrome === 'undefined' || !chrome.storage) return;
+
+    const consoleLog = document.getElementById('consoleLog');
+    if (!consoleLog) return;
+
+    const logs = Array.from(consoleLog.children).slice(0, 30).map(el => el.outerHTML);
+
+    try {
+        await chrome.storage.local.set({ consoleLogs: logs });
+    } catch (e) {
+        console.error('Erro ao salvar logs:', e);
+    }
+}
+
+/**
+ * Carregar logs do console salvos
+ */
+async function loadConsoleLogs() {
+    if (typeof chrome === 'undefined' || !chrome.storage) return;
+
+    try {
+        const result = await chrome.storage.local.get(['consoleLogs']);
+        if (result.consoleLogs && result.consoleLogs.length > 0) {
+            const consoleLog = document.getElementById('consoleLog');
+            if (consoleLog) {
+                consoleLog.innerHTML = result.consoleLogs.join('');
+            }
+        }
+    } catch (e) {
+        console.error('Erro ao carregar logs:', e);
+    }
+}
+
+/**
+ * Limpar console
+ */
+function clearConsole() {
+    const consoleLog = document.getElementById('consoleLog');
+    if (consoleLog) {
+        consoleLog.innerHTML = '';
+        saveConsoleLogs();
+        showToast('🗑️ Console limpo', 'info');
+    }
+}
+
 /**
  * Autodetectar o perfil ou post atual e exibir card de perfil
  */
