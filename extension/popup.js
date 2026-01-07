@@ -295,9 +295,78 @@ async function loadSavedState() {
 
             console.log('📂 Estado restaurado com sucesso:', extensionState);
         }
+
+        // Configurar auto-save dos campos
+        setupAutoSaveFields();
+
     } catch (error) {
         console.error('Error loading state:', error);
     }
+}
+
+/**
+ * Configurar auto-save dos campos do formulário
+ */
+function setupAutoSaveFields() {
+    // Salvar fonte de extração
+    const sourceSelect = document.getElementById('extractSource');
+    if (sourceSelect) {
+        sourceSelect.addEventListener('change', () => {
+            extensionState.lastExtractSource = sourceSelect.value;
+            saveExtensionState();
+        });
+    }
+
+    // Salvar perfil alvo
+    const targetProfile = document.getElementById('targetProfile');
+    if (targetProfile) {
+        targetProfile.addEventListener('input', debounce(() => {
+            extensionState.lastTargetProfile = targetProfile.value;
+            saveExtensionState();
+        }, 500));
+    }
+
+    // Salvar alvo/referência
+    const extractTarget = document.getElementById('extractTarget');
+    if (extractTarget) {
+        extractTarget.addEventListener('input', debounce(() => {
+            extensionState.lastExtractTarget = extractTarget.value;
+            saveExtensionState();
+        }, 500));
+    }
+
+    // Salvar filtros
+    ['filterBR', 'filterPhoto', 'filterPosts', 'filterPublic'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                extensionState.lastFilters = {
+                    brOnly: document.getElementById('filterBR')?.checked ?? true,
+                    hasPhoto: document.getElementById('filterPhoto')?.checked ?? true,
+                    minPosts: document.getElementById('filterPosts')?.checked ?? false,
+                    publicOnly: document.getElementById('filterPublic')?.checked ?? false
+                };
+                saveExtensionState();
+            });
+        }
+    });
+
+    console.log('✓ Auto-save configurado');
+}
+
+/**
+ * Função debounce para evitar salvamentos excessivos
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 // Sistema de navegação por abas
