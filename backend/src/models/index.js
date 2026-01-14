@@ -11,6 +11,7 @@ const Flow = require('./Flow');
 const Execution = require('./Execution');
 const Log = require('./Log');
 const Account = require('./Account');
+const Lead = require('./Lead');
 
 // Relacionamentos
 
@@ -84,11 +85,22 @@ Account.belongsTo(User, {
     as: 'user'
 });
 
+// User <-> Lead (1:N)
+User.hasMany(Lead, {
+    foreignKey: 'user_id',
+    as: 'leads'
+});
+Lead.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user'
+});
+
 module.exports = {
     User,
     Subscription,
     Flow,
     Execution,
     Log,
-    Account
+    Account,
+    Lead
 };

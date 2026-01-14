@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Ajuda & Guia Oficial | E.I.O System</title>
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="icon" href="public/assets/official_brand_rocket.png" type="image/png">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background-color: var(--eio-dark-900);
+            color: #f0f0f0;
+            /* Texto claro garantido */
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .docs-sidebar {
+            width: var(--sidebar-width);
+            background: #121217;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 30px 20px;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .docs-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            text-decoration: none;
+        }
+
+        .docs-logo img {
+            height: 32px;
+        }
+
+        .docs-logo span {
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .docs-nav-group {
+            margin-bottom: 30px;
+        }
+
+        .docs-nav-title {
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-left: 10px;
+        }
+
+        .docs-nav-link {
+            display: block;
+            color: #ccc;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            margin-bottom: 5px;
+            border-left: 3px solid transparent;
+        }
+
+        .docs-nav-link:hover,
+        .docs-nav-link.active {
+            background: rgba(127, 90, 240, 0.1);
+            color: var(--eio-purple-400);
+            border-left-color: var(--eio-purple-500);
+        }
+
+        /* Main Content */
+        .docs-main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 60px 80px;
+            max-width: 1200px;
+        }
+
+        .docs-section {
+            margin-bottom: 100px;
+            scroll-margin-top: 40px;
+        }
+
+        .docs-title {
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .docs-subtitle {
+            font-size: 1.1rem;
+            color: #ddd;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card h3 {
+            color: #fff;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+
+        .feature-card p,
+        .feature-card li {
+            color: #ccc;
+            line-height: 1.7;
+        }
+
+        .step-list {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 30px;
+        }
+
+        .step-item::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--eio-purple-600);
+            color: #fff;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(127, 90, 240, 0.3);
+        }
+
+        .step-title {
+            color: #fff;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .step-desc {
+            color: #ccc;
+        }
+
+        .pro-tip {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid #2ecc71;
+            padding: 20px;
+            border-radius: 8px;
+            color: #ddd;
+            margin-top: 20px;
+        }
+
+        .pro-tip strong {
+            color: #2ecc71;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #ff79c6;
+        }
+
+        @media (max-width: 768px) {
+            .docs-sidebar {
+                display: none;
+            }
+
+            .docs-main {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <nav class="docs-sidebar">
+        <a href="index.html" class="docs-logo">
+            <img src="public/assets/official_brand_rocket.png" alt="Logo">
+            <span>Guia E.I.O</span>
+        </a>
+
+        <div class="docs-nav-group">
+            <div class="docs-nav-title">Primeiros Passos</div>
+            <a href="#intro" class="docs-nav-link">Introdução</a>
+            <a href="#instalacao" class="docs-nav-link">Instalação</a>
+            <a href="#dashboard" class="docs-nav-link">Tour do Dashboard</a>
+        </div>
+
+        <div class="docs-nav-group">
+            <div class="docs-nav-title">Ferramentas</div>
+            <a href="#explorador" class="docs-nav-link">🔎 Explorador de Leads</a>
+            <a href="#automacao" class="docs-nav-link">🤖 Automação Híbrida</a>
+            <a href="#crm" class="docs-nav-link">📈 CRM Integrado</a>
+        </div>
+
+        <div class="docs-nav-group">
+            <div class="docs-nav-title">Estratégia</div>
+            <a href="#seguranca" class="docs-nav-link">🛡️ Segurança</a>
+            <a href="#quiz" class="docs-nav-link">🎮 Funil de Quiz</a>
+        </div>
+
+        <div class="docs-nav-group">
+            <a href="dashboard.html" class="eio-btn eio-btn-primary"
+                style="width: 100%; text-align: center; margin-top: 20px;">Acessar Sistema</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="docs-main">
+
+        <!-- Intro -->
+        <section id="intro" class="docs-section">
+            <h1 class="docs-title">Bem-vindo à Revolução Orgânica 🚀</h1>
+            <p class="docs-subtitle">O Manual Oficial para dominar o E.I.O System e transformar seu Instagram em uma
+                máquina automática de captar clientes.</p>
+
+            <div class="feature-card">
+                <h3><span class="feature-icon">💡</span> O que é o E.I.O System?</h3>
+                <p>Somos um sistema de automação híbrida que roda diretamente no seu navegador. Diferente de robôs
+                    antigos que bloqueiam contas, o E.I.O simula um humano trabalhando por você 24 horas por dia.</p>
+            </div>
+        </section>
+
+        <!-- Instalação -->
+        <section id="instalacao" class="docs-section">
+            <h2 class="docs-title">Instalação e Configuração</h2>
+            <ul class="step-list">
+                <li class="step-item">
+                    <span class="step-title">Baixe a Extensão</span>
+                    <span class="step-desc">Acesse sua área de downloads e baixe o arquivo ZIP da extensão.</span>
+                </li>
+                <li class="step-item">
+                    <span class="step-title">Instale no Navegador</span>
+                    <span class="step-desc">Abra o Chrome, digite <code>chrome://extensions</code>, ative o "Modo do
+                        Desenvolvedor" (canto superior direito) e arraste a pasta da extensão.</span>
+                </li>
+                <li class="step-item">
+                    <span class="step-title">Login Seguro</span>
+                    <span class="step-desc">Clique no ícone do foguete na barra do navegador. Faça login com seu e-mail
+                        de compra e conecte seu Instagram.</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Dashboard Tour -->
+        <section id="dashboard" class="docs-section">
+            <h2 class="docs-title">Tour do Dashboard</h2>
+            <p>Seu painel de controle é dividido em áreas estratégicas:</p>
+            <div class="feature-card">
+                <ul>
+                    <li><strong>Analytics:</strong> Gráficos de crescimento de seguidores e engajamento.</li>
+                    <li><strong>Explorador:</strong> Ferramenta de busca de novos clientes.</li>
+                    <li><strong>Agentes IA:</strong> Configuração das mensagens automáticas.</li>
+                    <li><strong>CRM:</strong> Gestão visual dos seus leads (kanban).</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Explorador -->
+        <section id="explorador" class="docs-section">
+            <h2 class="docs-title">Explorador de Leads (Novo)</h2>
+            <p class="docs-subtitle">Como minerar contatos qualificados sem gastar com anúncios.</p>
+
+            <div class="feature-card">
+                <h3>Passo a Passo da Mineração</h3>
+                <ol style="color: #ccc; margin-left: 20px; line-height: 1.8;">
+                    <li>Vá na aba <strong>Explorador de Leads</strong> no menu lateral.</li>
+                    <li>No campo de busca, digite o <strong>cargo</strong> ou <strong>nicho</strong> (Ex:
+                        "Nutricionista", "Loja de Roupas").</li>
+                    <li>Marque os filtros <strong>Brasil Only</strong> e <strong>Possui Contato</strong> para limpar a
+                        lista.</li>
+                    <li>Clique em <strong>Explorar Agora</strong> e aguarde o sistema varrer os perfis.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Automação -->
+        <section id="automacao" class="docs-section">
+            <h2 class="docs-title">Automação Híbrida</h2>
+            <p>Configure o "Agente de Boas-Vindas" para falar com quem te segue.</p>
+            <div class="feature-card">
+                <p>Nossa IA identifica novos seguidores e envia um Direct personalizado após um tempo aleatório (delay),
+                    parecendo 100% natural.</p>
+                <p>Use a tag <code>{primeiro_nome}</code> para chamar a pessoa pelo nome!</p>
+            </div>
+        </section>
+
+        <!-- CRM -->
+        <section id="crm" class="docs-section">
+            <h2 class="docs-title">CRM Integrado</h2>
+            <p>Organize seus leads em colunas: Novos Leads, Em Negociação, Fechado.</p>
+            <div class="pro-tip">
+                <strong>Dica:</strong> Você pode arrastar os cards dos clientes de uma coluna para outra.
+            </div>
+        </section>
+
+        <!-- Segurança -->
+        <section id="seguranca" class="docs-section">
+            <h2 class="docs-title">Segurança Anti-Bloqueio</h2>
+            <div class="feature-card">
+                <h3>Escudo Nível Militar</h3>
+                <ul>
+                    <li><strong>Intervalos Aleatórios:</strong> Ações entre 45s e 180s.</li>
+                    <li><strong>Pausas de Descanso:</strong> O sistema para por 15min a cada 50 ações.</li>
+                    <li><strong>Navegação Humana:</strong> Sem chamadas de API proibidas (Graph API).</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Quiz -->
+        <section id="quiz" class="docs-section">
+            <h2 class="docs-title">Funil de Quiz Gamificado</h2>
+            <p>Use nosso gerador de Quiz para qualificar leads antes de vender.</p>
+            <div class="feature-card">
+                <p>Acesse <code>eio-system.vercel.app/quiz</code> para ver um exemplo prático. Você pode configurar
+                    perguntas que filtram clientes por orçamento e urgência.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Smooth scroll para links da sidebar
+        document.querySelectorAll('.docs-nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                document.querySelector(targetId).scrollIntoView({
+                    behavior: 'smooth'
+                });
+
+                // Active state
+                document.querySelectorAll('.docs-nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,26 @@
+name = "eio-system"
+main = "frontend"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "frontend"
+
+[[routes]]
+pattern = "/api/*"
+custom_origin = true
+
+[[routes]]
+pattern = "/downloads/*"
+custom_headers = { "Content-Disposition" = "attachment", "Cache-Control" = "public, max-age=0" }
+
+[[routes]]
+pattern = "*.html"
+custom_headers = { "Cache-Control" = "public, max-age=0, must-revalidate" }
+
+[[routes]]
+pattern = "*.css"
+custom_headers = { "Cache-Control" = "public, max-age=31536000, immutable" }
+
+[[routes]]
+pattern = "*.js"
+custom_headers = { "Cache-Control" = "public, max-age=31536000, immutable" }

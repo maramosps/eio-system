@@ -75,14 +75,29 @@ async function authenticate(req, res, next) {
         // Verificar token
         const decoded = verifyAccessToken(token);
 
+        // Handle both 'sub' and 'userId' from token (backward compatibility)
+        const userId = decoded.sub || decoded.userId;
+        const userRole = decoded.role || 'user';
+        const userEmail = decoded.email;
+
+        // If token has role 'admin', use token data directly
+        if (userRole === 'admin') {
+            req.user = {
+                id: userId,
+                email: userEmail,
+                role: 'admin'
+            };
+            return next();
+        }
+
         // Buscar usuário
         let user;
         try {
-            user = await User.findByPk(decoded.sub);
+            user = await User.findByPk(userId);
         } catch (dbError) {
             // Fallback for testing if database is offline but token is otherwise valid
             console.warn('Database offline, using token info for identification');
-            req.user = { id: decoded.sub, email: decoded.email || 'user@test.com', role: decoded.role || 'user' };
+            req.user = { id: userId, email: userEmail || 'user@test.com', role: userRole };
             return next();
         }
 

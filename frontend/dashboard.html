@@ -5,8 +5,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - E.I.O</title>
-    <link rel="stylesheet" href="design-system.css">
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="design-system.css?v=12">
+    <link rel="stylesheet" href="dashboard.css?v=12">
+    <link rel="stylesheet" href="admin.css?v=12">
+    <link rel="stylesheet" href="fix-spacing.css?v=12">
+
+
+    <!-- ✅ FIX SPACING INLINE - VERSÃO AGRESSIVA -->
+    <style>
+        /* ========================================
+           FIX DEFINITIVO DE ESPAÇAMENTO V16
+           Força layout mais simples, sem flex problemático
+           ======================================== */
+
+        /* TOPBAR - tamanho fixo compacto */
+        .eio-topbar {
+            padding: 10px 24px !important;
+        }
+
+        /* PAGE CONTENT - layout simples */
+        .eio-page-content {
+            padding: 16px 24px !important;
+            margin: 0 !important;
+            overflow-y: auto !important;
+        }
+
+        /* TODAS as seções - display none por padrão */
+        .eio-content-section {
+            display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* MOSTRA apenas a seção ativa - display block forçado */
+        .eio-content-section.eio-content-active {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Primeiro filho da seção ativa - sem margin top */
+        .eio-content-section.eio-content-active>*:first-child,
+        .eio-content-section.eio-content-active>.eio-card,
+        .eio-content-section.eio-content-active>.eio-stats-grid,
+        .eio-content-section.eio-content-active>.eio-section-header-dash {
+            margin-top: 0 !important;
+        }
+
+        /* HEADERS das seções */
+        .eio-section-header-dash {
+            margin: 0 0 16px 0 !important;
+            padding: 0 0 8px 0 !important;
+        }
+
+        /* Stats grid - sem margin top */
+        .eio-stats-grid {
+            margin-top: 0 !important;
+        }
+
+        /* Cards - sem margin top */
+        .eio-card {
+            margin-top: 0 !important;
+        }
+
+        /* SELECT - TEMA ESCURO */
+        select {
+            background-color: #1F1F28 !important;
+            color: #FFFFFF !important;
+            border: 1px solid #35354A !important;
+            padding: 10px 14px !important;
+            border-radius: 8px !important;
+            font-family: inherit !important;
+            font-size: 0.9rem !important;
+            cursor: pointer !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            padding-right: 36px !important;
+        }
+
+        select:focus {
+            outline: none !important;
+            border-color: #2196F3 !important;
+        }
+
+        select option {
+            background-color: #1F1F28 !important;
+            color: #FFFFFF !important;
+        }
+    </style>
 </head>
 
 <body class="eio-dashboard-body">
@@ -31,6 +120,15 @@
                 <span>Início</span>
             </a>
 
+
+            <a href="#explorer" class="eio-nav-item" data-page="explorer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>Explorador de Leads</span>
+            </a>
+
             <a href="#agents" class="eio-nav-item" data-page="agents">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h4z"
@@ -42,7 +140,7 @@
                 <span>Agentes IA</span>
             </a>
 
-            <a href="#analytics" class="eio-nav-item" data-page="analytics">
+            <a href="analytics.html" class="eio-nav-item">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M3 17V9M10 17V3M17 17V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
@@ -91,6 +189,50 @@
                 </svg>
                 <span>Configurações</span>
             </a>
+
+            <!-- Admin Sections (Hidden by default, shown via JS for admin users) -->
+            <div id="adminSectionsContainer"
+                style="display: none; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,0,85,0.3);">
+                <div
+                    style="padding: 0 15px 10px; font-size: 0.7rem; color: var(--eio-pink-500); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                    🔐 Administração
+                </div>
+
+                <a href="#admin-users" class="eio-nav-item" data-page="admin-users" style="color: var(--eio-pink-400);">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M13 14C13 12.3431 11.6569 11 10 11H6C4.34315 11 3 12.3431 3 14V17H13V14Z"
+                            stroke="currentColor" stroke-width="2" />
+                        <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Gerenciar Usuários</span>
+                </a>
+
+                <a href="#admin-subs" class="eio-nav-item" data-page="admin-subs" style="color: var(--eio-pink-400);">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M3 8H17" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Assinaturas</span>
+                </a>
+
+                <a href="#admin-messages" class="eio-nav-item" data-page="admin-messages"
+                    style="color: var(--eio-pink-400);">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2L3 7L10 12L17 7L10 2Z" stroke="currentColor" stroke-width="2" />
+                        <path d="M3 12L10 17L17 12" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Mensagens Auto</span>
+                </a>
+
+                <a href="#admin-finances" class="eio-nav-item" data-page="admin-finances"
+                    style="color: var(--eio-pink-400);">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" />
+                        <path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span>Financeiro</span>
+                </a>
+            </div>
         </nav>
 
         <!-- Sidebar Footer Removed as requested -->
@@ -147,6 +289,16 @@
                     <!-- User Dropdown -->
                     <div class="eio-user-dropdown" id="userDropdown"
                         style="display: none; position: absolute; top: 100%; right: 0; width: 220px; background: #1a1a23; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1000; margin-top: 10px; overflow: hidden;">
+                        <a href="admin.html" id="adminDropdownLink"
+                            style="display: none; align-items: center; gap: 10px; padding: 12px 20px; color: var(--eio-pink-400); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-weight: 600;"
+                            onmouseover="this.style.background='rgba(255,0,85,0.05)'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            Painel Administrativo
+                        </a>
                         <a href="profile.html"
                             style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;"
                             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
@@ -171,7 +323,7 @@
                             </svg>
                             Configurações
                         </a>
-                        <a href="MANUAL_DE_USO_EIO.html" target="_blank"
+                        <a href="guia.html" target="_blank"
                             style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;"
                             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
                             onmouseout="this.style.background='transparent'">
@@ -181,7 +333,21 @@
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
                             </svg>
-                            Ajuda
+                            Guia do Usuário
+                        </a>
+                        <a href="termos.html" target="_blank"
+                            style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Termos de Uso
                         </a>
                         <a href="#" id="btnLogout"
                             style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #ff4d4d; text-decoration: none; transition: background 0.2s;"
@@ -202,8 +368,89 @@
 
         <!-- Page Content -->
         <div class="eio-page-content" id="pageContent">
+            <!-- Explorer Page (Hidden by default) -->
+            <div class="eio-content-section" data-section="explorer" style="display: none;">
+                <div class="eio-card" style="padding: 30px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">🔍</div>
+                        <h2 class="eio-card-title" style="font-size: 1.5rem; color: #7F5AF0;">Explorador de Leads E.I.O
+                        </h2>
+                        <p style="color: #aaa; max-width: 600px; margin: 0 auto;">
+                            Encontre milhares de potenciais clientes no Instagram usando nossa tecnologia de busca por
+                            intenção. A extensão fará a varredura automáticamente.
+                        </p>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                        <div style="display: grid; grid-template-columns: 1fr 200px; gap: 15px; margin-bottom: 20px;">
+                            <input type="text" id="explorerSearch" placeholder="Ex: Nutricionista, Dono de Loja, CEO..."
+                                style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 8px; color: #fff; font-size: 1rem;">
+                            <button id="btnStartExploration" class="eio-btn eio-btn-primary"
+                                style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                Explorar Agora
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 8px; color: #ccc; cursor: pointer;">
+                                <input type="checkbox" id="filterBrazil" checked> 🇧🇷 Brasil Only
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; color: #ccc; cursor: pointer;">
+                                <input type="checkbox" id="filterContact" checked> 📱 Possui Contato (Bio)
+                            </label>
+                            <div style="margin-left: auto; color: #aaa; font-size: 0.9rem;">
+                                Limite de Segurança: <span style="color: #2ecc71;">Ativo (Humanizado)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="eio-table-container">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0;">Resultados da Busca</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="eio-btn eio-btn-sm eio-btn-outline" id="btnExportExcel">📊 Exportar
+                                    Excel</button>
+                                <button class="eio-btn eio-btn-sm eio-btn-success" id="btnSendToCRM">📥 Enviar para
+                                    CRM</button>
+                            </div>
+                        </div>
+
+                        <table class="eio-table" id="explorerTable">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAllExplorer"></th>
+                                    <th>Perfil</th>
+                                    <th>Bio (Resumo)</th>
+                                    <th>Contato (Detecção)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="explorerResults">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
+                                        Digite um termo acima e clique em "Explorar" para começar.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Dashboard Content -->
             <div class="eio-content-section eio-content-active" data-section="dashboard">
+                <div class="eio-section-header-dash">
+                    <h2 class="eio-section-title-dash">🏠 Painel de Controle</h2>
+                    <p>Visão geral de engajamento e métricas da sua conta</p>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="eio-stats-grid">
                     <div class="eio-stat-card">
@@ -306,8 +553,7 @@
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div>
                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Versão Atual</div>
-                                <div style="font-size: 1.1rem; font-weight: 600; color: #6246ea;" id="extensionVersion">
-                                    1.0.0</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #6246ea;" id="extensionVersion">2.1.0</div>
                             </div>
                             <div>
                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Tamanho</div>
@@ -962,493 +1208,547 @@ Conta com a gente sempre! ❤️</textarea>
                     <p>Engajamento contextual, proteção anti-bloqueio e captura de leads avançada</p>
                 </div>
 
-                <!-- Tabs de navegação -->
-                <div class="eio-analytics-tabs" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-                    <button class="eio-analytics-tab active" data-atab="timing"
-                        style="padding: 12px 20px; background: #6246ea; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;">
-                        ⏰ Horários de Pico
-                    </button>
-                    <button class="eio-analytics-tab" data-atab="protection"
-                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
-                        🛡️ Descanso Inteligente
-                    </button>
-                    <button class="eio-analytics-tab" data-atab="extractor"
-                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
-                        📥 Extrator de Leads
-                    </button>
-                    <button class="eio-analytics-tab" data-atab="hotleads"
-                        style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
-                        🔥 Leads Quentes
+                <!-- Empty State para Analytics (Novo) -->
+                <div id="analyticsEmptyState" class="eio-empty-state"
+                    style="padding: 60px 20px; text-align: center; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; margin-top: 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;">📊</div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Nenhuma análise disponível ainda</h3>
+                    <p style="color: rgba(255,255,255,0.5); max-width: 500px; margin: 0 auto 25px;">
+                        O sistema precisa coletar dados de uso da extensão para gerar gráficos e insights.
+                        Comece a usar a automação para ver as métricas aparecerem aqui.
+                    </p>
+                    <button class="eio-btn eio-btn-primary"
+                        onclick="document.getElementById('analyticsEmptyState').style.display='none'; document.getElementById('analyticsContent').style.display='block';">
+                        🔄 Carregar Painel Demo
                     </button>
                 </div>
 
-                <!-- TAB 1: ENGAJAMENTO CONTEXTUAL POR HORÁRIO -->
-                <div class="eio-analytics-content" data-acontent="timing" style="margin-top: 20px;">
-                    <div class="eio-card" style="border: 2px solid #6246ea;">
-                        <div class="eio-card-header">
-                            <div>
-                                <h3>⏰ Engajamento Contextual por Horário</h3>
-                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
-                                    Aumenta ações em horários de pico e reduz em horários mortos
-                                </p>
-                            </div>
-                            <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
-                                <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
-                                <div class="eio-toggle" id="toggleTiming"
-                                    style="width: 50px; height: 26px; background: #6246ea; border-radius: 13px; position: relative; cursor: pointer;">
-                                    <div
-                                        style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                <!-- Conteúdo Real (Oculto inicialmente se não houver dados) -->
+                <div id="analyticsContent" style="display: none;">
+
+                    <!-- Tabs de navegação -->
+                    <div class="eio-analytics-tabs"
+                        style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                        <button class="eio-analytics-tab active" data-atab="timing"
+                            style="padding: 12px 20px; background: #6246ea; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;">
+                            ⏰ Horários de Pico
+                        </button>
+                        <button class="eio-analytics-tab" data-atab="protection"
+                            style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                            🛡️ Descanso Inteligente
+                        </button>
+                        <button class="eio-analytics-tab" data-atab="extractor"
+                            style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                            📥 Extrator de Leads
+                        </button>
+                        <button class="eio-analytics-tab" data-atab="hotleads"
+                            style="padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #aaa; cursor: pointer;">
+                            🔥 Leads Quentes
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: ENGAJAMENTO CONTEXTUAL POR HORÁRIO -->
+                    <div class="eio-analytics-content" data-acontent="timing" style="margin-top: 10px;">
+                        <div class="eio-card" style="border: 2px solid #6246ea;">
+                            <div class="eio-card-header">
+                                <div>
+                                    <h3>⏰ Engajamento Contextual por Horário</h3>
+                                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                        Aumenta ações em horários de pico e reduz em horários mortos
+                                    </p>
+                                </div>
+                                <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
+                                    <div class="eio-toggle" id="toggleTiming"
+                                        style="width: 50px; height: 26px; background: #6246ea; border-radius: 13px; position: relative; cursor: pointer;">
+                                        <div
+                                            style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Gráfico de horários -->
-                        <div
-                            style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px;">
-                            <h4 style="color: #fff; margin: 0 0 20px;">📈 Melhores Horários para Engajamento</h4>
+                            <!-- Gráfico de horários -->
                             <div
-                                style="display: flex; align-items: flex-end; justify-content: space-between; height: 120px; padding: 0 10px;">
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 30px; border-radius: 4px;">
-                                    </div><span style="color: #aaa; font-size: 0.7rem;">6h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 50px; border-radius: 4px;">
-                                    </div><span style="color: #aaa; font-size: 0.7rem;">8h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 90px; border-radius: 4px;">
-                                    </div><span style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">10h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 100px; border-radius: 4px;">
-                                    </div><span style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">12h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 60px; border-radius: 4px;">
-                                    </div><span style="color: #aaa; font-size: 0.7rem;">14h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 55px; border-radius: 4px;">
-                                    </div><span style="color: #aaa; font-size: 0.7rem;">16h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 110px; border-radius: 4px;">
-                                    </div><span style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">18h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(255, 152, 0, 0.5), rgba(255, 152, 0, 1)); width: 30px; height: 120px; border-radius: 4px;">
-                                    </div><span style="color: #FF9800; font-size: 0.7rem; font-weight: 600;">20h
-                                        ⭐</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 95px; border-radius: 4px;">
-                                    </div><span style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">21h</span>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div
-                                        style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 40px; border-radius: 4px;">
-                                    </div><span style="color: #aaa; font-size: 0.7rem;">23h</span>
-                                </div>
-                            </div>
-                            <p
-                                style="color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center; margin-top: 15px;">
-                                ⭐ Melhor horário: 20h | 🚫 Evitar: 0h-6h (pausa automática)</p>
-                        </div>
-
-                        <!-- Configurações de intensidade -->
-                        <div style="margin-top: 25px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">⚙️ Intensidade por Período</h4>
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                                <h4 style="color: #fff; margin: 0 0 20px;">📈 Melhores Horários para Engajamento</h4>
                                 <div
-                                    style="padding: 20px; background: rgba(158, 158, 158, 0.1); border: 1px solid rgba(158, 158, 158, 0.2); border-radius: 12px; text-align: center;">
-                                    <div style="font-size: 1.5rem; margin-bottom: 10px;">🌙</div>
-                                    <div style="color: #9E9E9E; font-weight: 600; margin-bottom: 5px;">Horário Morto
+                                    style="display: flex; align-items: flex-end; justify-content: space-between; height: 120px; padding: 0 10px;">
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 30px; border-radius: 4px;">
+                                        </div><span style="color: #aaa; font-size: 0.7rem;">6h</span>
                                     </div>
-                                    <div style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
-                                        23h - 7h</div>
-                                    <select class="eio-input" id="intensityNight" style="width: 100%; padding: 8px;">
-                                        <option value="0" selected>Pausado (Recomendado)</option>
-                                        <option value="20">20% da velocidade</option>
-                                        <option value="50">50% da velocidade</option>
-                                    </select>
-                                </div>
-                                <div
-                                    style="padding: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.2); border-radius: 12px; text-align: center;">
-                                    <div style="font-size: 1.5rem; margin-bottom: 10px;">☀️</div>
-                                    <div style="color: #6246ea; font-weight: 600; margin-bottom: 5px;">Horário Normal
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 50px; border-radius: 4px;">
+                                        </div><span style="color: #aaa; font-size: 0.7rem;">8h</span>
                                     </div>
-                                    <div style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
-                                        7h - 18h</div>
-                                    <select class="eio-input" id="intensityDay" style="width: 100%; padding: 8px;">
-                                        <option value="50">50% da velocidade</option>
-                                        <option value="70">70% da velocidade</option>
-                                        <option value="100" selected>100% (Normal)</option>
-                                    </select>
-                                </div>
-                                <div
-                                    style="padding: 20px; background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px; text-align: center;">
-                                    <div style="font-size: 1.5rem; margin-bottom: 10px;">🔥</div>
-                                    <div style="color: #4CAF50; font-weight: 600; margin-bottom: 5px;">Horário de Pico
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 90px; border-radius: 4px;">
+                                        </div><span
+                                            style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">10h</span>
                                     </div>
-                                    <div style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
-                                        18h - 23h</div>
-                                    <select class="eio-input" id="intensityPeak" style="width: 100%; padding: 8px;">
-                                        <option value="100">100% (Normal)</option>
-                                        <option value="120" selected>120% (Agressivo)</option>
-                                        <option value="150">150% (Máximo)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                            <button class="eio-btn eio-btn-primary" id="btnSaveTiming">💾 Salvar Configurações</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 2: SISTEMA DE DESCANSO INTELIGENTE -->
-                <div class="eio-analytics-content" data-acontent="protection" style="margin-top: 20px; display: none;">
-                    <div class="eio-card" style="border: 2px solid #F44336;">
-                        <div class="eio-card-header">
-                            <div>
-                                <h3>🛡️ Sistema de Descanso Inteligente</h3>
-                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Proteção
-                                    automática contra bloqueios do Instagram</p>
-                            </div>
-                            <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
-                                <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
-                                <div class="eio-toggle" id="toggleProtection"
-                                    style="width: 50px; height: 26px; background: #F44336; border-radius: 13px; position: relative; cursor: pointer;">
-                                    <div
-                                        style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 100px; border-radius: 4px;">
+                                        </div><span
+                                            style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">12h</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 60px; border-radius: 4px;">
+                                        </div><span style="color: #aaa; font-size: 0.7rem;">14h</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 55px; border-radius: 4px;">
+                                        </div><span style="color: #aaa; font-size: 0.7rem;">16h</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 110px; border-radius: 4px;">
+                                        </div><span
+                                            style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">18h</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(255, 152, 0, 0.5), rgba(255, 152, 0, 1)); width: 30px; height: 120px; border-radius: 4px;">
+                                        </div><span style="color: #FF9800; font-size: 0.7rem; font-weight: 600;">20h
+                                            ⭐</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 1)); width: 30px; height: 95px; border-radius: 4px;">
+                                        </div><span
+                                            style="color: #4CAF50; font-size: 0.7rem; font-weight: 600;">21h</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div
+                                            style="background: linear-gradient(to top, rgba(98, 70, 234, 0.3), rgba(98, 70, 234, 0.8)); width: 30px; height: 40px; border-radius: 4px;">
+                                        </div><span style="color: #aaa; font-size: 0.7rem;">23h</span>
                                     </div>
                                 </div>
+                                <p
+                                    style="color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center; margin-top: 15px;">
+                                    ⭐ Melhor horário: 20h | 🚫 Evitar: 0h-6h (pausa automática)</p>
                             </div>
-                        </div>
 
-                        <!-- Status atual -->
-                        <div id="protectionStatus"
-                            style="margin-top: 25px; padding: 25px; background: rgba(76, 175, 80, 0.1); border: 2px solid rgba(76, 175, 80, 0.3); border-radius: 12px; text-align: center;">
-                            <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
-                            <div style="color: #4CAF50; font-size: 1.3rem; font-weight: 600;">Conta Segura</div>
-                            <div style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Nenhum
-                                bloqueio detectado nas últimas 24h</div>
-                        </div>
-
-                        <!-- Regras de proteção -->
-                        <div style="margin-top: 25px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">⚡ Regras de Proteção Automática</h4>
-                            <div style="display: grid; gap: 15px;">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(244, 67, 54, 0.05); border: 1px solid rgba(244, 67, 54, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;">
-                                        <span style="font-size: 2rem;">🚫</span>
-                                        <div>
-                                            <div style="color: #F44336; font-weight: 600;">Muitos "Ação Bloqueada"</div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Se detectar
-                                                3+ bloqueios em 1 hora</div>
+                            <!-- Configurações de intensidade -->
+                            <div style="margin-top: 25px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">⚙️ Intensidade por Período</h4>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                    <div
+                                        style="padding: 20px; background: rgba(158, 158, 158, 0.1); border: 1px solid rgba(158, 158, 158, 0.2); border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.5rem; margin-bottom: 10px;">🌙</div>
+                                        <div style="color: #9E9E9E; font-weight: 600; margin-bottom: 5px;">Horário Morto
                                         </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="color: #aaa;">Pausar por</span>
-                                        <select class="eio-input" id="pauseBlocked" style="width: 100px; padding: 8px;">
-                                            <option value="12">12 horas</option>
-                                            <option value="24" selected>24 horas</option>
-                                            <option value="48">48 horas</option>
+                                        <div
+                                            style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
+                                            23h - 7h</div>
+                                        <select class="eio-input" id="intensityNight"
+                                            style="width: 100%; padding: 8px;">
+                                            <option value="0" selected>Pausado (Recomendado)</option>
+                                            <option value="20">20% da velocidade</option>
+                                            <option value="50">50% da velocidade</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;">
-                                        <span style="font-size: 2rem;">🤖</span>
-                                        <div>
-                                            <div style="color: #FF9800; font-weight: 600;">Captcha Detectado</div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Instagram
-                                                pediu verificação</div>
+                                    <div
+                                        style="padding: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.2); border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.5rem; margin-bottom: 10px;">☀️</div>
+                                        <div style="color: #6246ea; font-weight: 600; margin-bottom: 5px;">Horário
+                                            Normal
                                         </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="color: #aaa;">Pausar por</span>
-                                        <select class="eio-input" id="pauseCaptcha" style="width: 100px; padding: 8px;">
-                                            <option value="2">2 horas</option>
-                                            <option value="4" selected>4 horas</option>
-                                            <option value="8">8 horas</option>
+                                        <div
+                                            style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
+                                            7h - 18h</div>
+                                        <select class="eio-input" id="intensityDay" style="width: 100%; padding: 8px;">
+                                            <option value="50">50% da velocidade</option>
+                                            <option value="70">70% da velocidade</option>
+                                            <option value="100" selected>100% (Normal)</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;">
-                                        <span style="font-size: 2rem;">⚡</span>
-                                        <div>
-                                            <div style="color: #2196F3; font-weight: 600;">Limite de Ações Atingido
-                                            </div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Velocidade
-                                                acima do seguro</div>
+                                    <div
+                                        style="padding: 20px; background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.5rem; margin-bottom: 10px;">🔥</div>
+                                        <div style="color: #4CAF50; font-weight: 600; margin-bottom: 5px;">Horário de
+                                            Pico
                                         </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="color: #aaa;">Pausar por</span>
-                                        <select class="eio-input" id="pauseLimit" style="width: 100px; padding: 8px;">
-                                            <option value="1" selected>1 hora</option>
-                                            <option value="2">2 horas</option>
-                                            <option value="4">4 horas</option>
+                                        <div
+                                            style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 10px;">
+                                            18h - 23h</div>
+                                        <select class="eio-input" id="intensityPeak" style="width: 100%; padding: 8px;">
+                                            <option value="100">100% (Normal)</option>
+                                            <option value="120" selected>120% (Agressivo)</option>
+                                            <option value="150">150% (Máximo)</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Notificações -->
-                        <div
-                            style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">🔔 Notificações de Proteção</h4>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" checked id="notifyPause"
-                                        style="width: 18px; height: 18px; accent-color: #6246ea;"> Notificar quando
-                                    pausa preventiva for ativada</label>
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" checked id="notifyBlock"
-                                        style="width: 18px; height: 18px; accent-color: #6246ea;"> Notificar quando
-                                    bloqueio for detectado</label>
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" id="notifyEmail"
-                                        style="width: 18px; height: 18px; accent-color: #6246ea;"> Enviar email com
-                                    relatório diário</label>
+                            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                <button class="eio-btn eio-btn-primary" id="btnSaveTiming">💾 Salvar
+                                    Configurações</button>
                             </div>
-                        </div>
-                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                            <button class="eio-btn eio-btn-primary" id="btnSaveProtection">💾 Salvar
-                                Configurações</button>
                         </div>
                     </div>
-                </div>
 
-                <!-- TAB 3: EXTRATOR DE LEADS AVANÇADO -->
-                <div class="eio-analytics-content" data-acontent="extractor" style="margin-top: 20px; display: none;">
-                    <div class="eio-card" style="border: 2px solid #9C27B0;">
-                        <div class="eio-card-header">
-                            <div>
-                                <h3>📥 Extrator de Leads Avançado</h3>
-                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Capture
-                                    leads de múltiplas fontes com dados enriquecidos</p>
-                            </div>
-                        </div>
-
-                        <!-- Fontes de extração -->
-                        <div style="margin-top: 25px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">🎯 Fontes de Extração</h4>
-                            <div style="display: grid; gap: 15px;">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;"><span
-                                            style="font-size: 1.5rem;">💬</span>
-                                        <div>
-                                            <div style="color: #4CAF50; font-weight: 600;">Comentários de Concorrentes
-                                            </div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, nome,
-                                                última atividade</div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
-                                        Alta</span>
+                    <!-- TAB 2: SISTEMA DE DESCANSO INTELIGENTE -->
+                    <div class="eio-analytics-content" data-acontent="protection"
+                        style="margin-top: 20px; display: none;">
+                        <div class="eio-card" style="border: 2px solid #F44336;">
+                            <div class="eio-card-header">
+                                <div>
+                                    <h3>🛡️ Sistema de Descanso Inteligente</h3>
+                                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                        Proteção
+                                        automática contra bloqueios do Instagram</p>
                                 </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;"><span
-                                            style="font-size: 1.5rem;">👥</span>
-                                        <div>
-                                            <div style="color: #2196F3; font-weight: 600;">Seguidores de Influencers
-                                            </div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, bio,
-                                                seguidores</div>
+                                <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
+                                    <div class="eio-toggle" id="toggleProtection"
+                                        style="width: 50px; height: 26px; background: #F44336; border-radius: 13px; position: relative; cursor: pointer;">
+                                        <div
+                                            style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
                                         </div>
                                     </div>
-                                    <span
-                                        style="background: rgba(33, 150, 243, 0.2); color: #2196F3; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
-                                        Média</span>
-                                </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;"><span
-                                            style="font-size: 1.5rem;">#️⃣</span>
-                                        <div>
-                                            <div style="color: #4CAF50; font-weight: 600;">Hashtags de Nicho</div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, posts
-                                                recentes, engajamento</div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
-                                        Alta</span>
-                                </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;"><span
-                                            style="font-size: 1.5rem;">❤️</span>
-                                        <div>
-                                            <div style="color: #FF9800; font-weight: 600;">Quem Curtiu Posts Específicos
-                                            </div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, perfil
-                                                verificado</div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        style="background: rgba(255, 152, 0, 0.2); color: #FF9800; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Muito
-                                        Alta</span>
-                                </div>
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(156, 39, 176, 0.05); border: 1px solid rgba(156, 39, 176, 0.2); border-radius: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 15px;"><span
-                                            style="font-size: 1.5rem;">👁️</span>
-                                        <div>
-                                            <div style="color: #9C27B0; font-weight: 600;">Viewers de Stories ⭐</div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, se já
-                                                segue, interações</div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        style="background: rgba(156, 39, 176, 0.2); color: #9C27B0; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Premium</span>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Importação CSV -->
-                        <div
-                            style="margin-top: 25px; padding: 25px; background: rgba(255,255,255,0.02); border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
-                            <div style="font-size: 2.5rem; margin-bottom: 15px;">📄</div>
-                            <h4 style="color: #fff; margin: 0 0 10px;">Importar Lista de Leads</h4>
-                            <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 20px;">Suba um
-                                arquivo CSV ou Excel com usernames para enriquecer automaticamente</p>
-                            <input type="file" id="csvUpload" accept=".csv,.xlsx" style="display: none;">
-                            <button class="eio-btn eio-btn-primary"
-                                onclick="document.getElementById('csvUpload').click()">📁 Selecionar Arquivo (.csv ou
-                                .xlsx)</button>
-                            <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-top: 15px;">Formato: uma
-                                coluna com usernames (sem @)</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 4: DETECTOR DE LEADS QUENTES -->
-                <div class="eio-analytics-content" data-acontent="hotleads" style="margin-top: 20px; display: none;">
-                    <div class="eio-card" style="border: 2px solid #FF5722;">
-                        <div class="eio-card-header">
-                            <div>
-                                <h3>🔥 Detector de Leads Quentes</h3>
-                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Identifica
-                                    automaticamente leads com alto potencial de conversão</p>
+                            <!-- Status atual -->
+                            <div id="protectionStatus"
+                                style="margin-top: 25px; padding: 25px; background: rgba(76, 175, 80, 0.1); border: 2px solid rgba(76, 175, 80, 0.3); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+                                <div style="color: #4CAF50; font-size: 1.3rem; font-weight: 600;">Conta Segura</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Nenhum
+                                    bloqueio detectado nas últimas 24h</div>
                             </div>
-                            <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
-                                <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
-                                <div class="eio-toggle" id="toggleHotleads"
-                                    style="width: 50px; height: 26px; background: #FF5722; border-radius: 13px; position: relative; cursor: pointer;">
+
+                            <!-- Regras de proteção -->
+                            <div style="margin-top: 25px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">⚡ Regras de Proteção Automática</h4>
+                                <div style="display: grid; gap: 15px;">
                                     <div
-                                        style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(244, 67, 54, 0.05); border: 1px solid rgba(244, 67, 54, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <span style="font-size: 2rem;">🚫</span>
+                                            <div>
+                                                <div style="color: #F44336; font-weight: 600;">Muitos "Ação Bloqueada"
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Se
+                                                    detectar
+                                                    3+ bloqueios em 1 hora</div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="color: #aaa;">Pausar por</span>
+                                            <select class="eio-input" id="pauseBlocked"
+                                                style="width: 100px; padding: 8px;">
+                                                <option value="12">12 horas</option>
+                                                <option value="24" selected>24 horas</option>
+                                                <option value="48">48 horas</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <span style="font-size: 2rem;">🤖</span>
+                                            <div>
+                                                <div style="color: #FF9800; font-weight: 600;">Captcha Detectado</div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Instagram
+                                                    pediu verificação</div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="color: #aaa;">Pausar por</span>
+                                            <select class="eio-input" id="pauseCaptcha"
+                                                style="width: 100px; padding: 8px;">
+                                                <option value="2">2 horas</option>
+                                                <option value="4" selected>4 horas</option>
+                                                <option value="8">8 horas</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <span style="font-size: 2rem;">⚡</span>
+                                            <div>
+                                                <div style="color: #2196F3; font-weight: 600;">Limite de Ações Atingido
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">
+                                                    Velocidade
+                                                    acima do seguro</div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="color: #aaa;">Pausar por</span>
+                                            <select class="eio-input" id="pauseLimit"
+                                                style="width: 100px; padding: 8px;">
+                                                <option value="1" selected>1 hora</option>
+                                                <option value="2">2 horas</option>
+                                                <option value="4">4 horas</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Gatilhos -->
-                        <div style="margin-top: 25px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">⚡ Gatilhos Automáticos de Lead Quente</h4>
-                            <div style="display: grid; gap: 12px;">
-                                <label
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                    <div style="display: flex; align-items: center; gap: 12px;"><input type="checkbox"
-                                            checked style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                            style="color: #fff;">💬 Respondeu DM em menos de 1 hora</span></div><span
-                                        style="color: #FF5722; font-weight: 600;">+5 pts</span>
-                                </label>
-                                <label
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                    <div style="display: flex; align-items: center; gap: 12px;"><input type="checkbox"
-                                            checked style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                            style="color: #fff;">👁️ Visitou perfil 3+ vezes</span></div><span
-                                        style="color: #FF5722; font-weight: 600;">+4 pts</span>
-                                </label>
-                                <label
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                    <div style="display: flex; align-items: center; gap: 12px;"><input type="checkbox"
-                                            checked style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                            style="color: #fff;">🔖 Salvou post ou story</span></div><span
-                                        style="color: #FF5722; font-weight: 600;">+4 pts</span>
-                                </label>
-                                <label
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                    <div style="display: flex; align-items: center; gap: 12px;"><input type="checkbox"
-                                            checked style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                            style="color: #fff;">🔄 Compartilhou conteúdo</span></div><span
-                                        style="color: #FF5722; font-weight: 600;">+5 pts</span>
-                                </label>
-                                <label
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                    <div style="display: flex; align-items: center; gap: 12px;"><input type="checkbox"
-                                            checked style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                            style="color: #fff;">📸 Mencionou em story</span></div><span
-                                        style="color: #FF5722; font-weight: 600;">+6 pts</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Ação automática -->
-                        <div
-                            style="margin-top: 25px; padding: 20px; background: rgba(255, 87, 34, 0.1); border: 1px solid rgba(255, 87, 34, 0.2); border-radius: 12px;">
-                            <h4 style="color: #FF5722; margin: 0 0 15px;">🎯 Ação Automática ao Detectar Lead Quente
-                            </h4>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" checked
-                                        style="width: 18px; height: 18px; accent-color: #FF5722;"> Exibir notificação:
-                                    "🔥 Lead quente detectado! @username"</label>
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" checked
-                                        style="width: 18px; height: 18px; accent-color: #FF5722;"> Mover automaticamente
-                                    para coluna "Quente" no CRM</label>
-                                <label
-                                    style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                        type="checkbox" style="width: 18px; height: 18px; accent-color: #FF5722;">
-                                    Enviar DM automática de follow-up</label>
-                            </div>
-                        </div>
-
-                        <!-- Leads quentes recentes -->
-                        <div style="margin-top: 25px;">
-                            <h4 style="color: #fff; margin: 0 0 15px;">🔥 Leads Quentes Recentes</h4>
-                            <div id="hotLeadsList" style="display: grid; gap: 10px;">
-                                <div
-                                    style="padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; text-align: center;">
-                                    <p style="color: rgba(255,255,255,0.4); margin: 0;">Nenhum lead quente detectado
-                                        ainda. Ative a extensão e comece a capturar!</p>
+                            <!-- Notificações -->
+                            <div
+                                style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">🔔 Notificações de Proteção</h4>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" checked id="notifyPause"
+                                            style="width: 18px; height: 18px; accent-color: #6246ea;"> Notificar quando
+                                        pausa preventiva for ativada</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" checked id="notifyBlock"
+                                            style="width: 18px; height: 18px; accent-color: #6246ea;"> Notificar quando
+                                        bloqueio for detectado</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" id="notifyEmail"
+                                            style="width: 18px; height: 18px; accent-color: #6246ea;"> Enviar email com
+                                        relatório diário</label>
                                 </div>
                             </div>
-                        </div>
-                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                            <button class="eio-btn eio-btn-primary" id="btnSaveHotleads">💾 Salvar
-                                Configurações</button>
+                            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                <button class="eio-btn eio-btn-primary" id="btnSaveProtection">💾 Salvar
+                                    Configurações</button>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- TAB 3: EXTRATOR DE LEADS AVANÇADO -->
+                    <div class="eio-analytics-content" data-acontent="extractor"
+                        style="margin-top: 20px; display: none;">
+                        <div class="eio-card" style="border: 2px solid #9C27B0;">
+                            <div class="eio-card-header">
+                                <div>
+                                    <h3>📥 Extrator de Leads Avançado</h3>
+                                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">Capture
+                                        leads de múltiplas fontes com dados enriquecidos</p>
+                                </div>
+                            </div>
+
+                            <!-- Fontes de extração -->
+                            <div style="margin-top: 25px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">🎯 Fontes de Extração</h4>
+                                <div style="display: grid; gap: 15px;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;"><span
+                                                style="font-size: 1.5rem;">💬</span>
+                                            <div>
+                                                <div style="color: #4CAF50; font-weight: 600;">Comentários de
+                                                    Concorrentes
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, nome,
+                                                    última atividade</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
+                                            Alta</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;"><span
+                                                style="font-size: 1.5rem;">👥</span>
+                                            <div>
+                                                <div style="color: #2196F3; font-weight: 600;">Seguidores de Influencers
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, bio,
+                                                    seguidores</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            style="background: rgba(33, 150, 243, 0.2); color: #2196F3; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
+                                            Média</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;"><span
+                                                style="font-size: 1.5rem;">#️⃣</span>
+                                            <div>
+                                                <div style="color: #4CAF50; font-weight: 600;">Hashtags de Nicho</div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, posts
+                                                    recentes, engajamento</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Qualidade
+                                            Alta</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;"><span
+                                                style="font-size: 1.5rem;">❤️</span>
+                                            <div>
+                                                <div style="color: #FF9800; font-weight: 600;">Quem Curtiu Posts
+                                                    Específicos
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, perfil
+                                                    verificado</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            style="background: rgba(255, 152, 0, 0.2); color: #FF9800; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Muito
+                                            Alta</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: rgba(156, 39, 176, 0.05); border: 1px solid rgba(156, 39, 176, 0.2); border-radius: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 15px;"><span
+                                                style="font-size: 1.5rem;">👁️</span>
+                                            <div>
+                                                <div style="color: #9C27B0; font-weight: 600;">Viewers de Stories ⭐
+                                                </div>
+                                                <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">@, se já
+                                                    segue, interações</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            style="background: rgba(156, 39, 176, 0.2); color: #9C27B0; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">Premium</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Importação CSV -->
+                            <div
+                                style="margin-top: 25px; padding: 25px; background: rgba(255,255,255,0.02); border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 2.5rem; margin-bottom: 15px;">📄</div>
+                                <h4 style="color: #fff; margin: 0 0 10px;">Importar Lista de Leads</h4>
+                                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 20px;">Suba um
+                                    arquivo CSV ou Excel com usernames para enriquecer automaticamente</p>
+                                <input type="file" id="csvUpload" accept=".csv,.xlsx" style="display: none;">
+                                <button class="eio-btn eio-btn-primary"
+                                    onclick="document.getElementById('csvUpload').click()">📁 Selecionar Arquivo (.csv
+                                    ou
+                                    .xlsx)</button>
+                                <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-top: 15px;">Formato:
+                                    uma
+                                    coluna com usernames (sem @)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: DETECTOR DE LEADS QUENTES -->
+                    <div class="eio-analytics-content" data-acontent="hotleads"
+                        style="margin-top: 20px; display: none;">
+                        <div class="eio-card" style="border: 2px solid #FF5722;">
+                            <div class="eio-card-header">
+                                <div>
+                                    <h3>🔥 Detector de Leads Quentes</h3>
+                                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 5px;">
+                                        Identifica
+                                        automaticamente leads com alto potencial de conversão</p>
+                                </div>
+                                <div class="eio-toggle-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #aaa; font-size: 0.85rem;">Ativo</span>
+                                    <div class="eio-toggle" id="toggleHotleads"
+                                        style="width: 50px; height: 26px; background: #FF5722; border-radius: 13px; position: relative; cursor: pointer;">
+                                        <div
+                                            style="width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gatilhos -->
+                            <div style="margin-top: 25px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">⚡ Gatilhos Automáticos de Lead Quente</h4>
+                                <div style="display: grid; gap: 12px;">
+                                    <label
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                                        <div style="display: flex; align-items: center; gap: 12px;"><input
+                                                type="checkbox" checked
+                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
+                                                style="color: #fff;">💬 Respondeu DM em menos de 1 hora</span></div>
+                                        <span style="color: #FF5722; font-weight: 600;">+5 pts</span>
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                                        <div style="display: flex; align-items: center; gap: 12px;"><input
+                                                type="checkbox" checked
+                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
+                                                style="color: #fff;">👁️ Visitou perfil 3+ vezes</span></div><span
+                                            style="color: #FF5722; font-weight: 600;">+4 pts</span>
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                                        <div style="display: flex; align-items: center; gap: 12px;"><input
+                                                type="checkbox" checked
+                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
+                                                style="color: #fff;">🔖 Salvou post ou story</span></div><span
+                                            style="color: #FF5722; font-weight: 600;">+4 pts</span>
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                                        <div style="display: flex; align-items: center; gap: 12px;"><input
+                                                type="checkbox" checked
+                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
+                                                style="color: #fff;">🔄 Compartilhou conteúdo</span></div><span
+                                            style="color: #FF5722; font-weight: 600;">+5 pts</span>
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                                        <div style="display: flex; align-items: center; gap: 12px;"><input
+                                                type="checkbox" checked
+                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
+                                                style="color: #fff;">📸 Mencionou em story</span></div><span
+                                            style="color: #FF5722; font-weight: 600;">+6 pts</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Ação automática -->
+                            <div
+                                style="margin-top: 25px; padding: 20px; background: rgba(255, 87, 34, 0.1); border: 1px solid rgba(255, 87, 34, 0.2); border-radius: 12px;">
+                                <h4 style="color: #FF5722; margin: 0 0 15px;">🎯 Ação Automática ao Detectar Lead Quente
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" checked
+                                            style="width: 18px; height: 18px; accent-color: #FF5722;"> Exibir
+                                        notificação:
+                                        "🔥 Lead quente detectado! @username"</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" checked
+                                            style="width: 18px; height: 18px; accent-color: #FF5722;"> Mover
+                                        automaticamente
+                                        para coluna "Quente" no CRM</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
+                                            type="checkbox" style="width: 18px; height: 18px; accent-color: #FF5722;">
+                                        Enviar DM automática de follow-up</label>
+                                </div>
+                            </div>
+
+                            <!-- Leads quentes recentes -->
+                            <div style="margin-top: 25px;">
+                                <h4 style="color: #fff; margin: 0 0 15px;">🔥 Leads Quentes Recentes</h4>
+                                <div id="hotLeadsList" style="display: grid; gap: 10px;">
+                                    <div
+                                        style="padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; text-align: center;">
+                                        <p style="color: rgba(255,255,255,0.4); margin: 0;">Nenhum lead quente detectado
+                                            ainda. Ative a extensão e comece a capturar!</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                <button class="eio-btn eio-btn-primary" id="btnSaveHotleads">💾 Salvar
+                                    Configurações</button>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- Fim de #analyticsContent -->
             </div>
 
             <!-- Messages Section (Central de DMs + Automação) -->
@@ -1459,7 +1759,7 @@ Conta com a gente sempre! ❤️</textarea>
                 </div>
 
                 <!-- Tabs de navegação -->
-                <div class="eio-messages-tabs" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                <div class="eio-messages-tabs" style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="eio-messages-tab active" data-mtab="conversations"
                         style="padding: 12px 20px; background: #6246ea; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;">
                         💬 Conversas
@@ -1479,7 +1779,7 @@ Conta com a gente sempre! ❤️</textarea>
                 </div>
 
                 <!-- TAB 1: CONVERSAS -->
-                <div class="eio-messages-content" data-mcontent="conversations" style="margin-top: 20px;">
+                <div class="eio-messages-content" data-mcontent="conversations" style="margin-top: 10px;">
                     <!-- Aviso sobre funcionamento -->
                     <div class="eio-card"
                         style="background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
@@ -1496,7 +1796,7 @@ Conta com a gente sempre! ❤️</textarea>
                     </div>
 
                     <!-- Lista de conversas -->
-                    <div class="eio-card" style="margin-top: 20px;">
+                    <div class="eio-card" style="margin-top: 10px;">
                         <div class="eio-card-header">
                             <div>
                                 <h3>Conversas</h3>
@@ -1847,7 +2147,7 @@ Significa muito pra nós ter você aqui ❤️</textarea>
                 </div>
 
                 <!-- Tabs de navegação -->
-                <div class="eio-protools-tabs" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                <div class="eio-protools-tabs" style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
                     <button class="eio-protools-tab active" data-ptab="security"
                         style="padding: 12px 20px; background: #6246ea; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;">
                         🛡️ Segurança Anti-Bloqueio
@@ -1871,7 +2171,7 @@ Significa muito pra nós ter você aqui ❤️</textarea>
                 </div>
 
                 <!-- TAB 1: SEGURANÇA ANTI-BLOQUEIO -->
-                <div class="eio-protools-content" data-pcontent="security" style="margin-top: 20px;">
+                <div class="eio-protools-content" data-pcontent="security" style="margin-top: 10px;">
                     <!-- Fingerprint Humano -->
                     <div class="eio-card" style="border: 2px solid #4CAF50;">
                         <div class="eio-card-header">
@@ -2395,71 +2695,692 @@ Significa muito pra nós ter você aqui ❤️</textarea>
             <!-- Accounts Section (New) -->
             <div class="eio-content-section" data-section="accounts">
                 <div class="eio-section-header-dash">
-                    <h2 class="eio-section-title-dash">Contas Instagram</h2>
-                    <p>Cadastre até <strong>2 perfis</strong> do Instagram para fazer login na extensão</p>
+                    <h2 class="eio-section-title-dash">👤 Gerenciar Perfis</h2>
+                    <p>Conecte seus perfis do Instagram para automação. Cada licença inclui 1 slot.</p>
                 </div>
 
-                <!-- Aviso importante sobre o sistema de login -->
-                <div class="eio-card"
-                    style="margin-top: 20px; background: rgba(98, 70, 234, 0.1); border: 1px solid rgba(98, 70, 234, 0.3);">
-                    <div style="display: flex; align-items: flex-start; gap: 15px; padding: 20px;">
-                        <div style="font-size: 2rem;">💡</div>
+                <div class="eio-card" style="margin-bottom: 25px; border-left: 3px solid #7F5AF0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
                         <div>
-                            <h4 style="color: #fff; margin: 0 0 8px;">Como funciona o login na extensão</h4>
-                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.6;">
-                                Para usar a extensão E.I.O, você deve cadastrar seu <strong>@ do Instagram</strong>
-                                aqui
-                                no dashboard.
-                                Na extensão, você fará login usando apenas o <strong>@</strong> cadastrado - sem
-                                precisar de email ou senha.
-                            </p>
-                            <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 0.85rem;">
-                                ⚠️ Limite: máximo de <strong>2 perfis</strong> por conta. Isso evita o
-                                compartilhamento
-                                indevido da extensão.
+                            <h3 style="margin: 0; color: #fff; font-size: 1.1rem;">Capacidade da Conta</h3>
+                            <p style="margin: 5px 0 0; color: #aaa; font-size: 0.9rem;">
+                                Você está usando <strong style="color: #fff;"><span
+                                        id="accountsCountDisplay">1</span>/<span
+                                        id="slotsTotalDisplay">1</span></strong> slots disponíveis.
                             </p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="eio-card" style="margin-top: 20px;">
-                    <div class="eio-card-header">
-                        <div>
-                            <h3>Contas Cadastradas</h3>
-                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px;">
-                                <span id="accountsCount">0</span>/2 contas utilizadas
-                            </p>
-                        </div>
-                        <button class="eio-btn eio-btn-primary eio-btn-sm" id="btnConnectAccount">
-                            + Adicionar Conta
+                        <button onclick="openSlotModal()" class="eio-btn eio-btn-primary"
+                            style="background: rgba(127, 90, 240, 0.2); border: 1px solid #7F5AF0; color: #7F5AF0;">
+                            + Comprar Slot Extra
                         </button>
                     </div>
-                    <div class="eio-account-list" id="accountsList" style="margin-top: 20px;">
-                        <!-- Estado vazio por padrão -->
-                        <div class="eio-empty-accounts" style="padding: 50px 20px; text-align: center;">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)"
-                                stroke-width="1.5" style="margin-bottom: 20px;">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M16 12H8"></path>
-                                <path d="M12 8v8"></path>
+                </div>
+
+                <div class="eio-account-grid" id="accountsListGrid"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+
+                    <div class="eio-card" style="position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #25D366;">
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div
+                                    style="width: 50px; height: 50px; background: #2d2d3a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                    📸
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; color: #fff;">@seu_instagram</h4>
+                                    <span style="font-size: 0.8rem; color: #25D366;">● Conectado e Ativo</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="eio-btn eio-btn-sm"
+                                    style="flex: 1; background: rgba(255,255,255,0.05);">Configurar</button>
+                                <button class="eio-btn eio-btn-sm"
+                                    style="background: rgba(255,77,77,0.1); color: #ff4d4d;">Desconectar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onclick="openSlotModal()"
+                        style="border: 2px dashed rgba(127, 90, 240, 0.3); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; cursor: pointer; transition: all 0.3s;"
+                        onmouseover="this.style.borderColor='#7F5AF0'; this.style.background='rgba(127, 90, 240, 0.05)'"
+                        onmouseout="this.style.borderColor='rgba(127, 90, 240, 0.3)'; this.style.background='transparent'">
+                        <div
+                            style="width: 50px; height: 50px; background: #7F5AF0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(127, 90, 240, 0.3);">
+                            +
+                        </div>
+                        <h4 style="color: #fff; margin: 0;">Adicionar Perfil</h4>
+                        <span style="color: #aaa; font-size: 0.85rem; margin-top: 5px;">R$ 150,00 / slot</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="slotModal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;">
+                <div
+                    style="background: #16161e; border: 1px solid #7F5AF0; padding: 30px; border-radius: 16px; max-width: 450px; width: 90%; position: relative; box-shadow: 0 0 40px rgba(127, 90, 240, 0.2);">
+                    <button onclick="document.getElementById('slotModal').style.display='none'"
+                        style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer;">✕</button>
+
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
+                        <h2 style="color: #fff; margin: 0;">Expandir Operação</h2>
+                        <p style="color: #ccc; font-size: 0.95rem; margin-top: 10px;">Adicione mais um perfil de
+                            Instagram ao seu painel.</p>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; color: #fff; margin-bottom: 8px;">
+                            <span>Item:</span>
+                            <span><strong>1x Slot de Perfil Extra</strong></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #fff; font-size: 1.2rem;">
+                            <span>Valor Único:</span>
+                            <span style="color: #25D366; font-weight: 800;">R$ 150,00</span>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                        <p style="color: #aaa; font-size: 0.8rem; margin: 0;">
+                            ℹ️ O slot adicional segue a validade da sua assinatura principal. Após a compra, envie o
+                            comprovante para liberação imediata.
+                        </p>
+                    </div>
+
+                    <a href="javascript:void(0)" onclick="redirectToWhatsAppSlot()"
+                        style="display: block; background: #25D366; color: #fff; text-decoration: none; padding: 16px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; transition: 0.3s; border: none; width: 100%;">
+                        <svg style="vertical-align: middle; margin-right: 8px;" width="24" height="24"
+                            viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.628 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        Pagar e Ativar via WhatsApp
+                    </a>
+
+                    <div style="text-align: center;">
+                        <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">Já tem o comprovante? Anexe
+                            aqui:</p>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="file" id="slotReceipt" class="eio-input" style="font-size: 0.8rem;">
+                            <button class="eio-btn eio-btn-primary"
+                                onclick="alert('Comprovante enviado para análise!')">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================================================= -->
+            <!-- ADMIN SECTIONS (Only visible to admin users via JS)     -->
+            <!-- ======================================================= -->
+
+            <!-- Admin Users Section -->
+            <div class="eio-content-section" data-section="admin-users" style="display: none;">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--eio-pink-500);">🔐</span> Gerenciar Usuários
+                        </h3>
+                        <div style="display: flex; gap: var(--spacing-md);">
+                            <input type="search" class="eio-input" placeholder="Buscar..." style="width: 250px;"
+                                id="searchAdminUsers">
+                            <button class="eio-btn eio-btn-primary" id="btnAdminAddUser">+ Adicionar</button>
+                        </div>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>@ Instagram</th>
+                                    <th>Email</th>
+                                    <th>Plano</th>
+                                    <th>Status</th>
+                                    <th>Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 30px;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Subscriptions Section -->
+            <div class="eio-content-section" data-section="admin-subs" style="display: none;">
+                <div class="eio-stats-grid" style="margin-bottom: 30px;">
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Assinaturas Ativas</span>
+                            <div class="eio-stat-icon eio-stat-icon-blue">✓</div>
+                        </div>
+                        <div class="eio-stat-value" id="adminStatActiveSubs">0</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Em Trial</span>
+                            <div class="eio-stat-icon eio-stat-icon-cyan">⏰</div>
+                        </div>
+                        <div class="eio-stat-value" id="adminStatTrialSubs">0</div>
+                    </div>
+                    <div class="eio-stat-card">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">MRR Estimado</span>
+                            <div class="eio-stat-icon eio-stat-icon-purple">$</div>
+                        </div>
+                        <div class="eio-stat-value" id="adminStatMRR">R$ 0</div>
+                    </div>
+                </div>
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--eio-pink-500);">🔐</span> Histórico de Assinaturas
+                        </h3>
+                    </div>
+                    <div class="eio-admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plano</th>
+                                    <th>Status</th>
+                                    <th>Valor</th>
+                                    <th>Próximo Pgto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminSubsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align:center; padding: 30px;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Auto Messages Section -->
+            <div class="eio-content-section" data-section="admin-messages" style="display: none;">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--eio-pink-500);">🔐</span> Mensagens Automáticas
+                        </h3>
+                        <span class="eio-badge"
+                            style="background: rgba(0,210,255,0.1); color: var(--eio-cyan-500);">Configure as mensagens
+                            do sistema</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Boas-vindas -->
+                        <div
+                            style="background: rgba(0,210,255,0.1); border: 1px solid rgba(0,210,255,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h4 style="color: #00d2ff; margin: 0;">🎉 Boas-vindas</h4>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin: 5px 0 0;">
+                                        Enviada após cadastro</p>
+                                </div>
+                                <label class="eio-switch"><input type="checkbox" id="toggleAdminWelcome" checked><span
+                                        class="eio-switch-slider"></span></label>
+                            </div>
+                            <textarea class="eio-input" id="msgAdminWelcome" rows="3"
+                                style="width: 100%;">Olá {nome}! 🚀 Bem-vindo(a) ao E.I.O! Seu período de teste começou. Qualquer dúvida, estamos aqui!</textarea>
+                        </div>
+                        <!-- Pagamento -->
+                        <div
+                            style="background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h4 style="color: #4CAF50; margin: 0;">💳 Pagamento Confirmado</h4>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin: 5px 0 0;">Após
+                                        confirmação</p>
+                                </div>
+                                <label class="eio-switch"><input type="checkbox" id="toggleAdminPayment" checked><span
+                                        class="eio-switch-slider"></span></label>
+                            </div>
+                            <textarea class="eio-input" id="msgAdminPayment" rows="3"
+                                style="width: 100%;">Olá {nome}! 🎉 Pagamento confirmado! Sua assinatura está ativa até {data_vencimento}.</textarea>
+                        </div>
+                        <!-- Renovação -->
+                        <div
+                            style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h4 style="color: #FFC107; margin: 0;">⏰ Lembrete de Renovação</h4>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin: 5px 0 0;">3 dias
+                                        antes do vencimento</p>
+                                </div>
+                                <label class="eio-switch"><input type="checkbox" id="toggleAdminRenewal" checked><span
+                                        class="eio-switch-slider"></span></label>
+                            </div>
+                            <textarea class="eio-input" id="msgAdminRenewal" rows="3"
+                                style="width: 100%;">Olá {nome}! Sua assinatura vence em 3 dias ({data_vencimento}). Renove para continuar!</textarea>
+                        </div>
+                        <button class="eio-btn eio-btn-primary" id="btnSaveAdminMessages">💾 Salvar
+                            Configurações</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Finances Section - Professional Control Panel -->
+            <div class="eio-content-section" data-section="admin-finances" style="display: none;">
+                <!-- Status Stats Grid -->
+                <div class="eio-stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(5, 1fr);">
+                    <div class="eio-stat-card" style="border-left: 3px solid #00d2ff;">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Em Trial</span>
+                            <div class="eio-stat-icon" style="background: rgba(0,210,255,0.1); color: #00d2ff;">⏳</div>
+                        </div>
+                        <div class="eio-stat-value" id="finStatTrial">0</div>
+                        <div class="eio-stat-change" style="color: #00d2ff;">5 dias gratuitos</div>
+                    </div>
+                    <div class="eio-stat-card" style="border-left: 3px solid #4CAF50;">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Ativos</span>
+                            <div class="eio-stat-icon" style="background: rgba(76,175,80,0.1); color: #4CAF50;">✓</div>
+                        </div>
+                        <div class="eio-stat-value" id="finStatActive">0</div>
+                        <div class="eio-stat-change eio-stat-positive">Pagantes</div>
+                    </div>
+                    <div class="eio-stat-card" style="border-left: 3px solid #ff4d4d;">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Expirados</span>
+                            <div class="eio-stat-icon" style="background: rgba(255,77,77,0.1); color: #ff4d4d;">✗</div>
+                        </div>
+                        <div class="eio-stat-value" id="finStatExpired">0</div>
+                        <div class="eio-stat-change" style="color: #ff4d4d;">Bloqueados</div>
+                    </div>
+                    <div class="eio-stat-card" style="border-left: 3px solid #FFC107;">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">Aguardando Pgto</span>
+                            <div class="eio-stat-icon" style="background: rgba(255,193,7,0.1); color: #FFC107;">💳</div>
+                        </div>
+                        <div class="eio-stat-value" id="finStatAwaiting">0</div>
+                        <div class="eio-stat-change" style="color: #FFC107;">Potenciais</div>
+                    </div>
+                    <div class="eio-stat-card" style="border-left: 3px solid #7F5AF0;">
+                        <div class="eio-stat-header">
+                            <span class="eio-stat-label">MRR</span>
+                            <div class="eio-stat-icon" style="background: rgba(127,90,240,0.1); color: #7F5AF0;">$</div>
+                        </div>
+                        <div class="eio-stat-value" id="finStatMRR">R$ 0</div>
+                        <div class="eio-stat-change eio-stat-positive">Receita Mensal</div>
+                    </div>
+                </div>
+
+                <!-- Churn Rate Card -->
+                <div class="eio-card"
+                    style="margin-bottom: 30px; background: linear-gradient(135deg, rgba(255,77,77,0.1), rgba(127,90,240,0.05));">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                        <div>
+                            <h4 style="margin: 0 0 5px; color: #ff6b6b;">📉 Taxa de Churn (Cancelamentos)</h4>
+                            <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 0.9rem;">Usuários que não
+                                renovaram este mês</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 2.5rem; font-weight: 800; color: #ff6b6b;" id="finChurnRate">0%</div>
+                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Meta: &lt;5%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Torre de Controle Financeira - Metrics Header -->
+                <div class="eio-admin-summary"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; font-family: 'Inter', sans-serif;">
+
+                    <!-- Faturamento Bruto -->
+                    <div
+                        style="background: #16161e; border: 1px solid #2d2d3a; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span
+                                style="color: #888; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Faturamento
+                                Bruto</span>
+                            <span style="font-size: 1.5rem;">📈</span>
+                        </div>
+                        <h2 style="color: #fff; margin: 0 0 5px; font-size: 2.2rem; font-weight: 800;"
+                            id="finGrossTotalHeader">R$ 0,00</h2>
+                        <span style="color: #aaa; font-size: 0.75rem;">Total acumulado no período</span>
+                    </div>
+
+                    <!-- Provisão de Impostos -->
+                    <div
+                        style="background: #16161e; border: 1px solid rgba(255, 85, 85, 0.2); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(255, 85, 85, 0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span
+                                style="color: #ff5555; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Provisão
+                                de Impostos (12,15%)</span>
+                            <span style="font-size: 1.5rem;">🏛️</span>
+                        </div>
+                        <h2 style="color: #ff5555; margin: 0 0 5px; font-size: 2.2rem; font-weight: 800;"
+                            id="finTaxTotalHeader">R$ 0,00</h2>
+                        <div
+                            style="width: 100%; background: #2d2d3a; height: 8px; border-radius: 4px; margin-top: 15px; position: relative; overflow: hidden;">
+                            <div
+                                style="width: 12.15%; background: linear-gradient(90deg, #ff5555, #ff8c8c); height: 100%; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <p style="color: #888; font-size: 0.75rem; margin-top: 10px;">Reserva obrigatória Brasil 2026
+                        </p>
+                    </div>
+
+                    <!-- Lucro Líquido Real -->
+                    <div
+                        style="background: #16161e; border: 1px solid #25D366; padding: 25px; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(37, 211, 102, 0.1);">
+                        <div style="position: absolute; right: -15px; top: -15px; opacity: 0.05;">
+                            <svg width="120" height="120" viewBox="0 0 24 24" fill="#25D366">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                             </svg>
-                            <h4 style="color: rgba(255,255,255,0.6); margin: 0 0 10px;">Nenhuma conta cadastrada
-                            </h4>
-                            <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0 0 20px;">
-                                Cadastre seu @ do Instagram para poder fazer login na extensão
-                            </p>
-                            <button class="eio-btn eio-btn-primary" id="btnAddFirstAccount">
-                                + Cadastrar meu primeiro @
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span
+                                style="color: #25D366; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Lucro
+                                Líquido Real</span>
+                            <span style="font-size: 1.5rem;">💰</span>
+                        </div>
+                        <h2 style="color: #fff; margin: 0 0 5px; font-size: 2.2rem; font-weight: 800;"
+                            id="finNetProfitHeader">R$ 0,00</h2>
+                        <span
+                            style="color: #25D366; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                            <span
+                                style="width: 8px; height: 8px; background: #25D366; border-radius: 50%; display: inline-block;"></span>
+                            Dinheiro disponível em caixa
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Growth Analysis Chart -->
+                <div class="eio-card" style="margin-bottom: 30px;">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #7F5AF0;">📊</span> Crescimento de Usuários Ativos (Últimos 7 dias)
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span
+                                    style="width: 10px; height: 10px; background: #7F5AF0; border-radius: 2px;"></span>
+                                <span style="font-size: 0.8rem; color: #aaa;">Novos Ativos</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 20px; height: 300px; position: relative;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Pending Payments Section -->
+                <div class="eio-card" style="margin-bottom: 30px;" id="pendingPaymentsCard">
+                    <div class="eio-card-header"
+                        style="background: linear-gradient(90deg, rgba(247,147,30,0.2), transparent);">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #f7931e;">🔔</span> Comprovantes Pendentes de Aprovação
+                            <span class="eio-badge"
+                                style="background: #f7931e; color: #000; font-size: 0.75rem; padding: 4px 10px;"
+                                id="pendingBadge">0</span>
+                        </h3>
+                        <button class="eio-btn eio-btn-ghost" id="btnRefreshPending">🔄 Atualizar</button>
+                    </div>
+                    <div id="pendingPaymentsList" style="padding: 20px;">
+                        <div style="text-align: center; padding: 30px; color: #888;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">✅</div>
+                            Nenhum comprovante pendente
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Approval Modal -->
+                <div id="paymentApprovalModal"
+                    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px;">
+                    <div
+                        style="background: #16161e; border: 1px solid #2d2d3a; padding: 25px; border-radius: 16px; max-width: 500px; width: 100%; margin: auto;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <span
+                                style="background: #f7931e; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">AGUARDANDO
+                                APROVAÇÃO</span>
+                            <span style="color: #888; font-size: 0.85rem;" id="modalPaymentId">ID: #---</span>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="margin: 0; font-size: 1.2rem;" id="modalUserName">Nome do Usuário</h3>
+                            <p style="margin: 5px 0; color: #aaa; font-size: 0.9rem;" id="modalUserEmail">
+                                email@usuario.com</p>
+                            <p style="margin: 5px 0; color: #7F5AF0; font-size: 0.9rem;" id="modalPlanLabel">Plano Anual
+                                Premium</p>
+                        </div>
+
+                        <!-- Financial Breakdown -->
+                        <div
+                            style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="color: #aaa;">Valor Bruto:</span>
+                                <span style="font-weight: bold;" id="modalGrossValue">R$ 0,00</span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #ff5555;">
+                                <span>Imposto (12,15%):</span>
+                                <span id="modalTaxValue">- R$ 0,00</span>
+                            </div>
+                            <hr style="border: 0; border-top: 1px solid #2d2d3a; margin: 10px 0;">
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #25D366;">
+                                <span style="font-weight: bold;">Lucro Líquido:</span>
+                                <span style="font-weight: 800;" id="modalNetProfit">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method & Date -->
+                        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div
+                                style="flex: 1; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; text-align: center;">
+                                <div style="color: #888; font-size: 0.75rem;">Método</div>
+                                <div style="font-weight: 600;" id="modalPaymentMethod">PIX</div>
+                            </div>
+                            <div
+                                style="flex: 1; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; text-align: center;">
+                                <div style="color: #888; font-size: 0.75rem;">Enviado em</div>
+                                <div style="font-weight: 600;" id="modalSubmittedAt">--/--/----</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <button class="eio-btn" id="btnApprovePayment"
+                                style="flex: 1; background: #25D366; color: #fff; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                                ✅ Aprovar e Ativar
                             </button>
+                            <button class="eio-btn" id="btnRejectPayment"
+                                style="flex: 1; background: transparent; border: 1px solid #ff5555; color: #ff5555; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                                ❌ Rejeitar
+                            </button>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <a href="#" id="btnViewReceipt"
+                                style="color: #7F5AF0; text-decoration: none; font-size: 0.9rem;">👁️ Ver Comprovante
+                                Anexado</a>
+                        </div>
+
+                        <button class="eio-btn eio-btn-ghost" id="btnCloseApprovalModal"
+                            style="width: 100%; margin-top: 15px;">Fechar</button>
+                        <input type="hidden" id="approvalPaymentId">
+                    </div>
+                </div>
+
+                <!-- Receipt Viewer Modal -->
+                <div id="receiptViewerModal"
+                    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 1100; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="max-width: 90%; max-height: 90%; position: relative;">
+                        <button id="btnCloseReceipt"
+                            style="position: absolute; top: -40px; right: 0; background: #ff4d4d; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">✕
+                            Fechar</button>
+                        <img id="receiptImage"
+                            style="max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 10px 50px rgba(0,0,0,0.5);"
+                            src="" alt="Comprovante">
+                        <div id="receiptPdf"
+                            style="display: none; width: 100%; height: 80vh; background: white; border-radius: 12px;">
+                            <iframe id="pdfFrame"
+                                style="width: 100%; height: 100%; border: none; border-radius: 12px;"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Management Table -->
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--eio-pink-500);">🔐</span> Gestão de Assinaturas
+                        </h3>
+                        <div style="display: flex; gap: 10px;">
+                            <select class="eio-input" id="filterStatus" style="width: 180px; padding: 8px 12px;">
+                                <option value="all">Todos os Status</option>
+                                <option value="trial">Em Trial</option>
+                                <option value="active">Ativos</option>
+                                <option value="expired">Expirados</option>
+                                <option value="awaiting_payment">Aguardando Pgto</option>
+                            </select>
+                            <button class="eio-btn eio-btn-ghost" id="btnRefreshSubs">🔄 Atualizar</button>
+                        </div>
+                    </div>
+                    <div class="eio-admin-table" style="max-height: 500px; overflow-y: auto;">
+                        <table>
+                            <thead style="position: sticky; top: 0; background: #1a1a23; z-index: 10;">
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>E-mail</th>
+                                    <th>Status</th>
+                                    <th>Plano</th>
+                                    <th>Expiração</th>
+                                    <th>Dias Rest.</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finSubscriptionsBody">
+                                <tr>
+                                    <td colspan="7" style="text-align:center; padding: 40px; color:#888;">
+                                        <div style="font-size: 2rem; margin-bottom: 10px;">📊</div>
+                                        Carregando assinaturas...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Grant Access Modal (hidden by default) -->
+                <div id="grantAccessModal"
+                    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+                    <div
+                        style="background: #1a1a23; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 30px; max-width: 400px; width: 90%;">
+                        <h3 style="margin: 0 0 20px; color: #7F5AF0;">🔓 Liberar Acesso</h3>
+                        <p style="margin: 0 0 20px; color: rgba(255,255,255,0.7);">Selecione o período de acesso para:
+                            <strong id="grantUserName">Usuário</strong>
+                        </p>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                            <button class="eio-btn"
+                                style="background: rgba(0,210,255,0.2); color: #00d2ff; border: 1px solid #00d2ff;"
+                                data-period="trial">
+                                ⏳ Trial (+5 dias)
+                            </button>
+                            <button class="eio-btn"
+                                style="background: rgba(127,90,240,0.2); color: #7F5AF0; border: 1px solid #7F5AF0;"
+                                data-period="monthly">
+                                📅 Mensal (+30 dias) - R$ 399,90
+                            </button>
+                            <button class="eio-btn"
+                                style="background: rgba(37,211,102,0.2); color: #25D366; border: 1px solid #25D366;"
+                                data-period="annual">
+                                🎉 Anual (+365 dias) - R$ 3.999
+                            </button>
+                        </div>
+
+                        <button class="eio-btn eio-btn-ghost" id="closeGrantModal"
+                            style="width: 100%;">Cancelar</button>
+                        <input type="hidden" id="grantUserId">
+                    </div>
+                </div>
+
+                <!-- Activity Log Section -->
+                <div class="eio-card" style="margin-top: 30px;">
+                    <div class="eio-card-header">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--eio-cyan-500);">📋</span> Log de Atividades Financeiras
+                        </h3>
+                        <span class="eio-badge" style="background: rgba(127,90,240,0.15); color: #7F5AF0;">Registro para
+                            declaração fiscal</span>
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto; padding: 20px;">
+                        <div id="activityLogsList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="text-align: center; padding: 30px; color: #888;">
+                                <div style="font-size: 1.5rem; margin-bottom: 10px;">📝</div>
+                                Carregando logs de atividade...
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
         </div>
+    </main>
 
-        <!-- Modal Removed -->
-        <script src="dashboard.js"></script>
+
+
+    <!-- Modal Removed -->
+
+    <!-- ✅ FIX SPACING SCRIPT - REMOVIDO PARA ROLLBACK -->
+    <script>
+        console.log('✅ Spacing fix script removed for stability rollback to V6');
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="security.js"></script>
+    <script src="config.js"></script>
+    <script src="api.js?v=12"></script>
+    <script src="dashboard.js?v=12"></script>
+    <script src="admin-integration.js"></script>
+
+    <script>
+        // --- LÓGICA DE COMPRA DE SLOTS ---
+
+        // Abrir Modal
+        function openSlotModal() {
+            document.getElementById('slotModal').style.display = 'flex';
+        }
+
+        // Fechar Modal ao clicar fora
+        document.getElementById('slotModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        // Redirecionar para WhatsApp com Mensagem Personalizada
+        function redirectToWhatsAppSlot() {
+            // Tenta pegar dados do usuário logado (se disponível no localStorage)
+            const userName = localStorage.getItem('eio_user_name') || 'Cliente E.I.O';
+            const userEmail = localStorage.getItem('eio_user_email') || '[Meu Email]';
+
+            // Mensagem codificada
+            const text = `Olá! 👋\n\nQuero comprar um *Slot de Perfil Extra* para minha conta E.I.O.\n\n👤 *Nome:* ${userName}\n📧 *E-mail:* ${userEmail}\n💰 *Valor:* R$ 150,00\n\nPor favor, me envie a chave Pix ou Link de pagamento. Aguardo para enviar o comprovante! 🚀`;
+
+            const encodedText = encodeURIComponent(text);
+            const phone = "5521975312662"; // Seu número
+
+            window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank');
+        }
+    </script>
 </body>
 
 </html>

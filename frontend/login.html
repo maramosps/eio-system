@@ -363,8 +363,12 @@
         </div>
     </div>
 
+    <script src="security.js"></script>
     <script src="config.js"></script>
     <script>
+        // Verificação de sessão manual - Removido auto-redirecionamento para evitar erros de login automático indesejado
+        console.log('🔑 Sistema de login pronto');
+
         const form = document.getElementById('loginForm');
         const submitBtn = document.getElementById('submitBtn');
         const alertBox = document.getElementById('alertBox');
@@ -408,15 +412,20 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    // Salvar token e dados do usuário
+                    // Salvar token e dados do usuário - usando chaves corretas
+                    localStorage.setItem('accessToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    // Also save with legacy keys for compatibility
                     localStorage.setItem('eio_token', data.token);
                     localStorage.setItem('eio_user', JSON.stringify(data.user));
 
+                    console.log('✅ Login successful:', data.user);
                     showAlert('Login realizado com sucesso! Redirecionando...', 'success');
 
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
-                    }, 1000);
+                    }, 800);
                 } else {
                     showAlert(data.message || 'Email ou senha incorretos', 'error');
                     submitBtn.disabled = false;
@@ -440,12 +449,6 @@
                 showAlert('Digite seu email primeiro', 'error');
             }
         });
-
-        // Verificar se já está logado
-        const existingToken = localStorage.getItem('eio_token');
-        if (existingToken) {
-            // Verificar se token ainda é válido (opcional, poderia redirecionar direto)
-        }
     </script>
 </body>
 

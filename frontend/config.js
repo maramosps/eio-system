@@ -8,7 +8,7 @@ const isProduction = window.location.hostname !== 'localhost' && window.location
 
 // URL da API baseada no ambiente
 const API_BASE_URL = isProduction
-    ? 'https://eio-system.vercel.app/api/v1'
+    ? '/api/v1'
     : 'http://localhost:3000/api/v1';
 
 // URL do WebSocket

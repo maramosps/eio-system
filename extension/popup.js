@@ -1,1186 +1,1720 @@
 /*
 ═══════════════════════════════════════════════════════════
-  E.I.O - EXTENSION POPUP LOGIC
-  Controle da interface da extensão
+  E.I.O - POPUP SCRIPT (ADVANCED VERSION)
+  Complete functionality for account management
 ═══════════════════════════════════════════════════════════
 */
 
-// Estado global da extensão
-let extensionState = {
-    isRunning: false,
-    stats: {
-        followsToday: 0,
-        likesToday: 0,
-        commentsToday: 0
+// ═══════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+const AppState = {
+    accounts: [],
+    filteredAccounts: [],
+    selectedAccounts: new Set(),
+    currentPage: 1,
+    pageSize: 50,
+    sortColumn: 'username',
+    sortDirection: 'asc',
+    currentProfile: '@user',
+    targetProfile: '',
+    mediaQueue: [],
+    isAuthenticated: false,
+    automationRunning: false,
+    filters: {
+        followersMin: 0,
+        followersMax: 100000,
+        followingMin: 0,
+        followingMax: 10000,
+        ratioMin: 0,
+        ratioMax: 100,
+        postsMin: 0,
+        postsMax: 1000,
+        lastPostDays: null,
+        hasPhoto: null,
+        isPrivate: null,
+        isVerified: null,
+        followsMe: null,
+        bioContains: '',
+        businessCategory: ''
     },
-    automations: [],
-    connectionStatus: 'connected',
-    extractedLeads: [],
-    lastExtractSource: 'followers',
-    lastTargetProfile: '',
-    lastExtractTarget: '',
-    lastFilters: {}
+    config: {
+        delayAfterAction: 60,
+        delayAfterSkip: 1,
+        randomDelayPercent: 50,
+        showProfilePics: true,
+        showBadges: true,
+        autoSaveQueue: true
+    },
+    logs: [],
+    mediaQueue: []
 };
 
-// Função para salvar estado no chrome.storage (persistência)
-async function saveExtensionState() {
-    if (typeof chrome !== 'undefined' && chrome.storage) {
-        try {
-            await chrome.storage.local.set({ extensionState });
-            console.log('📦 Estado salvo com sucesso');
-        } catch (e) {
-            console.error('Erro ao salvar estado:', e);
-        }
-    }
-}
-
-// Listener para receber logs do content script
-if (typeof chrome !== 'undefined' && chrome.runtime) {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.action === 'console_log') {
-            // Receber log do content script e exibir no console da extensão
-            addConsoleEntry(message.level, message.message);
-        }
-        return false;
-    });
-}
-
-// Inicialização robusta COM VERIFICAÇÃO DE LICENÇA
+// ═══════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('E.I.O Popup DOM Loaded');
+    console.log('E.I.O Popup initialized');
 
-    // ═══════════════════════════════════════════════════════════
-    // VERIFICAÇÃO DE LICENÇA - PRIMEIRA PRIORIDADE
-    // ═══════════════════════════════════════════════════════════
-    if (typeof window.licenseManager !== 'undefined') {
-        console.log('🔐 Verificando licença...');
-        const isLicenseValid = await window.licenseManager.initialize();
+    // Update time display
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
 
-        if (!isLicenseValid) {
-            console.warn('❌ Licença inválida ou expirada - Bloqueando extensão');
-            // License Manager já mostra o modal e bloqueia a UI
-            return; // NÃO CONTINUAR A INICIALIZAÇÃO
-        }
+    // Load saved state
+    await loadState();
 
-        console.log('✅ Licença válida - Inicializando extensão');
-    } else {
-        console.error('⚠️ License Manager não encontrado!');
-    }
+    // Check authentication
+    checkAuthentication();
 
-    // ═══════════════════════════════════════════════════════════
-    // INICIALIZAÇÃO NORMAL (apenas se licença válida)
-    // ═══════════════════════════════════════════════════════════
-
-    // Inicializar abas primeiro para garantir navegabilidade
+    // Initialize UI
     initializeTabs();
+    initializeDropdowns();
+    initializeFilters();
+    initializeConfigSections();
+    initializeTableHandlers();
+    initializeActionButtons();
+    initializeMediaHandlers();
 
-    // Tentar carregar estado e inicializar o resto
-    try {
-        if (typeof chrome !== 'undefined' && chrome.storage) {
-            await loadSavedState();
-            await checkTermsApproval();
-            autoDetectTarget();
-            startLiveUpdates();
-        } else {
-            console.warn('Executando fora do contexto de extensão. Usando modo de demonstração.');
-            // Simular estado para preview
-            const extractionResults = document.getElementById('extractionResults');
-            if (extractionResults) extractionResults.style.display = 'none';
-        }
-    } catch (e) {
-        console.error('Erro na inicialização segura:', e);
-    }
+    // Render initial data
+    renderAccountsTable();
+    renderLogs();
 
-    initializeButtons();
-    updateUI();
-
-    // Atualizar UIs dinâmicas
-    updateStatsUI();
-    updateHistoryUI();
-    loadConsoleLogs();
-
-    // Inicializar Flow Builder integrado
-    setTimeout(() => {
-        if (typeof initializeFlowBuilder === 'function') {
-            initializeFlowBuilder();
-        }
-    }, 500);
+    // Detect current Instagram profile
+    detectCurrentProfile();
 });
 
-/**
- * Adicionar entrada no console da extensão
- */
-function addConsoleEntry(level, message) {
-    const consoleLog = document.getElementById('consoleLog');
-    if (!consoleLog) return;
+// ═══════════════════════════════════════════════════════════
+// DATE/TIME
+// ═══════════════════════════════════════════════════════════
+function updateDateTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).replace(',', ' -');
 
-    const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    const entry = document.createElement('div');
-    entry.className = `eio-console-entry eio-console-${level}`;
-
-    const icons = {
-        'success': '✅',
-        'error': '❌',
-        'warning': '⚠️',
-        'info': 'ℹ️'
-    };
-
-    entry.innerHTML = `
-        <span class="eio-console-time">${time}</span>
-        <span class="eio-console-icon">${icons[level] || '📌'}</span>
-        <span class="eio-console-msg">${message}</span>
-    `;
-
-    consoleLog.prepend(entry);
-
-    // Limitar a 50 entradas
-    while (consoleLog.children.length > 50) {
-        consoleLog.lastChild.remove();
-    }
-
-    // Salvar logs
-    saveConsoleLogs();
+    const el = document.getElementById('currentDateTime');
+    if (el) el.textContent = formatted;
 }
 
-/**
- * Salvar logs do console
- */
-async function saveConsoleLogs() {
-    if (typeof chrome === 'undefined' || !chrome.storage) return;
-
-    const consoleLog = document.getElementById('consoleLog');
-    if (!consoleLog) return;
-
-    const logs = Array.from(consoleLog.children).slice(0, 30).map(el => el.outerHTML);
-
+// ═══════════════════════════════════════════════════════════
+// STATE PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+async function loadState() {
     try {
-        await chrome.storage.local.set({ consoleLogs: logs });
+        const result = await chrome.storage.local.get(['eioAppState', 'eioAccounts', 'eioSelectedAccounts']);
+
+        // Load accounts separately (they're larger data)
+        if (result.eioAccounts) {
+            AppState.accounts = result.eioAccounts;
+            AppState.filteredAccounts = [...result.eioAccounts];
+        }
+
+        // Load selected accounts (convert array back to Set)
+        if (result.eioSelectedAccounts) {
+            AppState.selectedAccounts = new Set(result.eioSelectedAccounts);
+        }
+
+        // Load other state
+        if (result.eioAppState) {
+            const saved = result.eioAppState;
+            AppState.currentPage = saved.currentPage || 1;
+            AppState.pageSize = saved.pageSize || 50;
+            AppState.sortColumn = saved.sortColumn || 'username';
+            AppState.sortDirection = saved.sortDirection || 'asc';
+            AppState.targetProfile = saved.targetProfile || '';
+            AppState.filters = saved.filters || AppState.filters;
+            AppState.config = saved.config || AppState.config;
+            AppState.logs = saved.logs || [];
+            AppState.mediaQueue = saved.mediaQueue || [];
+        }
+
+        console.log(`✅ Estado carregado: ${AppState.accounts.length} contas`);
     } catch (e) {
-        console.error('Erro ao salvar logs:', e);
+        console.error('Error loading state:', e);
     }
 }
 
-/**
- * Carregar logs do console salvos
- */
-async function loadConsoleLogs() {
-    if (typeof chrome === 'undefined' || !chrome.storage) return;
-
+async function saveState() {
     try {
-        const result = await chrome.storage.local.get(['consoleLogs']);
-        if (result.consoleLogs && result.consoleLogs.length > 0) {
-            const consoleLog = document.getElementById('consoleLog');
-            if (consoleLog) {
-                consoleLog.innerHTML = result.consoleLogs.join('');
+        // Save accounts separately
+        await chrome.storage.local.set({
+            eioAccounts: AppState.accounts,
+            eioSelectedAccounts: Array.from(AppState.selectedAccounts),
+            eioAppState: {
+                currentPage: AppState.currentPage,
+                pageSize: AppState.pageSize,
+                sortColumn: AppState.sortColumn,
+                sortDirection: AppState.sortDirection,
+                targetProfile: AppState.targetProfile,
+                filters: AppState.filters,
+                config: AppState.config,
+                logs: AppState.logs.slice(0, 100), // Limitar logs
+                mediaQueue: AppState.mediaQueue || []
             }
-        }
-    } catch (e) {
-        console.error('Erro ao carregar logs:', e);
-    }
-}
-
-/**
- * Limpar console
- */
-function clearConsole() {
-    const consoleLog = document.getElementById('consoleLog');
-    if (consoleLog) {
-        consoleLog.innerHTML = '';
-        saveConsoleLogs();
-        showToast('🗑️ Console limpo', 'info');
-    }
-}
-
-/**
- * Autodetectar o perfil ou post atual e exibir card de perfil
- */
-async function autoDetectTarget() {
-    if (typeof chrome === 'undefined' || !chrome.tabs) return;
-
-    try {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tabs[0] && tabs[0].url.includes('instagram.com')) {
-            const url = tabs[0].url;
-            const targetInput = document.getElementById('extractTarget');
-            const targetProfile = document.getElementById('targetProfile');
-            const sourceSelect = document.getElementById('extractSource');
-            const profileCard = document.getElementById('currentProfileCard');
-
-            if (url.includes('/p/') || url.includes('/reels/')) {
-                if (targetInput) targetInput.value = url;
-                if (sourceSelect) sourceSelect.value = 'likes';
-                if (profileCard) profileCard.style.display = 'none';
-            } else {
-                const profileMatch = url.match(/instagram\.com\/([^/?#&]+)/);
-                if (profileMatch && !['explore', 'reels', 'direct', 'stories', 'accounts'].includes(profileMatch[1])) {
-                    const username = profileMatch[1];
-                    if (targetInput) targetInput.value = `@${username}`;
-                    if (targetProfile) targetProfile.value = `@${username}`;
-                    if (sourceSelect) sourceSelect.value = 'followers';
-
-                    // Atualizar card de perfil
-                    updateCurrentProfileCard(username);
-
-                    // Salvar perfil atual no estado
-                    extensionState.currentProfile = username;
-                    saveExtensionState();
-                } else {
-                    if (profileCard) profileCard.style.display = 'none';
-                }
-            }
-        }
-    } catch (e) { console.error('AutoDetect failed', e); }
-}
-
-/**
- * Atualizar card de perfil atual
- */
-function updateCurrentProfileCard(username) {
-    const profileCard = document.getElementById('currentProfileCard');
-    const profileName = document.getElementById('currentProfileName');
-    const profileUsername = document.getElementById('currentProfileUsername');
-
-    if (profileCard) {
-        profileCard.style.display = 'flex';
-    }
-    if (profileName) {
-        profileName.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-    }
-    if (profileUsername) {
-        profileUsername.textContent = `@${username}`;
-    }
-}
-
-// Carregar estado salvo
-async function loadSavedState() {
-    if (typeof chrome === 'undefined' || !chrome.storage) return;
-    try {
-        const result = await chrome.storage.local.get(['extensionState']);
-        if (result.extensionState) {
-            extensionState = { ...extensionState, ...result.extensionState };
-
-            // Restaurar campos do formulário
-            const sourceSelect = document.getElementById('extractSource');
-            const targetProfile = document.getElementById('targetProfile');
-            const extractTarget = document.getElementById('extractTarget');
-
-            if (sourceSelect && extensionState.lastExtractSource) {
-                sourceSelect.value = extensionState.lastExtractSource;
-            }
-            if (targetProfile && extensionState.lastTargetProfile) {
-                targetProfile.value = extensionState.lastTargetProfile;
-            }
-            if (extractTarget && extensionState.lastExtractTarget) {
-                extractTarget.value = extensionState.lastExtractTarget;
-            }
-
-            // Restaurar filtros
-            if (extensionState.lastFilters) {
-                const filterBR = document.getElementById('filterBR');
-                const filterPhoto = document.getElementById('filterPhoto');
-                const filterPosts = document.getElementById('filterPosts');
-                const filterPublic = document.getElementById('filterPublic');
-
-                if (filterBR) filterBR.checked = extensionState.lastFilters.brOnly ?? true;
-                if (filterPhoto) filterPhoto.checked = extensionState.lastFilters.hasPhoto ?? true;
-                if (filterPosts) filterPosts.checked = extensionState.lastFilters.minPosts ?? false;
-                if (filterPublic) filterPublic.checked = extensionState.lastFilters.publicOnly ?? false;
-            }
-
-            // Restaurar leads extraídos
-            if (extensionState.extractedLeads && extensionState.extractedLeads.length > 0) {
-                updateResultsUI();
-            }
-
-            console.log('📂 Estado restaurado com sucesso:', extensionState);
-        }
-
-        // Configurar auto-save dos campos
-        setupAutoSaveFields();
-
-    } catch (error) {
-        console.error('Error loading state:', error);
-    }
-}
-
-/**
- * Configurar auto-save dos campos do formulário
- */
-function setupAutoSaveFields() {
-    // Salvar fonte de extração
-    const sourceSelect = document.getElementById('extractSource');
-    if (sourceSelect) {
-        sourceSelect.addEventListener('change', () => {
-            extensionState.lastExtractSource = sourceSelect.value;
-            saveExtensionState();
         });
+        console.log(`💾 Estado salvo: ${AppState.accounts.length} contas`);
+    } catch (e) {
+        console.error('Error saving state:', e);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTHENTICATION
+// ═══════════════════════════════════════════════════════════
+function checkAuthentication() {
+    chrome.storage.local.get(['extensionLicense'], (result) => {
+        if (result.extensionLicense && result.extensionLicense.validated) {
+            AppState.isAuthenticated = true;
+            AppState.currentProfile = result.extensionLicense.igHandle || '@user';
+            document.getElementById('currentProfile').textContent = AppState.currentProfile;
+            hideTermsModal();
+        } else {
+            showTermsModal();
+        }
+    });
+}
+
+function showTermsModal() {
+    document.getElementById('termsModal').classList.add('active');
+}
+
+function hideTermsModal() {
+    document.getElementById('termsModal').classList.remove('active');
+}
+
+// Login handlers
+document.getElementById('btnGoToLogin')?.addEventListener('click', () => {
+    document.getElementById('termsStep1').style.display = 'none';
+    document.getElementById('termsStep2').style.display = 'block';
+});
+
+document.getElementById('btnSubmitExtensionLogin')?.addEventListener('click', async () => {
+    const handle = document.getElementById('loginInstagramHandle').value.trim();
+    if (!handle) {
+        alert('Por favor, digite seu @');
+        return;
     }
 
-    // Salvar perfil alvo
-    const targetProfile = document.getElementById('targetProfile');
-    if (targetProfile) {
-        targetProfile.addEventListener('input', debounce(() => {
-            extensionState.lastTargetProfile = targetProfile.value;
-            saveExtensionState();
-        }, 500));
-    }
+    // Simulate validation (in production, would call backend)
+    AppState.isAuthenticated = true;
+    AppState.currentProfile = `@${handle.replace('@', '')}`;
 
-    // Salvar alvo/referência
-    const extractTarget = document.getElementById('extractTarget');
-    if (extractTarget) {
-        extractTarget.addEventListener('input', debounce(() => {
-            extensionState.lastExtractTarget = extractTarget.value;
-            saveExtensionState();
-        }, 500));
-    }
-
-    // Salvar filtros
-    ['filterBR', 'filterPhoto', 'filterPosts', 'filterPublic'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('change', () => {
-                extensionState.lastFilters = {
-                    brOnly: document.getElementById('filterBR')?.checked ?? true,
-                    hasPhoto: document.getElementById('filterPhoto')?.checked ?? true,
-                    minPosts: document.getElementById('filterPosts')?.checked ?? false,
-                    publicOnly: document.getElementById('filterPublic')?.checked ?? false
-                };
-                saveExtensionState();
-            });
+    chrome.storage.local.set({
+        extensionLicense: {
+            validated: true,
+            igHandle: AppState.currentProfile,
+            validatedAt: new Date().toISOString()
         }
     });
 
-    console.log('✓ Auto-save configurado');
-}
+    document.getElementById('currentProfile').textContent = AppState.currentProfile;
+    hideTermsModal();
+    addLog('success', `Login realizado: ${AppState.currentProfile}`);
+});
 
-/**
- * Função debounce para evitar salvamentos excessivos
- */
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Sistema de navegação por abas
+// ═══════════════════════════════════════════════════════════
+// TABS NAVIGATION
+// ═══════════════════════════════════════════════════════════
 function initializeTabs() {
     const tabs = document.querySelectorAll('.eio-tab');
     const contents = document.querySelectorAll('.eio-tab-content');
 
     tabs.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetTab = tab.getAttribute('data-tab');
-            console.log('Switching to tab:', targetTab);
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
 
+            // Update active tab
             tabs.forEach(t => t.classList.remove('eio-tab-active'));
-            contents.forEach(c => c.classList.remove('eio-tab-content-active'));
-
             tab.classList.add('eio-tab-active');
-            const targetContent = document.getElementById(`${targetTab}Tab`);
-            if (targetContent) {
-                targetContent.classList.add('eio-tab-content-active');
-            }
+
+            // Update active content
+            contents.forEach(c => c.classList.remove('eio-tab-content-active'));
+            document.getElementById(`${targetTab}Tab`)?.classList.add('eio-tab-content-active');
         });
     });
 }
 
-// Inicializar botões com segurança
-function safeAddEventListener(id, event, fn) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener(event, fn);
-        console.log(`✓ Listener adicionado: #${id}`);
-    } else {
-        console.warn(`⚠ Elemento #${id} não encontrado`);
-    }
+// ═══════════════════════════════════════════════════════════
+// DROPDOWNS
+// ═══════════════════════════════════════════════════════════
+function initializeDropdowns() {
+    const dropdownTriggers = document.querySelectorAll('.eio-dropdown-trigger');
+
+    dropdownTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = trigger.closest('.eio-dropdown');
+
+            // Close other dropdowns
+            document.querySelectorAll('.eio-dropdown.open').forEach(d => {
+                if (d !== dropdown) d.classList.remove('open');
+            });
+
+            dropdown.classList.toggle('open');
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.eio-dropdown.open').forEach(d => {
+            d.classList.remove('open');
+        });
+    });
+
+    // Prevent dropdown menu from closing when clicking inside
+    document.querySelectorAll('.eio-dropdown-menu').forEach(menu => {
+        menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
+
+    // Load Accounts Menu Actions
+    initializeLoadAccountsMenu();
+    initializeSelectMenu();
+    initializeProcessQueueMenu();
 }
 
-function initializeButtons() {
-    safeAddEventListener('startAutomationBtn', 'click', startAutomation);
-    safeAddEventListener('pauseAutomationBtn', 'click', pauseAutomation);
-    safeAddEventListener('clearConsoleBtn', 'click', clearConsole);
-    safeAddEventListener('startExtractionBtn', 'click', startExtraction);
-    safeAddEventListener('sendToCrmBtn', 'click', sendLeadsToCRM);
-    safeAddEventListener('executeSelectedBtn', 'click', executeActionOnSelected);
+function initializeLoadAccountsMenu() {
+    const menu = document.getElementById('loadAccountsMenu');
+    if (!menu) return;
 
-    safeAddEventListener('selectAllLeads', 'change', (e) => toggleSelectAll(e.target.checked));
-    safeAddEventListener('deselectLast50', 'click', () => deselectLastN(50));
-    safeAddEventListener('deselectLast100', 'click', () => deselectLastN(100));
-    safeAddEventListener('clearSelection', 'click', () => toggleSelectAll(false));
-
-    safeAddEventListener('settingsBtn', 'click', () => {
-        console.log('⚙️ Settings button clicked');
-
-        // Criar modal de configurações se não existir
-        let settingsModal = document.getElementById('settingsModal');
-        if (!settingsModal) {
-            settingsModal = document.createElement('div');
-            settingsModal.id = 'settingsModal';
-            settingsModal.className = 'eio-terms-modal';
-            settingsModal.innerHTML = `
-                <div class="eio-terms-content" style="max-width: 400px;">
-                    <span class="eio-terms-title">⚙️ Configurações</span>
-                    <div style="text-align: left; margin: 20px 0;">
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">Velocidade de Ação</label>
-                            <select class="eio-input" id="speedSetting" style="width: 100%;">
-                                <option value="safe">Humana (Segura - Recomendado)</option>
-                                <option value="fast">Rápida (Contas antigas)</option>
-                                <option value="turbo">Turbo (Alto risco)</option>
-                            </select>
-                        </div>
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="autoStartSetting" style="width: 18px; height: 18px;">
-                                <span style="color: white; font-size: 0.9rem;">Iniciar automação ao abrir</span>
-                            </label>
-                        </div>
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="notificationsSetting" checked style="width: 18px; height: 18px;">
-                                <span style="color: white; font-size: 0.9rem;">Notificações de ações</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="cancelSettingsBtn">Cancelar</button>
-                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="saveSettingsBtn">Salvar</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(settingsModal);
-
-            // Adicionar event listeners
-            document.getElementById('cancelSettingsBtn').addEventListener('click', () => {
-                document.getElementById('settingsModal').style.display = 'none';
-            });
-            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
-        }
-
-        // Mostrar modal
-        settingsModal.style.display = 'flex';
-
-        if (typeof showToast === 'function') {
-            showToast('⚙️ Configurações abertas', 'info');
-        }
-    });
-
-    safeAddEventListener('openDashboardBtn', 'click', () => {
-        const url = 'dashboard.html'; // Usar local no preview ou full URL em prod
-        if (typeof chrome !== 'undefined' && chrome.tabs) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('frontend/dashboard.html') });
-        } else {
-            window.open('../frontend/dashboard.html', '_blank');
-        }
-    });
-
-    // Dashboard Link agora tem href direto no HTML com URL correta
-    // Não precisa de handler de clique adicional
-
-    safeAddEventListener('acceptTermsBtn', 'click', async () => {
-        if (typeof chrome !== 'undefined' && chrome.storage) {
-            const result = await chrome.storage.local.get(['extensionState']);
-            const state = result.extensionState || extensionState;
-            state.termsAccepted = true;
-            await chrome.storage.local.set({ 'extensionState': state });
-        }
-        const modal = document.getElementById('termsModal');
-        if (modal) modal.classList.remove('active');
-    });
-
-    // Fluxos - Atualizar
-    safeAddEventListener('refreshFlowsBtn', 'click', loadActiveFlows);
-
-    // Fluxos - Criar novo
-    safeAddEventListener('createFlowBtn', 'click', () => {
-        if (typeof chrome !== 'undefined' && chrome.tabs) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('frontend/flow-builder.html') });
-        } else {
-            window.open('../frontend/flow-builder.html', '_blank');
-        }
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // BOTÃO POP-OUT - Destacar janela fixa na tela
-    // ═══════════════════════════════════════════════════════════
-    safeAddEventListener('popoutBtn', 'click', () => {
-        if (typeof chrome !== 'undefined' && chrome.windows) {
-            chrome.windows.create({
-                url: chrome.runtime.getURL('popup.html'),
-                type: 'popup',
-                width: 450,
-                height: 650,
-                top: 50,
-                left: screen.width - 500
-            });
-            // Fechar popup atual
-            window.close();
-        } else {
-            showToast('Pop-out disponível apenas na extensão', 'warning');
-        }
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // AÇÕES RÁPIDAS
-    // ═══════════════════════════════════════════════════════════
-    safeAddEventListener('quickFollowBtn', 'click', async () => {
-        showToast('🔄 Seguindo perfil...', 'info');
-        await executeQuickAction('follow');
-    });
-
-    safeAddEventListener('quickLikeBtn', 'click', async () => {
-        showToast('🔄 Curtindo posts...', 'info');
-        await executeQuickAction('like');
-    });
-
-    safeAddEventListener('quickDmBtn', 'click', async () => {
-        showToast('💬 Abrindo DM...', 'info');
-        await executeQuickAction('dm');
-    });
-
-    safeAddEventListener('quickExtractBtn', 'click', () => {
-        // Mudar para aba Assistente e iniciar
-        document.querySelector('[data-tab="assistant"]')?.click();
-        showToast('📥 Vá para a aba Assistente para extrair', 'info');
-    });
-
-    // Limpar histórico
-    safeAddEventListener('clearHistoryBtn', 'click', () => {
-        extensionState.actionHistory = [];
-        saveExtensionState();
-        updateHistoryUI();
-        showToast('🗑️ Histórico limpo', 'success');
+    menu.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            handleLoadAccountsAction(action);
+        });
     });
 }
 
-/**
- * Executar ação rápida
- */
-async function executeQuickAction(actionType) {
-    if (typeof chrome === 'undefined' || !chrome.tabs) {
-        showToast('Execute no Instagram', 'error');
-        return;
+function handleLoadAccountsAction(action) {
+    const limit = document.getElementById('limitQueue')?.checked
+        ? parseInt(document.getElementById('queueLimit')?.value) || 50
+        : 1000;
+
+    addLog('info', `Carregando contas: ${action} (limite: ${limit})`);
+
+    switch (action) {
+        case 'load-whitelist':
+            loadWhitelist();
+            break;
+        case 'load-pending':
+            loadPendingRequests();
+            break;
+        case 'load-followers':
+            loadFromInstagram('followers', limit);
+            break;
+        case 'load-following':
+            loadFromInstagram('following', limit);
+            break;
+        case 'load-likers':
+            loadFromInstagram('likers', limit);
+            break;
+        case 'load-commenters':
+            loadFromInstagram('commenters', limit);
+            break;
+        case 'load-saved-queue':
+            loadSavedQueue();
+            break;
     }
 
-    try {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tabs[0] || !tabs[0].url.includes('instagram.com')) {
-            showToast('Abra o Instagram primeiro', 'error');
+    // Close dropdown
+    document.querySelector('.eio-dropdown.open')?.classList.remove('open');
+}
+
+function initializeSelectMenu() {
+    const menu = document.getElementById('selectMenu');
+    if (!menu) return;
+
+    menu.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            handleSelectAction(action);
+            document.querySelector('.eio-dropdown.open')?.classList.remove('open');
+        });
+    });
+}
+
+function handleSelectAction(action) {
+    switch (action) {
+        case 'select-all':
+            AppState.filteredAccounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
+            break;
+        case 'select-none':
+            AppState.selectedAccounts.clear();
+            break;
+        case 'invert-selection':
+            AppState.filteredAccounts.forEach(acc => {
+                if (AppState.selectedAccounts.has(acc.username)) {
+                    AppState.selectedAccounts.delete(acc.username);
+                } else {
+                    AppState.selectedAccounts.add(acc.username);
+                }
+            });
+            break;
+        case 'remove-selected':
+            AppState.accounts = AppState.accounts.filter(acc => !AppState.selectedAccounts.has(acc.username));
+            AppState.selectedAccounts.clear();
+            applyFilters();
+            break;
+        case 'add-to-whitelist':
+            addSelectedToWhitelist();
+            break;
+    }
+
+    renderAccountsTable();
+    updateSelectedCount();
+}
+
+function initializeProcessQueueMenu() {
+    // The menu uses radio buttons, handled on process start
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACCOUNTS TABLE
+// ═══════════════════════════════════════════════════════════
+function initializeTableHandlers() {
+    // Select all checkbox
+    document.getElementById('selectAllAccounts')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        const visibleAccounts = getPageAccounts();
+
+        visibleAccounts.forEach(acc => {
+            if (checked) {
+                AppState.selectedAccounts.add(acc.username);
+            } else {
+                AppState.selectedAccounts.delete(acc.username);
+            }
+        });
+
+        renderAccountsTable();
+        updateSelectedCount();
+    });
+
+    // Sortable columns
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.sort;
+            if (AppState.sortColumn === column) {
+                AppState.sortDirection = AppState.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                AppState.sortColumn = column;
+                AppState.sortDirection = 'asc';
+            }
+            sortAccounts();
+            renderAccountsTable();
+        });
+    });
+
+    // Page size change
+    document.getElementById('pageSize')?.addEventListener('change', (e) => {
+        AppState.pageSize = parseInt(e.target.value);
+        AppState.currentPage = 1;
+        renderAccountsTable();
+    });
+
+    // Page number change
+    document.getElementById('pageNumber')?.addEventListener('change', (e) => {
+        const maxPage = Math.ceil(AppState.filteredAccounts.length / AppState.pageSize);
+        AppState.currentPage = Math.max(1, Math.min(parseInt(e.target.value) || 1, maxPage));
+        renderAccountsTable();
+    });
+}
+
+function renderAccountsTable() {
+    const gridContainer = document.getElementById('accountsGrid');
+    const emptyState = document.getElementById('tableEmptyState');
+
+    if (!gridContainer) return;
+
+    // Função interna de renderização
+    const performRender = () => {
+        const accounts = getPageAccounts();
+
+        if (accounts.length === 0) {
+            gridContainer.innerHTML = '';
+            if (emptyState) emptyState.style.display = 'flex';
             return;
         }
 
-        const result = await chrome.tabs.sendMessage(tabs[0].id, {
-            action: 'execute',
-            payload: { type: actionType }
+        if (emptyState) emptyState.style.display = 'none';
+
+        // Criar header
+        const headerHtml = `
+            <div class="eio-grid-header">
+                <label>
+                    <input type="checkbox" id="selectAllGrid" ${AppState.selectedAccounts.size === accounts.length ? 'checked' : ''}>
+                    <span>Selecionar Todos</span>
+                </label>
+            </div>
+        `;
+
+        // Criar cards
+        const cardsHtml = accounts.map(acc => {
+            const initial = (acc.username || '?').replace('@', '')[0]?.toUpperCase() || '?';
+            const isSelected = AppState.selectedAccounts.has(acc.username);
+            const cleanUsername = (acc.username || '').replace('@', '');
+            
+            let avatarHtml = '';
+            if (acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
+                avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                              <div class="card-placeholder" style="display:none;">${initial}</div>`;
+            } else {
+                avatarHtml = `<div class="card-placeholder">${initial}</div>`;
+            }
+
+            return `
+                <div class="eio-account-card ${isSelected ? 'selected' : ''}" data-username="${acc.username}">
+                    <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
+                    ${avatarHtml}
+                    <div class="card-info">
+                        <div class="card-username">
+                            <a href="https://instagram.com/${cleanUsername}" target="_blank">@${cleanUsername}</a>
+                        </div>
+                        ${acc.fullName ? `<div class="card-name">${acc.fullName}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        gridContainer.innerHTML = headerHtml + cardsHtml;
+
+        // Re-attach handlers
+        const selectAllGrid = document.getElementById('selectAllGrid');
+        if (selectAllGrid) {
+            selectAllGrid.addEventListener('change', (e) => {
+                const allCards = gridContainer.querySelectorAll('.eio-account-card');
+                const allCheckboxes = gridContainer.querySelectorAll('.card-checkbox');
+                
+                allCards.forEach((card, idx) => {
+                    const username = card.dataset.username;
+                    if (e.target.checked) {
+                        AppState.selectedAccounts.add(username);
+                        card.classList.add('selected');
+                        allCheckboxes[idx].checked = true;
+                    } else {
+                        AppState.selectedAccounts.delete(username);
+                        card.classList.remove('selected');
+                        allCheckboxes[idx].checked = false;
+                    }
+                });
+                
+                updateSelectedCount();
+            });
+        }
+
+        gridContainer.querySelectorAll('.eio-account-card').forEach(card => {
+            const checkbox = card.querySelector('.card-checkbox');
+            card.addEventListener('click', (e) => {
+                if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
+                checkbox.checked = !checkbox.checked;
+                toggleCardSelection(card, checkbox.checked);
+            });
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                toggleCardSelection(card, e.target.checked);
+            });
         });
 
-        if (result && result.success) {
-            addToHistory(actionType, extensionState.currentProfile || 'perfil');
-            incrementStat(actionType);
-            showToast(`✅ ${getActionLabel(actionType)} realizado!`, 'success');
-        } else {
-            showToast(`❌ Falha ao ${getActionLabel(actionType).toLowerCase()}`, 'error');
-        }
-    } catch (e) {
-        console.error('Quick action error:', e);
-        showToast('⚠️ Recarregue a página do Instagram', 'error');
-    }
-}
-
-/**
- * Adicionar ação ao histórico
- */
-function addToHistory(actionType, target) {
-    if (!extensionState.actionHistory) {
-        extensionState.actionHistory = [];
-    }
-
-    extensionState.actionHistory.unshift({
-        type: actionType,
-        target: target,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    });
-
-    // Manter apenas últimas 20 ações
-    if (extensionState.actionHistory.length > 20) {
-        extensionState.actionHistory.pop();
-    }
-
-    saveExtensionState();
-    updateHistoryUI();
-}
-
-/**
- * Atualizar UI do histórico
- */
-function updateHistoryUI() {
-    const container = document.getElementById('actionHistory');
-    if (!container) return;
-
-    if (!extensionState.actionHistory || extensionState.actionHistory.length === 0) {
-        container.innerHTML = `
-            <div class="eio-history-empty">
-                <span>Nenhuma ação realizada ainda</span>
-            </div>
-        `;
-        return;
-    }
-
-    const iconMap = {
-        'follow': '👤',
-        'like': '❤️',
-        'comment': '💬',
-        'dm': '✉️'
+        updatePaginationInfo();
     };
 
-    container.innerHTML = extensionState.actionHistory.map(item => `
-        <div class="eio-history-item">
-            <div class="eio-history-icon ${item.type}">${iconMap[item.type] || '📌'}</div>
-            <span class="eio-history-text">${getActionLabel(item.type)} @${item.target}</span>
-            <span class="eio-history-time">${item.time}</span>
-        </div>
-    `).join('');
+    // Otimização: Spinner
+    if (AppState.filteredAccounts.length > 200) {
+        gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
+        
+        // setTimeout para processar
+        setTimeout(() => {
+            requestAnimationFrame(performRender);
+        }, 50);
+    } else {
+        performRender();
+    }
 }
 
 /**
- * Incrementar estatística
+ * Alterna seleção de um card
  */
-function incrementStat(actionType) {
-    const today = new Date().toDateString();
-    if (extensionState.statsDate !== today) {
-        extensionState.stats = { followsToday: 0, likesToday: 0, commentsToday: 0, dmsToday: 0 };
-        extensionState.statsDate = today;
+function toggleCardSelection(card, isSelected) {
+    const username = card.dataset.username;
+
+    if (isSelected) {
+        AppState.selectedAccounts.add(username);
+        card.classList.add('selected');
+    } else {
+        AppState.selectedAccounts.delete(username);
+        card.classList.remove('selected');
     }
 
-    switch (actionType) {
-        case 'follow': extensionState.stats.followsToday++; break;
-        case 'like': extensionState.stats.likesToday++; break;
-        case 'comment': extensionState.stats.commentsToday++; break;
-        case 'dm': extensionState.stats.dmsToday = (extensionState.stats.dmsToday || 0) + 1; break;
-    }
-
-    updateStatsUI();
-    saveExtensionState();
+    updateSelectedCount();
 }
 
-/**
- * Atualizar UI de estatísticas
- */
-function updateStatsUI() {
-    const follows = document.getElementById('followsToday');
-    const likes = document.getElementById('likesToday');
-    const comments = document.getElementById('commentsToday');
-    const dms = document.getElementById('dmsToday');
-    const actionsToday = document.getElementById('actionsToday');
-
-    if (follows) follows.textContent = extensionState.stats?.followsToday || 0;
-    if (likes) likes.textContent = extensionState.stats?.likesToday || 0;
-    if (comments) comments.textContent = extensionState.stats?.commentsToday || 0;
-    if (dms) dms.textContent = extensionState.stats?.dmsToday || 0;
-
-    const total = (extensionState.stats?.followsToday || 0) +
-        (extensionState.stats?.likesToday || 0) +
-        (extensionState.stats?.commentsToday || 0) +
-        (extensionState.stats?.dmsToday || 0);
-    if (actionsToday) actionsToday.textContent = total;
+function getPageAccounts() {
+    const start = (AppState.currentPage - 1) * AppState.pageSize;
+    const end = start + AppState.pageSize;
+    return AppState.filteredAccounts.slice(start, end);
 }
 
-/**
- * Obter label da ação
- */
-function getActionLabel(actionType) {
-    const labels = {
-        'follow': 'Seguido',
-        'like': 'Curtido',
-        'comment': 'Comentado',
-        'dm': 'DM enviado'
-    };
-    return labels[actionType] || actionType;
-}
+function updatePaginationInfo() {
+    const total = AppState.filteredAccounts.length;
+    const start = (AppState.currentPage - 1) * AppState.pageSize + 1;
+    const end = Math.min(AppState.currentPage * AppState.pageSize, total);
 
-/**
- * Mostrar toast de notificação
- */
-function showToast(message, type = 'info') {
-    let toast = document.getElementById('eio-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'eio-toast';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            max-width: 90%;
-            text-align: center;
-        `;
-        document.body.appendChild(toast);
+    const el = document.getElementById('queuePagination');
+    if (el) {
+        el.textContent = `📊 ${start} - ${end} / ${total} (${AppState.accounts.length})`;
     }
 
-    const colors = {
-        'success': { bg: 'rgba(76, 175, 80, 0.95)', color: 'white' },
-        'error': { bg: 'rgba(244, 67, 54, 0.95)', color: 'white' },
-        'warning': { bg: 'rgba(255, 152, 0, 0.95)', color: 'white' },
-        'info': { bg: 'rgba(33, 150, 243, 0.95)', color: 'white' }
-    };
-
-    const style = colors[type] || colors.info;
-    toast.style.background = style.bg;
-    toast.style.color = style.color;
-    toast.textContent = message;
-    toast.style.opacity = '1';
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-    }, 2500);
-}
-
-/**
- * Verificar se os termos foram aceitos
- */
-async function checkTermsApproval() {
-    const result = await chrome.storage.local.get(['extensionState']);
-    if (!result.extensionState || !result.extensionState.termsAccepted) {
-        document.getElementById('termsModal').classList.add('active');
-    }
-}
-
-// Iniciar extração de leads
-async function startExtraction() {
-    const source = document.getElementById('extractSource').value;
-    const targetProfile = document.getElementById('targetProfile')?.value || '';
-    const extractTarget = document.getElementById('extractTarget')?.value || '';
-
-    // Determinar o alvo correto baseado no tipo de fonte
-    let target = extractTarget;
-    if ((source === 'followers' || source === 'following') && targetProfile) {
-        target = targetProfile;
-    }
-
-    // Coletar Filtros (Resiliente a elementos faltantes)
-    const filters = {
-        brOnly: document.getElementById('filterBR')?.checked || false,
-        hasPhoto: document.getElementById('filterPhoto')?.checked || false,
-        minPosts: document.getElementById('filterPosts')?.checked || false,
-        publicOnly: document.getElementById('filterPublic')?.checked || false
-    };
-
-    if (!target) {
-        addConsoleEntry('error', 'Por favor, informe o alvo da extração (perfil ou referência)');
-        return;
-    }
-
-    // Salvar configurações para persistência
-    extensionState.lastExtractSource = source;
-    extensionState.lastTargetProfile = targetProfile;
-    extensionState.lastExtractTarget = extractTarget;
-    extensionState.lastFilters = filters;
-    await saveExtensionState();
-
-    try {
-        extensionState.extractedLeads = [];
-        updateResultsUI();
-
-        document.getElementById('extractionProgress').style.display = 'block';
-        document.getElementById('extractionResults').style.display = 'none';
-
-        updateExtractionProgress(5, 0);
-
-        const sourceLabels = {
-            'followers': 'seguidores',
-            'following': 'seguindo',
-            'likes': 'curtidas',
-            'hashtags': 'hashtag',
-            'unfollow': 'deixar de seguir'
-        };
-        addConsoleEntry('info', `Solicitando extração de ${sourceLabels[source] || source}...`);
-
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-        // Definir Limite (200 para seguidores/curtidas, 500 para unfollow)
-        const limit = source === 'unfollow' ? 500 : 200;
-
-        const result = await chrome.tabs.sendMessage(tabs[0].id, {
-            action: 'execute_extraction',
-            payload: {
-                type: source,
-                value: target,
-                filters: filters,
-                limit: limit
-            }
-        });
-
-        if (result && result.success) {
-            // Adicionar flag de selecionado por padrão
-            extensionState.extractedLeads = result.data.map(lead => ({ ...lead, selected: true }));
-            updateExtractionProgress(100, result.data.length);
-            updateResultsUI();
-            addConsoleEntry('success', `Extração concluída: ${result.data.length} leads.`);
-
-            // Salvar leads extraídos
-            await saveExtensionState();
-        } else {
-            updateExtractionProgress(0, 0);
-            addConsoleEntry('error', `Falha: ${result ? result.message : 'Sem resposta'}`);
-        }
-    } catch (error) {
-        console.error('Extraction error:', error);
-        addConsoleEntry('error', '⚠️ Erro de comunicação. RECARREGUE o Instagram (F5).');
-    }
-}
-
-// Atualizar barra de progresso
-function updateExtractionProgress(percent, count) {
-    const fill = document.getElementById('extractionProgressFill');
-    const countEl = document.getElementById('extractionCount');
-    if (fill) fill.style.width = `${percent}%`;
-    if (countEl) countEl.innerText = `${count} leads`;
-}
-
-// Ouvir progresso em tempo real
-chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'extraction_progress') {
-        const percent = Math.min(message.count * 2, 98);
-        updateExtractionProgress(percent, message.count);
-    }
-});
-
-// Ações de Seleção Manual
-function toggleSelectAll(checked) {
-    extensionState.extractedLeads.forEach(l => l.selected = checked);
-    if (document.getElementById('selectAllLeads')) {
-        document.getElementById('selectAllLeads').checked = checked;
-    }
-    updateResultsUI();
-}
-
-function deselectLastN(n) {
-    const leads = extensionState.extractedLeads;
-    for (let i = Math.max(0, leads.length - n); i < leads.length; i++) {
-        leads[i].selected = false;
-    }
-    updateResultsUI();
-}
-
-// Atualizar lista de resultados com Inteligência Visual
-function updateResultsUI() {
-    const container = document.getElementById('extractionResults');
-    const list = document.getElementById('resultsList');
-    const selectedCountEl = document.getElementById('selectedCount');
-    const controls = document.querySelector('.eio-results-controls');
-    const source = document.getElementById('extractSource')?.value || 'followers';
-    const isUnfollow = source === 'unfollow';
-
-    if (!extensionState.extractedLeads || extensionState.extractedLeads.length === 0) {
-        if (container) container.style.display = 'none';
-        return;
-    }
-
-    if (container) container.style.display = 'block';
-    if (list) list.innerHTML = '';
-
-    // Mostrar ou esconder controles de seleção (Só para Unfollow)
-    if (controls) {
-        controls.style.display = isUnfollow ? 'flex' : 'none';
-    }
-
-    let selectedCount = 0;
-
-    extensionState.extractedLeads.forEach((lead, index) => {
-        if (lead.selected) selectedCount++;
-
-        const item = document.createElement('div');
-        item.className = 'eio-lead-item';
-
-        // Renderizar com ou sem checkbox baseado na funcionalidade
-        const checkboxHtml = isUnfollow ?
-            `<input type="checkbox" ${lead.selected ? 'checked' : ''} data-index="${index}">` :
-            '';
-
-        // Tratamento melhorado para avatares - usar placeholder quando imagem não carrega
-        const getAvatarHtml = (lead) => {
-            if (!lead.avatar || lead.avatar === '' || lead.avatar === 'undefined') {
-                // Avatar padrão com inicial do nome
-                const initial = (lead.name || lead.username || 'U').charAt(0).toUpperCase();
-                return `<div class="eio-lead-avatar eio-lead-avatar-placeholder">${initial}</div>`;
-            }
-            // Tentar carregar imagem com fallback
-            return `<img src="${lead.avatar}" 
-                         class="eio-lead-avatar-img" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
-                         alt="${lead.name || 'Avatar'}">
-                    <div class="eio-lead-avatar eio-lead-avatar-placeholder" style="display:none;">
-                        ${(lead.name || lead.username || 'U').charAt(0).toUpperCase()}
-                    </div>`;
-        };
-
-        item.innerHTML = `
-            ${checkboxHtml}
-            <div class="eio-lead-avatar-container">
-                ${getAvatarHtml(lead)}
-            </div>
-            <div class="eio-lead-info">
-                <span class="eio-lead-name">${lead.name || 'Usuário Instagram'}</span>
-                <span class="eio-lead-username">${lead.username || '@unknown'}</span>
-            </div>
-        `;
-
-        if (isUnfollow) {
-            const checkbox = item.querySelector('input');
-            if (checkbox) {
-                checkbox.onchange = (e) => {
-                    extensionState.extractedLeads[index].selected = e.target.checked;
-                    updateSelectedCount();
-                    saveExtensionState(); // Salvar ao mudar seleção
-                };
-            }
-        }
-
-        if (list) list.appendChild(item);
-    });
-
-    if (selectedCountEl) {
-        selectedCountEl.style.display = isUnfollow ? 'block' : 'none';
-        selectedCountEl.innerText = `${selectedCount} selecionados`;
+    const pageInput = document.getElementById('pageNumber');
+    if (pageInput) {
+        pageInput.value = AppState.currentPage;
+        pageInput.max = Math.ceil(total / AppState.pageSize) || 1;
     }
 }
 
 function updateSelectedCount() {
-    const count = extensionState.extractedLeads.filter(l => l.selected).length;
     const el = document.getElementById('selectedCount');
-    const source = document.getElementById('extractSource').value;
     if (el) {
-        el.style.display = source === 'unfollow' ? 'block' : 'none';
-        el.innerText = `${count} selecionados`;
+        el.textContent = `${AppState.selectedAccounts.size} selected`;
     }
 }
 
-// ENVIAR AÇÕES PARA O ROBÔ (O GRANDE BOTÃO START)
-async function executeActionOnSelected() {
-    const selectedLeads = extensionState.extractedLeads.filter(l => l.selected);
-    const source = document.getElementById('extractSource').value;
+function sortAccounts() {
+    AppState.filteredAccounts.sort((a, b) => {
+        let aVal = a[AppState.sortColumn];
+        let bVal = b[AppState.sortColumn];
 
-    if (selectedLeads.length === 0) {
-        addConsoleEntry('warning', 'Nenhum perfil selecionado para ação.');
+        if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal?.toLowerCase() || '';
+        }
+
+        if (aVal < bVal) return AppState.sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return AppState.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return '-';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num.toString();
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD ACCOUNTS FROM INSTAGRAM
+// ═══════════════════════════════════════════════════════════
+async function loadFromInstagram(type, limit) {
+    addLog('info', `🔄 Iniciando extração de ${type}...`);
+
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const activeTab = tabs[0];
+
+        if (!activeTab?.url?.includes('instagram.com')) {
+            addLog('error', '❌ Por favor, navegue para o Instagram primeiro');
+            alert('Por favor, navegue para o Instagram e abra a lista de seguidores/seguindo antes de clicar aqui.');
+            return;
+        }
+
+        addLog('info', '📋 Certifique-se de que a janela de seguidores/seguindo está aberta!');
+
+        const response = await chrome.tabs.sendMessage(activeTab.id, {
+            action: 'execute_extraction',
+            payload: {
+                type: type,
+                limit: limit,
+                filters: AppState.filters
+            }
+        });
+
+        if (response?.success && response.data) {
+            // Map data correctly from content script
+            const newAccounts = response.data.map(lead => ({
+                username: lead.username || '',
+                fullName: lead.fullName || lead.name || '',
+                avatar: lead.avatar || null,
+                bio: lead.bio || '',
+                posts: lead.posts || null,
+                followers: lead.followers || null,
+                following: lead.following || null,
+                ratio: lead.ratio || null,
+                mutual: lead.mutual || false,
+                followedByMe: lead.followedByMe || false,
+                followsMe: lead.followsMe || false,
+                isPrivate: lead.isPrivate || false,
+                isVerified: lead.isVerified || false,
+                hasStory: lead.hasStory || false,
+                source: type
+            }));
+
+            // Merge with existing accounts (avoid duplicates)
+            const existingUsernames = new Set(AppState.accounts.map(a => a.username));
+            const uniqueNew = newAccounts.filter(a => !existingUsernames.has(a.username));
+
+            AppState.accounts = [...AppState.accounts, ...uniqueNew];
+            applyFilters();
+            renderAccountsTable();
+            saveState();
+
+            addLog('success', `✅ ${uniqueNew.length} novas contas carregadas!`);
+
+            if (uniqueNew.length === 0 && newAccounts.length > 0) {
+                addLog('warning', '⚠️ Todas as contas já estavam na lista');
+            }
+        } else {
+            addLog('error', response?.message || 'Falha na extração. A janela de seguidores está aberta?');
+            alert('Por favor, clique em "Seguidores" ou "Seguindo" no perfil do Instagram para abrir a lista antes de extrair.');
+        }
+    } catch (error) {
+        console.error('Load error:', error);
+        addLog('error', `❌ Erro: ${error.message}`);
+        alert('Erro ao carregar contas. Certifique-se de que:\n1. Você está em instagram.com\n2. A janela de seguidores/seguindo está aberta\n3. Recarregue a página do Instagram e tente novamente');
+    }
+}
+
+function loadWhitelist() {
+    chrome.storage.local.get(['eioWhitelist'], (result) => {
+        if (result.eioWhitelist && result.eioWhitelist.length > 0) {
+            const newAccounts = result.eioWhitelist.map(username => ({
+                username: username,
+                fullName: '',
+                avatar: null,
+                bio: '',
+                posts: null,
+                followers: null,
+                following: null,
+                ratio: null,
+                whitelisted: true
+            }));
+
+            AppState.accounts = [...newAccounts, ...AppState.accounts];
+            applyFilters();
+            renderAccountsTable();
+            addLog('success', `✅ ${newAccounts.length} contas da whitelist carregadas`);
+        } else {
+            addLog('warning', '⚠️ Whitelist vazia');
+        }
+    });
+}
+
+function loadPendingRequests() {
+    addLog('info', '⏳ Carregando pedidos pendentes... (requer estar na página de solicitações)');
+    loadFromInstagram('pending', 100);
+}
+
+function loadSavedQueue() {
+    chrome.storage.local.get(['eioSavedQueue'], (result) => {
+        if (result.eioSavedQueue && result.eioSavedQueue.length > 0) {
+            AppState.accounts = result.eioSavedQueue;
+            applyFilters();
+            renderAccountsTable();
+            addLog('success', `✅ ${result.eioSavedQueue.length} contas restauradas`);
+        } else {
+            addLog('warning', '⚠️ Nenhuma fila salva encontrada');
+        }
+    });
+}
+
+function addSelectedToWhitelist() {
+    chrome.storage.local.get(['eioWhitelist'], (result) => {
+        const whitelist = new Set(result.eioWhitelist || []);
+        AppState.selectedAccounts.forEach(username => whitelist.add(username));
+
+        chrome.storage.local.set({ eioWhitelist: Array.from(whitelist) });
+        addLog('success', `✅ ${AppState.selectedAccounts.size} contas adicionadas à whitelist`);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════
+function initializeFilters() {
+    // Range sliders
+    const rangeSliders = [
+        { min: 'followersMin', max: 'followersMax', minVal: 'followersMinVal', maxVal: 'followersMaxVal' },
+        { min: 'followingMin', max: 'followingMax', minVal: 'followingMinVal', maxVal: 'followingMaxVal' },
+        { min: 'ratioMin', max: 'ratioMax', minVal: 'ratioMinVal', maxVal: 'ratioMaxVal' },
+        { min: 'postsMin', max: 'postsMax', minVal: 'postsMinVal', maxVal: 'postsMaxVal' }
+    ];
+
+    rangeSliders.forEach(slider => {
+        const minEl = document.getElementById(slider.min);
+        const maxEl = document.getElementById(slider.max);
+        const minValEl = document.getElementById(slider.minVal);
+        const maxValEl = document.getElementById(slider.maxVal);
+
+        if (minEl && maxEl) {
+            minEl.addEventListener('input', () => {
+                if (minValEl) minValEl.textContent = formatNumber(parseInt(minEl.value));
+            });
+            maxEl.addEventListener('input', () => {
+                if (maxValEl) maxValEl.textContent = formatNumber(parseInt(maxEl.value));
+            });
+        }
+    });
+
+    // Apply filters button
+    document.getElementById('btnApplyFilters')?.addEventListener('click', () => {
+        collectFilters();
+        applyFilters();
+        renderAccountsTable();
+        addLog('info', `🎯 Filtros aplicados: ${AppState.filteredAccounts.length} contas`);
+    
+        // Feedback UX: Ir para aba contas
+        setTimeout(() => {
+            const tab = document.querySelector('.eio-tab[data-tab="contas"]');
+            if (tab) tab.click();
+        }, 100);
+    });
+
+    // Reset filters button
+    document.getElementById('btnResetFilters')?.addEventListener('click', () => {
+        resetFilters();
+        renderAccountsTable();
+        addLog('info', '🔄 Filtros redefinidos');
+    });
+}
+
+function collectFilters() {
+    AppState.filters = {
+        followersMin: parseInt(document.getElementById('followersMin')?.value) || 0,
+        followersMax: parseInt(document.getElementById('followersMax')?.value) || 100000,
+        followingMin: parseInt(document.getElementById('followingMin')?.value) || 0,
+        followingMax: parseInt(document.getElementById('followingMax')?.value) || 10000,
+        ratioMin: parseFloat(document.getElementById('ratioMin')?.value) || 0,
+        ratioMax: parseFloat(document.getElementById('ratioMax')?.value) || 100,
+        postsMin: parseInt(document.getElementById('postsMin')?.value) || 0,
+        postsMax: parseInt(document.getElementById('postsMax')?.value) || 1000,
+        lastPostDays: parseInt(document.getElementById('lastPostDays')?.value) || null,
+        hasPhoto: document.getElementById('filterHasPhoto')?.checked || null,
+        noPhoto: document.getElementById('filterNoPhoto')?.checked || null,
+        isPrivate: document.getElementById('filterPrivate')?.checked || null,
+        isPublic: document.getElementById('filterPublic')?.checked || null,
+        followsMe: document.getElementById('filterFollowsMe')?.checked || null,
+        notFollowsMe: document.getElementById('filterNotFollowsMe')?.checked || null,
+        isVerified: document.getElementById('filterVerified')?.checked || null,
+        bioContains: document.getElementById('bioContains')?.value || '',
+        businessCategory: document.getElementById('businessCategory')?.value || ''
+    };
+}
+
+function applyFilters() {
+    AppState.filteredAccounts = AppState.accounts.filter(acc => {
+        const f = AppState.filters;
+
+        // Followers range
+        if (acc.followers !== null) {
+            if (acc.followers < f.followersMin || acc.followers > f.followersMax) return false;
+        }
+
+        // Following range
+        if (acc.following !== null) {
+            if (acc.following < f.followingMin || acc.following > f.followingMax) return false;
+        }
+
+        // Ratio range
+        if (acc.ratio !== null) {
+            if (acc.ratio < f.ratioMin || acc.ratio > f.ratioMax) return false;
+        }
+
+        // Posts range
+        if (acc.posts !== null) {
+            if (acc.posts < f.postsMin || acc.posts > f.postsMax) return false;
+        }
+
+        // Photo filter
+        if (f.hasPhoto && !acc.avatar) return false;
+        if (f.noPhoto && acc.avatar) return false;
+
+        // Private/Public
+        if (f.isPrivate && !acc.isPrivate) return false;
+        if (f.isPublic && acc.isPrivate) return false;
+
+        // Follows me
+        if (f.followsMe && !acc.followsMe) return false;
+        if (f.notFollowsMe && acc.followsMe) return false;
+
+        // Verified
+        if (f.isVerified && !acc.isVerified) return false;
+
+        // Bio contains
+        if (f.bioContains && acc.bio && !acc.bio.toLowerCase().includes(f.bioContains.toLowerCase())) {
+            return false;
+        }
+
+        // Business category
+        if (f.businessCategory && acc.businessCategory && !acc.businessCategory.toLowerCase().includes(f.businessCategory.toLowerCase())) {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Sort after filtering
+    sortAccounts();
+
+    // Reset to page 1
+    AppState.currentPage = 1;
+
+    renderAccountsTable();
+    addLog('success', `Filtros aplicados. ${AppState.filteredAccounts.length} contas encontradas.`);
+    // UX: Switch to accounts tab explicitly
+    setTimeout(() => { const btn = document.querySelector('.eio-tab[data-tab="contas"]'); if(btn) btn.click(); }, 200);
+}
+
+function resetFilters() {
+    // Reset form values
+    document.getElementById('followersMin').value = 0;
+    document.getElementById('followersMax').value = 100000;
+    document.getElementById('followingMin').value = 0;
+    document.getElementById('followingMax').value = 10000;
+    document.getElementById('ratioMin').value = 0;
+    document.getElementById('ratioMax').value = 100;
+    document.getElementById('postsMin').value = 0;
+    document.getElementById('postsMax').value = 1000;
+    document.getElementById('lastPostDays').value = '';
+
+    // Reset checkboxes
+    document.querySelectorAll('.eio-filter-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+    // Reset text filters
+    document.getElementById('bioContains').value = '';
+    document.getElementById('businessCategory').value = '';
+
+    // Update display values
+    document.getElementById('followersMinVal').textContent = '0';
+    document.getElementById('followersMaxVal').textContent = '100k';
+    document.getElementById('followingMinVal').textContent = '0';
+    document.getElementById('followingMaxVal').textContent = '10k';
+    document.getElementById('ratioMinVal').textContent = '0';
+    document.getElementById('ratioMaxVal').textContent = '100';
+    document.getElementById('postsMinVal').textContent = '0';
+    document.getElementById('postsMaxVal').textContent = '1000';
+
+    // Reset state and reapply
+    AppState.filters = {};
+    AppState.filteredAccounts = [...AppState.accounts];
+    AppState.currentPage = 1;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONFIG SECTIONS
+// ═══════════════════════════════════════════════════════════
+function initializeConfigSections() {
+    document.querySelectorAll('.eio-config-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const collapseId = header.dataset.collapse;
+            const content = document.getElementById(collapseId);
+
+            if (content) {
+                content.classList.toggle('collapsed');
+                const arrow = header.querySelector('span');
+                if (arrow) {
+                    arrow.textContent = content.classList.contains('collapsed')
+                        ? arrow.textContent.replace('▼', '▶')
+                        : arrow.textContent.replace('▶', '▼');
+                }
+            }
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTION BUTTONS
+// ═══════════════════════════════════════════════════════════
+function initializeActionButtons() {
+    // Save Queue
+    document.getElementById('btnSaveQueue')?.addEventListener('click', () => {
+        chrome.storage.local.set({ eioSavedQueue: AppState.accounts });
+        addLog('success', `💾 Fila salva: ${AppState.accounts.length} contas`);
+    });
+
+    // Export CSV
+    document.getElementById('btnExportCSV')?.addEventListener('click', () => {
+        exportToCSV();
+    });
+
+    // Start automation
+    document.getElementById('btnStartAutomation')?.addEventListener('click', () => {
+        startAutomation();
+    });
+
+    // Pause automation
+    document.getElementById('btnPauseAutomation')?.addEventListener('click', () => {
+        pauseAutomation();
+    });
+
+    // Stop automation
+    document.getElementById('btnStopAutomation')?.addEventListener('click', () => {
+        stopAutomation();
+    });
+
+    // Mini automation controls - pause and stop only (start is handled separately)
+    document.getElementById('btnPauseAuto')?.addEventListener('click', () => {
+        pauseAutomation();
+    });
+    document.getElementById('btnStopAuto')?.addEventListener('click', () => {
+        stopAutomation();
+    });
+
+    // Clear logs
+    document.getElementById('clearLogBtn')?.addEventListener('click', () => {
+        AppState.logs = [];
+        renderLogs();
+    });
+
+    // Trim logs
+    document.getElementById('trimLogBtn')?.addEventListener('click', () => {
+        AppState.logs = AppState.logs.slice(0, 50);
+        renderLogs();
+    });
+
+    // Quick actions - old tab cards
+    document.querySelectorAll('.eio-action-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const actionId = card.id;
+            handleQuickAction(actionId);
+        });
+    });
+
+    // NEW: Toggle action buttons (combinable)
+    document.querySelectorAll('.eio-action-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Toggle active state
+            btn.classList.toggle('active');
+
+            // If unfollow is selected, deselect all others
+            if (btn.dataset.action === 'unfollow' && btn.classList.contains('active')) {
+                document.querySelectorAll('.eio-action-toggle:not([data-action="unfollow"])').forEach(b => {
+                    b.classList.remove('active');
+                });
+            } else if (btn.dataset.action !== 'unfollow') {
+                // If any other action is selected, deselect unfollow
+                document.querySelector('.eio-action-toggle[data-action="unfollow"]')?.classList.remove('active');
+            }
+
+            // Update queue status display
+            updateSelectedActions();
+        });
+    });
+
+    // Start automation with selected actions
+    document.getElementById('btnStartAuto')?.addEventListener('click', () => {
+        const selectedActions = getSelectedActions();
+        if (selectedActions.length === 0) {
+            alert('Selecione pelo menos uma ação (Seguir, Curtir, etc.)');
+            return;
+        }
+        if (AppState.selectedAccounts.size === 0) {
+            alert('Selecione pelo menos uma conta na lista');
+            return;
+        }
+        prepareAndStartAutomation(selectedActions);
+    });
+
+    // Popout button
+    document.getElementById('popoutBtn')?.addEventListener('click', () => {
+        chrome.windows.create({
+            url: 'popup.html',
+            type: 'popup',
+            width: 800,
+            height: 900
+        });
+    });
+}
+
+function getSelectedActions() {
+    const actions = [];
+    document.querySelectorAll('.eio-action-toggle.active').forEach(btn => {
+        actions.push(btn.dataset.action);
+    });
+    return actions;
+}
+
+function getQueueOptions() {
+    return {
+        likePosts: document.getElementById('optLikePosts')?.checked ?? true,
+        likeCount: parseInt(document.getElementById('optLikeCount')?.value) || 3,
+        viewStory: document.getElementById('optViewStory')?.checked ?? true,
+        useDashboardMsg: document.getElementById('optUseDashboardMsg')?.checked ?? false
+    };
+}
+
+function updateSelectedActions() {
+    const actions = getSelectedActions();
+    const actionEl = document.getElementById('queueActionType');
+    const countEl = document.getElementById('queueCount');
+
+    if (actions.length === 0) {
+        if (actionEl) actionEl.textContent = 'Nenhuma ação';
+    } else {
+        const labels = actions.map(a => ACTION_LABELS[a] || a).join(' + ');
+        if (actionEl) actionEl.textContent = labels;
+    }
+
+    if (countEl) countEl.textContent = `${AppState.selectedAccounts.size} contas`;
+}
+
+async function prepareAndStartAutomation(selectedActions) {
+    const options = getQueueOptions();
+    const selectedUsernames = Array.from(AppState.selectedAccounts);
+    const accounts = AppState.accounts.filter(a => selectedUsernames.includes(a.username));
+
+    if (accounts.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta selecionada');
         return;
     }
 
-    addConsoleEntry('info', `Preparando ${selectedLeads.length} ações de ${source}...`);
-
-    const actionType = source === 'unfollow' ? 'unfollow' : 'follow';
-
-    const actions = selectedLeads.map(lead => ({
-        type: actionType,
-        target: { type: 'profile', value: lead.username.replace('@', '') },
-        delay: Math.floor(Math.random() * (45000 - 30000 + 1) + 30000) // 30-45s entre ações para segurança
+    // Build queue with combined actions
+    const queue = accounts.map(acc => ({
+        ...acc,
+        actions: selectedActions,
+        options: options
     }));
 
-    try {
-        const response = await chrome.runtime.sendMessage({
-            action: 'loadQueue',
-            payload: { actions: actions }
-        });
+    addLog('info', `🎯 Preparando ${selectedActions.join('+')} para ${queue.length} contas...`);
 
-        if (response && response.success) {
-            addConsoleEntry('success', `${actions.length} perfis enviados para a fila!`);
-
-            // Mudar para a aba Dashboard
-            const dashTab = document.querySelector('[data-tab="dashboard"]');
-            if (dashTab) dashTab.click();
-
-            // Iniciar automação
+    // Send to background
+    chrome.runtime.sendMessage({
+        action: 'setQueue',
+        queue: queue,
+        actionType: selectedActions.join('+'),
+        options: options
+    }, (response) => {
+        if (response?.success) {
+            addLog('success', `✅ Fila criada: ${queue.length} contas`);
+            // Auto start
             startAutomation();
         }
-    } catch (error) {
-        console.error('Error loading queue:', error);
-        addConsoleEntry('error', 'Falha ao enviar perfis para o motor de automação.');
+    });
+}
+
+function exportToCSV() {
+    const accounts = AppState.selectedAccounts.size > 0
+        ? AppState.filteredAccounts.filter(a => AppState.selectedAccounts.has(a.username))
+        : AppState.filteredAccounts;
+
+    if (accounts.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta para exportar');
+        return;
     }
+
+    const headers = ['username', 'fullName', 'bio', 'posts', 'followers', 'following', 'ratio', 'isPrivate', 'isVerified'];
+    const csvContent = [
+        headers.join(','),
+        ...accounts.map(acc => headers.map(h => {
+            const val = acc[h];
+            if (typeof val === 'string') return `"${val.replace(/"/g, '""')}"`;
+            return val ?? '';
+        }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eio_accounts_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    addLog('success', `📄 Exportado: ${accounts.length} contas`);
 }
 
-// Enviar leads para o CRM
-async function sendLeadsToCRM() {
-    const count = extensionState.extractedLeads.length;
-    addConsoleEntry('info', `Enviando ${count} leads para o CRM...`);
-    await new Promise(r => setTimeout(r, 1500));
-    addConsoleEntry('success', 'Leads integrados ao CRM com sucesso!');
-    extensionState.extractedLeads = [];
-    updateResultsUI();
-    document.getElementById('extractionProgress').style.display = 'none';
-}
-
-// Automação
 async function startAutomation() {
-    extensionState.isRunning = true;
-    await chrome.runtime.sendMessage({ action: 'startAutomation' });
-    updateUI();
-    addConsoleEntry('success', 'Automação iniciada');
-}
+    const selectedAction = document.querySelector('input[name="processAction"]:checked')?.value || 'follow';
+    const accountsToProcess = AppState.selectedAccounts.size > 0
+        ? AppState.filteredAccounts.filter(a => AppState.selectedAccounts.has(a.username))
+        : AppState.filteredAccounts;
 
-async function pauseAutomation() {
-    extensionState.isRunning = false;
-    await chrome.runtime.sendMessage({ action: 'pauseAutomation' });
-    updateUI();
-    addConsoleEntry('warning', 'Automação pausada');
-}
-
-// Console
-function addConsoleEntry(type, message) {
-    const log = document.getElementById('consoleLog');
-    if (!log) return;
-
-    const entry = document.createElement('div');
-    entry.className = `eio-log-entry log-${type}`;
-    const time = new Date().toLocaleTimeString('pt-BR');
-    entry.innerHTML = `<span class="eio-log-time">[${time}]</span><span class="eio-log-msg">${message}</span>`;
-    log.prepend(entry);
-}
-
-function clearConsole() {
-    const log = document.getElementById('consoleLog');
-    if (log) log.innerHTML = '';
-}
-
-// Carregar fluxos ativos
-async function loadActiveFlows() {
-    const list = document.getElementById('activeFlowsList');
-    const noFlows = document.getElementById('noFlowsMessage');
-    if (!list) return;
-
-    let flows = [];
-
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-        try {
-            const response = await chrome.runtime.sendMessage({ action: 'getStatus' });
-            if (response && response.currentFlow) {
-                flows = [response.currentFlow];
-            }
-        } catch (e) { console.error('Error fetching flows', e); }
-    } else {
-        // Mock para preview
-        flows = [
-            { id: 1, name: 'Engajamento Orgânico #1', status: 'active' },
-            { id: 2, name: 'Boas-vindas para Seguidores', status: 'paused' }
-        ];
+    if (accountsToProcess.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta selecionada para processar');
+        return;
     }
 
-    if (flows.length === 0) {
-        list.style.display = 'none';
-        if (noFlows) noFlows.style.display = 'flex';
-    } else {
-        list.style.display = 'block';
-        if (noFlows) noFlows.style.display = 'none';
+    addLog('info', `🚀 Iniciando ${selectedAction} em ${accountsToProcess.length} contas...`);
 
-        list.innerHTML = flows.map(flow => `
-            <div class="eio-flow-card">
-                <div class="eio-flow-info">
-                    <span class="eio-flow-name">${flow.name}</span>
-                    <span class="eio-flow-status" style="color: ${flow.status === 'active' ? '#4CAF50' : '#FF9800'}">
-                        ${flow.status === 'active' ? '✓ Rodando' : '⏳ Pausado'}
-                    </span>
-                </div>
-                <div class="eio-flow-actions">
-                    <button class="eio-btn-mini" onclick="toggleFlow(${flow.id})">${flow.status === 'active' ? 'Pausar' : 'Retomar'}</button>
-                    <button class="eio-btn-mini eio-btn-mini-danger" onclick="stopFlow(${flow.id})">Parar</button>
-                </div>
-            </div>
-        `).join('');
-    }
-}
+    AppState.automationRunning = true;
+    updateAutomationUI('running');
 
-window.toggleFlow = function (id) {
-    console.log('Toggle flow:', id);
-    alert('Ação enviada para o motor de automação.');
-};
-
-window.stopFlow = function (id) {
-    if (confirm('Deseja realmente parar este fluxo?')) {
-        console.log('Stop flow:', id);
-        loadActiveFlows();
-    }
-};
-
-// Reiniciar atualizações em tempo real
-function startLiveUpdates() {
-    loadActiveFlows();
-    setInterval(async () => {
-        if (typeof chrome !== 'undefined' && chrome.runtime) {
-            try {
-                const stats = await chrome.runtime.sendMessage({ action: 'getStats' });
-                if (stats && stats.stats) {
-                    const follows = document.getElementById('followsToday');
-                    const likes = document.getElementById('likesToday');
-                    const comments = document.getElementById('commentsToday');
-                    if (follows) follows.innerText = stats.stats.followsToday || 0;
-                    if (likes) likes.innerText = stats.stats.likesToday || 0;
-                    if (comments) comments.innerText = stats.stats.commentsToday || 0;
-                }
-            } catch (e) { }
+    // Send to background script
+    chrome.runtime.sendMessage({
+        action: 'loadQueue',
+        payload: {
+            actions: accountsToProcess.map(acc => ({
+                type: selectedAction,
+                target: acc.username
+            }))
         }
-    }, 3000);
+    });
+
+    chrome.runtime.sendMessage({ action: 'startAutomation' });
 }
 
-// UI Updates
-function updateUI() {
-    const startBtn = document.getElementById('startAutomationBtn');
-    const pauseBtn = document.getElementById('pauseAutomationBtn');
-    if (startBtn) startBtn.disabled = extensionState.isRunning;
-    if (pauseBtn) pauseBtn.disabled = !extensionState.isRunning;
-
-    loadActiveFlows();
+function pauseAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
+    AppState.automationRunning = false;
+    updateAutomationUI('paused');
+    addLog('warning', '⏸️ Automação pausada');
 }
 
-// NOTA: As funções safeAddEventListener para refreshFlowsBtn e createFlowBtn
-// já estão definidas dentro de initializeButtons() (linhas 241-250)
+function stopAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
+    AppState.automationRunning = false;
+    updateAutomationUI('idle');
+    addLog('info', '⏹️ Automação parada');
+}
 
-// Função para salvar configurações
-window.saveSettings = async function () {
-    const speedSetting = document.getElementById('speedSetting')?.value || 'safe';
-    const autoStart = document.getElementById('autoStartSetting')?.checked || false;
-    const notifications = document.getElementById('notificationsSetting')?.checked || true;
+function updateAutomationUI(status) {
+    const statusEl = document.querySelector('.eio-status-indicator');
+    if (statusEl) {
+        statusEl.className = `eio-status-indicator eio-status-${status}`;
+        statusEl.querySelector('span').textContent = {
+            'running': 'Executando',
+            'paused': 'Pausado',
+            'idle': 'Parado'
+        }[status] || 'Parado';
+    }
+}
 
-    const settings = {
-        speed: speedSetting,
-        autoStart: autoStart,
-        notifications: notifications,
-        savedAt: new Date().toISOString()
+function handleQuickAction(actionId) {
+    const actions = {
+        'actionFollow': 'follow',
+        'actionLike': 'like',
+        'actionComment': 'comment',
+        'actionDM': 'dm',
+        'actionUnfollow': 'unfollow',
+        'actionStory': 'viewStory'
     };
 
-    console.log('💾 Salvando configurações:', settings);
+    const action = actions[actionId];
+    if (action) {
+        addLog('info', `⚡ Ação rápida: ${action}`);
+        // Execute on current profile
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]?.url?.includes('instagram.com')) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'execute',
+                    payload: { type: action }
+                });
+            }
+        });
+    }
+}
 
-    // Salvar no Chrome Storage se disponível
-    if (typeof chrome !== 'undefined' && chrome.storage) {
+// ═══════════════════════════════════════════════════════════
+// LOGS
+// ═══════════════════════════════════════════════════════════
+function addLog(level, message) {
+    const now = new Date();
+    const timestamp = now.toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    AppState.logs.unshift({ level, message, timestamp });
+
+    if (AppState.logs.length > 500) {
+        AppState.logs = AppState.logs.slice(0, 500);
+    }
+
+    renderLogs();
+    saveState();
+}
+
+function renderLogs() {
+    const container = document.getElementById('consoleLog');
+    if (!container) return;
+
+    container.innerHTML = AppState.logs.map(log => `
+        <div class="eio-log-entry log-${log.level}">
+            <span class="eio-log-time">${log.timestamp}</span>
+            <span class="eio-log-message">${log.message}</span>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROFILE DETECTION
+// ═══════════════════════════════════════════════════════════
+async function detectCurrentProfile() {
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const activeTab = tabs[0];
+
+        if (!activeTab?.url?.includes('instagram.com')) {
+            updateProfileDisplay('(abra o Instagram)');
+            addLog('warning', '⚠️ Por favor, navegue para o Instagram');
+            return;
+        }
+
+        // Extract profile from URL
+        const url = new URL(activeTab.url);
+        const pathParts = url.pathname.split('/').filter(p => p && !['p', 'reel', 'stories', 'explore', 'direct', 'reels'].includes(p));
+
+        if (pathParts.length > 0) {
+            const profileName = `@${pathParts[0]}`;
+            AppState.targetProfile = profileName;
+            updateProfileDisplay(profileName);
+            addLog('info', `📍 Perfil detectado: ${profileName}`);
+        } else {
+            updateProfileDisplay('@feed');
+            addLog('info', '📍 Você está no feed principal');
+        }
+
+        // Also try to get detailed info from content script
         try {
-            await chrome.storage.local.set({ settings });
+            const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'get_profile_info' });
+            if (response?.username) {
+                const profileName = response.username.startsWith('@') ? response.username : `@${response.username}`;
+                AppState.targetProfile = profileName;
+                updateProfileDisplay(profileName);
+            }
         } catch (e) {
-            console.log('Storage não disponível');
+            // Content script might not be ready
+            console.log('Could not get profile info from content script');
+        }
+
+    } catch (error) {
+        console.error('Error detecting profile:', error);
+        updateProfileDisplay('(erro)');
+    }
+}
+
+function updateProfileDisplay(profileName) {
+    // Update target profile name in dropdown
+    const targetEl = document.getElementById('targetProfileName');
+    if (targetEl) targetEl.textContent = profileName;
+
+    // Update all profile-ref elements
+    document.querySelectorAll('.profile-ref').forEach(el => {
+        el.textContent = profileName;
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// QUICK ACTIONS
+// ═══════════════════════════════════════════════════════════
+const ACTION_LABELS = {
+    'follow': 'Seguir',
+    'like': 'Curtir',
+    'comment': 'Comentar',
+    'dm': 'Enviar DM',
+    'unfollow': 'Deixar de Seguir',
+    'story': 'Ver Stories'
+};
+
+async function handleQuickAction(actionType) {
+    const selectedCount = AppState.selectedAccounts.size;
+
+    if (selectedCount === 0) {
+        addLog('warning', '⚠️ Selecione pelo menos uma conta primeiro');
+        alert('Por favor, selecione as contas na lista antes de executar uma ação.');
+        return;
+    }
+
+    const actionLabel = ACTION_LABELS[actionType] || actionType;
+    addLog('info', `🎯 Preparando "${actionLabel}" para ${selectedCount} contas...`);
+
+    // Build queue from selected accounts
+    const selectedUsernames = Array.from(AppState.selectedAccounts);
+    const queue = AppState.accounts.filter(a => selectedUsernames.includes(a.username));
+
+    // Update queue status display
+    updateQueueStatus(actionLabel, queue.length);
+
+    // Save queue to storage and set action type
+    chrome.runtime.sendMessage({
+        action: 'setQueue',
+        queue: queue,
+        actionType: actionType
+    }, (response) => {
+        if (response?.success) {
+            addLog('success', `✅ Fila "${actionLabel}" criada com ${queue.length} contas`);
+            updateAutomationUI('ready');
+        }
+    });
+}
+
+function updateQueueStatus(actionLabel, count) {
+    const actionEl = document.getElementById('queueActionType');
+    const countEl = document.getElementById('queueCount');
+
+    if (actionEl) actionEl.textContent = actionLabel;
+    if (countEl) countEl.textContent = `${count} contas`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTOMATION CONTROL
+// ═══════════════════════════════════════════════════════════
+function startAutomation() {
+    chrome.runtime.sendMessage({ action: 'startAutomation' }, (response) => {
+        if (response?.success) {
+            addLog('success', '▶️ Automação iniciada!');
+            updateAutomationUI('running');
+        } else {
+            addLog('error', response?.message || 'Erro ao iniciar automação');
+        }
+    });
+}
+
+function pauseAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' }, (response) => {
+        addLog('warning', '⏸️ Automação pausada');
+        updateAutomationUI('paused');
+    });
+}
+
+function stopAutomation() {
+    chrome.runtime.sendMessage({ action: 'stopAutomation' }, (response) => {
+        addLog('info', '⏹️ Automação parada');
+        updateAutomationUI('stopped');
+    });
+}
+
+function updateAutomationUI(status) {
+    // Update mini status in Contas tab
+    const dot = document.getElementById('automationStatusDot');
+    const text = document.getElementById('automationStatusText');
+
+    if (dot) {
+        dot.classList.remove('running', 'paused');
+        if (status === 'running') {
+            dot.classList.add('running');
+        } else if (status === 'paused') {
+            dot.classList.add('paused');
         }
     }
 
-    // Fechar modal
-    const modal = document.getElementById('settingsModal');
-    if (modal) modal.style.display = 'none';
-
-    // Feedback
-    if (typeof showToast === 'function') {
-        showToast('✅ Configurações salvas com sucesso!', 'success');
+    if (text) {
+        const statusLabels = {
+            'running': 'Executando...',
+            'paused': 'Pausado',
+            'stopped': 'Parado',
+            'ready': 'Pronto'
+        };
+        text.textContent = statusLabels[status] || 'Parado';
     }
 
-    if (typeof addConsoleEntry === 'function') {
-        addConsoleEntry('success', '✅ Configurações atualizadas');
+    // Update status in Ações tab
+    const statusIndicator = document.querySelector('.eio-status-indicator');
+    if (statusIndicator) {
+        statusIndicator.className = `eio-status-indicator eio-status-${status === 'running' ? 'active' : 'idle'}`;
+        const statusSpan = statusIndicator.querySelector('span');
+        if (statusSpan) {
+            statusSpan.textContent = status === 'running' ? 'Executando' :
+                status === 'paused' ? 'Pausado' : 'Parado';
+        }
     }
+
+    AppState.automationRunning = status === 'running';
+}
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGE LISTENER
+// ═══════════════════════════════════════════════════════════
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    switch (message.type) {
+        case 'statsUpdate':
+            updateStats(message.stats);
+            break;
+        case 'consoleMessage':
+            addLog(message.level, message.message);
+            break;
+        case 'automationStarted':
+            updateAutomationUI('running');
+            break;
+        case 'automationPaused':
+            updateAutomationUI('paused');
+            break;
+        case 'automationStopped':
+            updateAutomationUI('stopped');
+            break;
+        case 'automationProgress':
+            updateAutomationProgress(message.current, message.total);
+            break;
+        case 'extraction_progress':
+            addLog('info', `📊 Extração: ${message.count} contas`);
+            break;
+    }
+});
+
+function updateAutomationProgress(current, total) {
+    document.getElementById('automationCounter').textContent = `${current}/${total}`;
+    document.getElementById('automationProgress').textContent = `${current}/${total}`;
+
+    const progressBar = document.getElementById('automationProgressBar');
+    if (progressBar && total > 0) {
+        progressBar.style.width = `${(current / total) * 100}%`;
+    }
+}
+
+function updateStats(stats) {
+    if (stats) {
+        const total = (stats.followsToday || 0) + (stats.likesToday || 0) + (stats.commentsToday || 0) + (stats.dmsToday || 0);
+        const actionsEl = document.getElementById('actionsToday');
+        if (actionsEl) actionsEl.textContent = total;
+    }
+}
+
+// Initial filter application
+AppState.filteredAccounts = [...AppState.accounts];
+
+// ═══════════════════════════════════════════════════════════
+// MEDIA QUEUE HANDLERS
+// ═══════════════════════════════════════════════════════════
+
+function initializeMediaHandlers() {
+    const btnAddMedia = document.getElementById('btnAddMedia');
+    const mediaUrlInput = document.getElementById('mediaUrl');
+    const mediaExtractType = document.getElementById('mediaExtractType');
+
+    if (btnAddMedia) {
+        btnAddMedia.addEventListener('click', async () => {
+            const originalText = btnAddMedia.textContent;
+            btnAddMedia.textContent = 'Carregando...';
+            btnAddMedia.disabled = true;
+
+            try {
+                let url = mediaUrlInput.value.trim();
+                const type = mediaExtractType.value;
+
+                if (!url) {
+                    addLog('error', 'Por favor, insira uma URL.');
+                    return;
+                }
+
+                // Se o usuário digitou apenas um username (ex: msassessoria), vamos assumir que ele quer extrair
+                // de um perfil, mas avisar que aqui é para Posts.
+                // OU, se ele for teimoso, podemos tentar transformar em URL de perfil.
+                // Mas a lógica de extração abaixo espera POSTS para 'likers'/'commenters'.
+
+                const isUsername = /^[a-zA-Z0-9._]+$/.test(url);
+                if (isUsername) {
+                    addLog('warning', 'Você inseriu um nome de usuário. Para extrair Seguidores, use a aba "Contas".');
+                    // Opcional: Podemos tentar converter para URL de perfil se o tipo for compatível?
+                    // Por enquanto, vamos pedir a URL completa se ele quis dizer um post.
+                    url = `https://www.instagram.com/${url}/`;
+                }
+
+                if (!url.includes('instagram.com')) {
+                    addLog('error', 'A URL deve ser do Instagram (ex: https://instagram.com/p/...).');
+                    return;
+                }
+
+                if (!AppState.mediaQueue) AppState.mediaQueue = [];
+
+                AppState.mediaQueue.push({
+                    url: url,
+                    type: type,
+                    status: 'pending', // pending, processing, completed, error
+                    addedAt: new Date().toISOString()
+                });
+
+                mediaUrlInput.value = '';
+                addLog('success', 'Mídia adicionada à fila.');
+                saveState();
+                renderMediaQueue();
+
+            } catch (e) {
+                console.error(e);
+                addLog('error', 'Erro ao adicionar mídia.');
+            } finally {
+                btnAddMedia.textContent = originalText;
+                btnAddMedia.disabled = false;
+            }
+        });
+    }
+
+    renderMediaQueue();
+}
+
+function renderMediaQueue() {
+    const listContainer = document.getElementById('mediaQueueList');
+    if (!listContainer) return;
+
+    if (!AppState.mediaQueue || AppState.mediaQueue.length === 0) {
+        listContainer.innerHTML = `
+            <div class="eio-empty-state">
+                <p>Nenhuma mídia na fila</p>
+            </div>
+        `;
+        return;
+    }
+
+    listContainer.innerHTML = AppState.mediaQueue.map((item, index) => {
+        let icon = '📷';
+        if (item.url.includes('/reel/')) icon = '🎬';
+        if (item.url.includes('/stories/')) icon = '⏱️';
+
+        let statusClass = '';
+        let statusText = 'Pendente';
+
+        if (item.status === 'processing') {
+            statusClass = 'eio-status-processing';
+            statusText = 'Extraindo...';
+        } else if (item.status === 'completed') {
+            statusClass = 'eio-status-success';
+            statusText = 'Concluído';
+        } else if (item.status === 'error') {
+            statusClass = 'eio-status-error';
+            statusText = 'Erro';
+        }
+
+        const typeLabels = {
+            'likers': 'Curtidores',
+            'commenters': 'Comentadores',
+            'tagged': 'Marcados',
+            'all': 'Todos'
+        };
+
+        return `
+            <div class="eio-media-item ${statusClass}" style="display: flex; align-items: center; padding: 10px; background: var(--eio-dark-600); border-radius: 8px; margin-bottom: 8px; gap: 10px;">
+                <div class="eio-media-icon" style="font-size: 1.2rem;">${icon}</div>
+                <div class="eio-media-info" style="flex: 1; overflow: hidden;">
+                    <a href="${item.url}" target="_blank" class="eio-media-url" title="Abrir Post" style="text-decoration:none; color:var(--eio-primary); cursor:pointer; font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.url} <span style="font-size:0.8em">↗️</span></a>
+                    <div class="eio-media-meta" style="font-size: 0.8rem; color: var(--eio-text-secondary); display: flex; gap: 8px;">
+                        <span>${typeLabels[item.type] || item.type}</span> • 
+                        <span>${statusText}</span>
+                    </div>
+                </div>
+                <div class="eio-media-actions" style="display: flex; gap: 5px;">
+                    ${item.status === 'pending' ? `
+                        <button class="eio-btn-icon" onclick="processMediaItem(${index})" title="Processar agora" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                            ▶️
+                        </button>
+                    ` : ''}
+                    <button class="eio-btn-icon" onclick="removeMediaFromQueue(${index})" title="Remover" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                        ❌
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Global functions for inline onclick handlers
+window.removeMediaFromQueue = function (index) {
+    if (!AppState.mediaQueue) return;
+    AppState.mediaQueue.splice(index, 1);
+    saveState();
+    renderMediaQueue();
+    addLog('info', 'Mídia removida da fila.');
 };
+
+window.processMediaItem = function (index) {
+    if (!AppState.mediaQueue) return;
+    const item = AppState.mediaQueue[index];
+    if (!item) return;
+
+    addLog('info', `Processando: ${item.url}`);
+
+    // Simulating processing state for UI feedback
+    item.status = 'processing';
+    renderMediaQueue();
+
+    // Trigger existing extraction logic
+    loadFromInstagram(item.type, 1000);
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// EXTRACTION LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function loadFromInstagram(type, limit) {
+    addLog('info', `Iniciando extração: ${type} (max: ${limit})`);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) {
+            addLog('error', 'Nenhuma aba ativa encontrada.');
+            return;
+        }
+
+        const tab = tabs[0];
+
+        let extractionType = 'followers'; // default
+
+        switch (type) {
+            case 'followers': extractionType = 'followers'; break;
+            case 'following': extractionType = 'following'; break;
+            case 'likers': extractionType = 'likers'; break; // From post
+            case 'commenters': extractionType = 'comments'; break; // From post
+            case 'comments': extractionType = 'comments'; break; // Alias
+            default: extractionType = 'followers';
+        }
+
+        chrome.tabs.sendMessage(tab.id, {
+            action: 'execute_extraction',
+            payload: {
+                type: extractionType,
+                limit: limit
+            }
+        }, (response) => {
+            if (chrome.runtime.lastError) {
+                // Ignore connection errors if content script is reloading
+                console.warn(chrome.runtime.lastError.message);
+
+                // Fallback: try to inject script if it's missing? 
+                // For now, just log to user
+                addLog('error', `Erro na comunicação. Recarregue a página.`);
+                return;
+            }
+
+            if (response && response.success) {
+                if (response.data && response.data.length === 0 && (extractionType === 'likers' || extractionType === 'comments')) {
+                    addLog('warning', 'Certifique-se de ter aberto o modal de curtidas/comentários no post.');
+                } else {
+                    addLog('success', `Extração finalizada. ${response.data ? response.data.length : 0} contas coletadas.`);
+                }
+
+                if (response.data && response.data.length > 0) {
+                    processExtractedAccounts(response.data);
+                }
+            } else {
+                addLog('warning', `Extração: ${response?.message || 'Sem dados retornados'}`);
+
+                // Aba Ajuda removida conforme solicitação
+                // Apenas logar o erro
+                console.log('Erro de container não encontrado e aba ajuda desativada.');
+            }
+        });
+    });
+}
+
+function processExtractedAccounts(newAccounts) {
+    let addedCount = 0;
+
+    newAccounts.forEach(acc => {
+        // Check for duplicates
+        if (!AppState.accounts.some(existing => existing.username === acc.username)) {
+            AppState.accounts.push(acc);
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        addLog('success', `${addedCount} novas contas adicionadas à lista.`);
+        saveState();
+
+        // Re-apply filters e render
+        if (typeof applyFiltersLogic === 'function') {
+            AppState.filteredAccounts = applyFiltersLogic(AppState.accounts);
+        } else {
+            // Fallback if filter function is named differently or handled elsewhere
+            AppState.filteredAccounts = [...AppState.accounts];
+        }
+
+        renderAccountsTable();
+    } else {
+        addLog('info', 'Nenhuma conta nova (todas já existiam na lista).');
+    }
+}

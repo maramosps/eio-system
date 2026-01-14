@@ -62,10 +62,10 @@ class API {
         return data;
     }
 
-    async register(email, password, name) {
+    async register(email, password, name, instagram_handle, whatsapp) {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ email, password, name })
+            body: JSON.stringify({ email, password, name, instagram_handle, whatsapp })
         });
     }
 
@@ -77,6 +77,10 @@ class API {
     clearToken() {
         this.token = null;
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('eio_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('eio_user');
+        localStorage.removeItem('demoMode');
     }
 
     // ANALYTICS
@@ -211,6 +215,36 @@ class API {
             method: 'PUT',
             body: JSON.stringify(userData)
         });
+    }
+
+    // ADMIN
+    async getAdminStats() {
+        return this.request('/admin/stats');
+    }
+
+    async getAdminUsers() {
+        return this.request('/admin/users');
+    }
+
+    async updateAdminUser(id, userData) {
+        return this.request(`/admin/users/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(userData)
+        });
+    }
+
+    async deleteAdminUser(id) {
+        return this.request(`/admin/users/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async getAdminLogs() {
+        return this.request('/admin/logs');
+    }
+
+    async getAdminFinances() {
+        return this.request('/admin/finances');
     }
 }
 

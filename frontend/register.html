@@ -209,6 +209,18 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Usuário Instagram (@user)</label>
+                    <input type="text" class="form-input" id="instagram_handle" name="instagram_handle"
+                        placeholder="@seu_usuario" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">WhatsApp (com DDD)</label>
+                    <input type="tel" class="form-input" id="whatsapp" name="whatsapp" placeholder="21999999999"
+                        required>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Senha</label>
                     <input type="password" class="form-input" id="password" name="password"
                         placeholder="Mínimo 6 caracteres" required minlength="6">
@@ -232,6 +244,7 @@
         </div>
     </div>
 
+    <script src="security.js"></script>
     <script src="config.js"></script>
     <script>
         const form = document.getElementById('registerForm');
@@ -255,10 +268,17 @@
 
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const instagram_handle = document.getElementById('instagram_handle').value.replace('@', ''); // Remove @ if present
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             // Validações
+            if (!name || !email || !whatsapp || !instagram_handle || !password) {
+                showAlert('❌ Todos os campos são obrigatórios', 'error');
+                return;
+            }
+
             if (password !== confirmPassword) {
                 showAlert('❌ As senhas não coincidem', 'error');
                 return;
@@ -280,7 +300,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ name, email, whatsapp, instagram_handle, password })
                 });
 
                 const data = await response.json();

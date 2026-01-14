@@ -1,5 +1,11 @@
 // Analytics JavaScript
 document.addEventListener('DOMContentLoaded', () => {
+    // ✅ SCROLL AO TOPO: Garante que o conteúdo sempre apareça no início
+    const pageContent = document.querySelector('.eio-page-content');
+    if (pageContent) {
+        pageContent.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
     initializeCharts();
     loadTopPosts();
     initializeNavigation();
@@ -163,6 +169,15 @@ function initializeNavigation() {
 
             item.classList.add('eio-nav-item-active');
             document.querySelector(`[data-section="${page}"]`).classList.add('eio-content-active');
+
+            // ✅ SCROLL AO TOPO: Garante que o conteúdo sempre apareça no início
+            const pageContent = document.querySelector('.eio-page-content');
+            if (pageContent) {
+                pageContent.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
         });
     });
 }

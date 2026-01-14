@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Crescimento | E.I.O System</title>
+    <meta name="description" content="Descubra seu potencial de crescimento no Instagram em 30 segundos">
+    <link rel="icon" href="public/assets/official_brand_rocket.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="quiz.css">
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="quiz-background">
+        <div class="gradient-orb gradient-orb-1"></div>
+        <div class="gradient-orb gradient-orb-2"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Quiz Container -->
+    <div class="quiz-container" id="quizContainer">
+
+        <!-- Header with Progress -->
+        <header class="quiz-header">
+            <div class="quiz-logo">
+                <img src="public/assets/official_brand_rocket.png" alt="E.I.O" onerror="this.style.display='none'">
+                <span>E.I.O System</span>
+            </div>
+            <div class="quiz-timer" id="quizTimer">
+                <span class="timer-icon">⏱️</span>
+                <span class="timer-text" id="timerText">01:00</span>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="currentStep">1</span> de <span id="totalSteps">5</span>
+            </div>
+        </div>
+
+        <!-- Quiz Screens -->
+
+        <!-- Screen 1: Welcome -->
+        <div class="quiz-screen active" id="welcomeScreen">
+            <div class="welcome-content">
+                <div class="welcome-badge">🚀 DIAGNÓSTICO GRATUITO</div>
+                <h1 class="welcome-title">
+                    Descubra o que está <span class="highlight">travando</span> seu crescimento no Instagram
+                </h1>
+                <p class="welcome-subtitle">
+                    Responda 5 perguntas rápidas e receba um diagnóstico personalizado com a estratégia ideal para você.
+                </p>
+
+                <div class="welcome-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">⚡</span>
+                        <span>Menos de 1 minuto</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <span>100% Personalizado</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🆓</span>
+                        <span>Totalmente Gratuito</span>
+                    </div>
+                </div>
+
+                <button class="btn-start" id="btnStart">
+                    <span>Começar Diagnóstico</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <div class="welcome-trust">
+                    <span>🔒 Seus dados estão seguros</span>
+                    <span>+10.000 diagnósticos realizados</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Questions -->
+        <div class="quiz-screen" id="questionScreen">
+            <div class="question-container">
+                <div class="question-number" id="questionNumber">Pergunta 1</div>
+                <h2 class="question-text" id="questionText">Carregando pergunta...</h2>
+
+                <div class="options-container" id="optionsContainer">
+                    <!-- Options will be injected by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Capture Form -->
+        <div class="quiz-screen" id="captureScreen">
+            <div class="capture-content">
+                <div class="capture-icon">📊</div>
+                <h2 class="capture-title">Seu diagnóstico está pronto!</h2>
+                <p class="capture-subtitle">Para receber o resultado completo + um relatório detalhado, preencha abaixo:
+                </p>
+
+                <form class="capture-form" id="captureForm">
+                    <div class="form-group">
+                        <label for="leadName">Seu Nome</label>
+                        <input type="text" id="leadName" name="name" placeholder="Como podemos te chamar?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="leadWhatsApp">WhatsApp</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">📱</span>
+                            <input type="tel" id="leadWhatsApp" name="whatsapp" placeholder="(00) 00000-0000" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="leadEmail">E-mail</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">✉️</span>
+                            <input type="email" id="leadEmail" name="email" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-capture" id="btnCapture">
+                        <span>Ver Meu Resultado</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </form>
+
+                <p class="capture-privacy">
+                    🔒 Prometemos: zero spam. Seus dados são confidenciais.
+                </p>
+            </div>
+        </div>
+
+        <!-- Screen 4: Processing -->
+        <div class="quiz-screen" id="processingScreen">
+            <div class="processing-content">
+                <div class="processing-animation">
+                    <div class="processing-ring"></div>
+                    <div class="processing-icon">🧠</div>
+                </div>
+                <h2 class="processing-title">Analisando suas respostas...</h2>
+                <p class="processing-subtitle" id="processingText">Nossa IA está processando seu perfil</p>
+
+                <div class="processing-steps">
+                    <div class="processing-step active" id="step1">
+                        <span class="step-check">✓</span>
+                        <span>Calculando pontuação...</span>
+                    </div>
+                    <div class="processing-step" id="step2">
+                        <span class="step-check">○</span>
+                        <span>Identificando padrões...</span>
+                    </div>
+                    <div class="processing-step" id="step3">
+                        <span class="step-check">○</span>
+                        <span>Gerando diagnóstico...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Result -->
+        <div class="quiz-screen" id="resultScreen">
+            <div class="result-content">
+                <div class="result-confetti" id="confettiContainer"></div>
+
+                <div class="result-badge" id="resultBadge">🎯 SEU DIAGNÓSTICO</div>
+
+                <div class="result-profile">
+                    <div class="profile-icon" id="profileIcon">🚀</div>
+                    <h1 class="profile-title" id="profileTitle">Perfil em Escala</h1>
+                    <div class="profile-score">
+                        <span class="score-label">Pontuação:</span>
+                        <span class="score-value" id="scoreValue">0</span>
+                        <span class="score-max">/ 15</span>
+                    </div>
+                </div>
+
+                <div class="result-description" id="resultDescription">
+                    <p>Carregando resultado...</p>
+                </div>
+
+                <div class="result-tags">
+                    <h4>📌 Seu perfil identificou:</h4>
+                    <div class="tags-container" id="tagsContainer">
+                        <!-- Tags will be injected -->
+                    </div>
+                </div>
+
+                <div class="result-recommendation">
+                    <h4>💡 Recomendação para você:</h4>
+                    <p id="recommendationText">Carregando recomendação...</p>
+                </div>
+
+                <div class="result-cta">
+                    <button class="btn-cta-primary" id="btnCta">
+                        <span id="ctaText">Ativar Teste Grátis</span>
+                    </button>
+                    <button class="btn-cta-secondary" id="btnWhatsApp">
+                        <span>💬 Falar com Consultor</span>
+                    </button>
+                </div>
+
+                <div class="result-share">
+                    <p>Compartilhe seu resultado:</p>
+                    <div class="share-buttons">
+                        <button class="share-btn share-whatsapp" id="shareWhatsApp">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path
+                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.628 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                            </svg>
+                        </button>
+                        <button class="share-btn share-copy" id="shareCopy">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Audio Effects (opcional) -->
+    <audio id="clickSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRl9vT19teleHF0ZXJt..." type="audio/wav">
+    </audio>
+
+    <script src="security.js"></script>
+    <script src="config.js"></script>
+    <script src="quiz.js"></script>
+</body>
+
+</html>

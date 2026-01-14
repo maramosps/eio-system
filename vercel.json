@@ -20,6 +20,34 @@
             "dest": "/api/index.js?path=$1"
         },
         {
+            "src": "/dashboard",
+            "dest": "/frontend/dashboard.html"
+        },
+        {
+            "src": "/crm",
+            "dest": "/frontend/crm.html"
+        },
+        {
+            "src": "/login",
+            "dest": "/frontend/login.html"
+        },
+        {
+            "src": "/register",
+            "dest": "/frontend/register.html"
+        },
+        {
+            "src": "/termos",
+            "dest": "/frontend/termos.html"
+        },
+        {
+            "src": "/guia",
+            "dest": "/frontend/guia.html"
+        },
+        {
+            "src": "/quiz",
+            "dest": "/frontend/quiz.html"
+        },
+        {
             "src": "/downloads/(.*)",
             "dest": "/frontend/downloads/$1"
         },
@@ -53,7 +81,7 @@
         },
         {
             "src": "/(.*\\.zip)",
-            "dest": "/public/downloads/$1"
+            "dest": "/frontend/downloads/$1"
         },
         {
             "src": "/",

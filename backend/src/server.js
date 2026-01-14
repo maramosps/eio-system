@@ -29,6 +29,7 @@ const webhookRoutes = require('./routes/webhook.routes');
 const calendarRoutes = require('./routes/calendar.routes');
 const crmRoutes = require('./routes/crm.routes');
 const extensionRoutes = require('./routes/extension.routes'); // ✅ NOVO
+const paymentRoutes = require('./routes/payment.routes'); // ✅ NOVO - Pagamentos
 
 // Import middlewares
 const { errorHandler } = require('./middlewares/errorHandler');
@@ -124,6 +125,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', authenticate, userRoutes); // Perfil pode ser acessado para pagar
 app.use('/api/v1/subscriptions', authenticate, subscriptionRoutes); // Billing pode ser acessado
 app.use('/api/v1/extension', extensionRoutes); // ✅ NOVO - Download da extensão
+app.use('/api/v1/payments', paymentRoutes); // ✅ NOVO - Gestão de pagamentos
 
 // Rotas Bloqueadas por Assinatura
 app.use('/api/v1/flows', authenticate, checkSubscription, flowRoutes);

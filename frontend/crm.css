@@ -89,8 +89,12 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-lg);
-    padding: var(--spacing-xl);
-    height: calc(100vh - 140px);
+    padding: 0;
+    /* ✅ SEM padding */
+    padding-top: var(--spacing-sm);
+    /* ✅ Apenas 8px do topo */
+    min-height: calc(100vh - 200px);
+    /* Min-height ao invés de height fixa */
 }
 
 .eio-kanban-column {
@@ -99,6 +103,9 @@
     border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
+    backdrop-filter: var(--eio-glass-blur);
+    position: relative;
+    overflow: hidden;
 }
 
 .eio-column-header {
@@ -106,14 +113,43 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-lg);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.eio-column-header::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--eio-cyan-500);
+    box-shadow: 0 0 10px var(--eio-cyan-glow);
+}
+
+[data-status="contacted"] .eio-column-header::after {
+    background: var(--eio-purple-500);
+    box-shadow: 0 0 10px var(--eio-purple-glow);
+}
+
+[data-status="qualified"] .eio-column-header::after {
+    background: var(--eio-pink-500);
+    box-shadow: 0 0 10px var(--eio-pink-glow);
+}
+
+[data-status="converted"] .eio-column-header::after {
+    background: var(--eio-green-400);
+    box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
 }
 
 .eio-column-header h4 {
     margin: 0;
     font-size: 0.875rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .eio-badge-count {
@@ -134,18 +170,20 @@
 }
 
 .eio-lead-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--eio-gradient-surface);
+    border: 1px solid var(--eio-glass-border);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: var(--transition-base);
+    backdrop-filter: blur(10px);
 }
 
 .eio-lead-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--eio-blue-400);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--eio-cyan-500);
+    box-shadow: var(--eio-shadow-glow-cyan);
+    transform: translateY(-3px);
 }
 
 .eio-lead-header {

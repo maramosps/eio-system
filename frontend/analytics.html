@@ -5,9 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analytics Avançado - E.I.O</title>
-    <link rel="stylesheet" href="design-system.css">
-    <link rel="stylesheet" href="dashboard.css">
-    <link rel="stylesheet" href="analytics.css">
+    <link rel="stylesheet" href="design-system.css?v=11">
+    <link rel="stylesheet" href="dashboard.css?v=11">
+    <link rel="stylesheet" href="analytics.css?v=11">
+    <link rel="stylesheet" href="fix-spacing.css?v=11">
+
+    <!-- ✅ FIX SPACING INLINE -->
+    <style>
+        .eio-page-content {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        .eio-content-section,
+        .eio-content-section.eio-content-active {
+            margin-top: 0 !important;
+            padding-top: 16px !important;
+        }
+
+        .eio-section-header-dash {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        div[data-section] {
+            padding-top: 16px !important;
+            margin-top: 0 !important;
+        }
+
+        div[data-section]>*:first-child {
+            margin-top: 0 !important;
+        }
+
+        .eio-kpi-grid {
+            margin-top: 0 !important;
+        }
+    </style>
 </head>
 
 <body class="eio-dashboard-body">
@@ -259,21 +292,495 @@
 
             <!-- Growth Section -->
             <div class="eio-content-section" data-section="growth">
-                <div class="eio-card">
-                    <h3>Análise de Crescimento Detalhada</h3>
-                    <p>Em desenvolvimento...</p>
+                <div class="eio-kpi-grid">
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(76, 175, 80, 0.15); color: #4CAF50;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3 14L8 9L12 13L17 8M17 8V12M17 8H13" stroke="currentColor"
+                                        stroke-width="2" />
+                                </svg>
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+1,247</span>
+                        </div>
+                        <div class="eio-kpi-value">+8.4%</div>
+                        <div class="eio-kpi-label">Crescimento Mensal</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(33, 150, 243, 0.15); color: #2196F3;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M16 21V19C16 17.93 15.58 16.92 14.83 16.17C14.08 15.42 13.06 15 12 15H5C3.94 15 2.92 15.42 2.17 16.17C1.42 16.92 1 17.93 1 19V21"
+                                        stroke="currentColor" stroke-width="2" />
+                                    <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+847</span>
+                        </div>
+                        <div class="eio-kpi-value">15.2K</div>
+                        <div class="eio-kpi-label">Novos Seguidores (30d)</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(255, 152, 0, 0.15); color: #FF9800;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M17 21V19C17 17.93 16.58 16.92 15.83 16.17C15.08 15.42 14.06 15 13 15H5"
+                                        stroke="currentColor" stroke-width="2" />
+                                    <path d="M20 8L20 14M23 11L17 11" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-down">-124</span>
+                        </div>
+                        <div class="eio-kpi-value">327</div>
+                        <div class="eio-kpi-label">Unfollows (30d)</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(156, 39, 176, 0.15); color: #9C27B0;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" />
+                                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" />
+                                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+2.3%</span>
+                        </div>
+                        <div class="eio-kpi-value">46:1</div>
+                        <div class="eio-kpi-label">Ratio Follow/Unfollow</div>
+                    </div>
+                </div>
+
+                <div class="eio-analytics-grid">
+                    <div class="eio-card eio-card-large">
+                        <div class="eio-card-header">
+                            <h3>📈 Evolução de Seguidores</h3>
+                        </div>
+                        <div class="eio-chart-wrapper">
+                            <canvas id="growthDetailChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="eio-card">
+                        <div class="eio-card-header">
+                            <h3>🎯 Origem dos Seguidores</h3>
+                        </div>
+                        <div class="eio-stats-list">
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">🔍 Busca/Explorar</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 45%; background: #2196F3;"></div>
+                                </div>
+                                <span class="eio-stat-value">45%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">📱 Feed</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 28%; background: #4CAF50;"></div>
+                                </div>
+                                <span class="eio-stat-value">28%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">#️⃣ Hashtags</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 15%; background: #FF9800;"></div>
+                                </div>
+                                <span class="eio-stat-value">15%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">📍 Localização</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 8%; background: #9C27B0;"></div>
+                                </div>
+                                <span class="eio-stat-value">8%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">🔗 Link Externo</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 4%; background: #F44336;"></div>
+                                </div>
+                                <span class="eio-stat-value">4%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Engagement Section -->
             <div class="eio-content-section" data-section="engagement">
+                <div class="eio-kpi-grid">
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(244, 67, 54, 0.15); color: #F44336;">❤️
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+12.4%</span>
+                        </div>
+                        <div class="eio-kpi-value">45,892</div>
+                        <div class="eio-kpi-label">Total de Curtidas</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(33, 150, 243, 0.15); color: #2196F3;">💬
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+8.7%</span>
+                        </div>
+                        <div class="eio-kpi-value">3,247</div>
+                        <div class="eio-kpi-label">Total de Comentários</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(76, 175, 80, 0.15); color: #4CAF50;">📤
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+24.1%</span>
+                        </div>
+                        <div class="eio-kpi-value">1,856</div>
+                        <div class="eio-kpi-label">Compartilhamentos</div>
+                    </div>
+                    <div class="eio-kpi-card">
+                        <div class="eio-kpi-header">
+                            <div class="eio-kpi-icon" style="background: rgba(255, 152, 0, 0.15); color: #FF9800;">💾
+                            </div>
+                            <span class="eio-kpi-trend eio-trend-up">+31.2%</span>
+                        </div>
+                        <div class="eio-kpi-value">2,134</div>
+                        <div class="eio-kpi-label">Salvamentos</div>
+                    </div>
+                </div>
+
+                <div class="eio-analytics-grid">
+                    <div class="eio-card eio-card-large">
+                        <div class="eio-card-header">
+                            <h3>💖 Taxa de Engajamento por Tipo de Post</h3>
+                        </div>
+                        <div class="eio-chart-wrapper">
+                            <canvas id="engagementTypeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="eio-card">
+                        <div class="eio-card-header">
+                            <h3>🏆 Top Posts por Engajamento</h3>
+                        </div>
+                        <div class="eio-top-posts">
+                            <div class="eio-post-item">
+                                <div class="eio-post-thumb"
+                                    style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                                <div class="eio-post-info">
+                                    <span class="eio-post-type">📷 Imagem</span>
+                                    <span class="eio-post-engagement">❤️ 2,847 · 💬 156</span>
+                                </div>
+                            </div>
+                            <div class="eio-post-item">
+                                <div class="eio-post-thumb"
+                                    style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                                <div class="eio-post-info">
+                                    <span class="eio-post-type">🎬 Reels</span>
+                                    <span class="eio-post-engagement">❤️ 5,124 · 💬 423</span>
+                                </div>
+                            </div>
+                            <div class="eio-post-item">
+                                <div class="eio-post-thumb"
+                                    style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                                <div class="eio-post-info">
+                                    <span class="eio-post-type">📝 Carrossel</span>
+                                    <span class="eio-post-engagement">❤️ 1,892 · 💬 234</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hashtags Section -->
+            <div class="eio-content-section" data-section="hashtags">
                 <div class="eio-card">
-                    <h3>Métricas de Engajamento</h3>
-                    <p>Em desenvolvimento...</p>
+                    <div class="eio-card-header">
+                        <h3>#️⃣ Performance de Hashtags</h3>
+                        <span class="eio-badge eio-badge-info">Últimos 30 dias</span>
+                    </div>
+                    <div class="eio-hashtags-grid">
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #4CAF50;">
+                            <div class="eio-hashtag-name">#empreendedorismo</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 45.2K alcance</span>
+                                <span>❤️ 3,847 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 95%; background: #4CAF50;"></div>
+                            </div>
+                        </div>
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #2196F3;">
+                            <div class="eio-hashtag-name">#marketingdigital</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 38.7K alcance</span>
+                                <span>❤️ 2,156 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 82%; background: #2196F3;"></div>
+                            </div>
+                        </div>
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #FF9800;">
+                            <div class="eio-hashtag-name">#instagram</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 28.4K alcance</span>
+                                <span>❤️ 1,892 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 65%; background: #FF9800;"></div>
+                            </div>
+                        </div>
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #9C27B0;">
+                            <div class="eio-hashtag-name">#negociosonline</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 21.1K alcance</span>
+                                <span>❤️ 1,456 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 48%; background: #9C27B0;"></div>
+                            </div>
+                        </div>
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #F44336;">
+                            <div class="eio-hashtag-name">#socialmedia</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 18.9K alcance</span>
+                                <span>❤️ 987 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 42%; background: #F44336;"></div>
+                            </div>
+                        </div>
+                        <div class="eio-hashtag-card" style="border-left: 4px solid #00BCD4;">
+                            <div class="eio-hashtag-name">#vendas</div>
+                            <div class="eio-hashtag-stats">
+                                <span>👁️ 15.3K alcance</span>
+                                <span>❤️ 756 curtidas</span>
+                            </div>
+                            <div class="eio-hashtag-bar">
+                                <div class="eio-hashtag-fill" style="width: 35%; background: #00BCD4;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="eio-card" style="margin-top: 20px;">
+                    <div class="eio-card-header">
+                        <h3>💡 Hashtags Sugeridas</h3>
+                    </div>
+                    <div class="eio-suggested-tags">
+                        <span class="eio-tag">#crescimento</span>
+                        <span class="eio-tag">#sucesso</span>
+                        <span class="eio-tag">#motivação</span>
+                        <span class="eio-tag">#dicas</span>
+                        <span class="eio-tag">#estrategia</span>
+                        <span class="eio-tag">#negocios</span>
+                        <span class="eio-tag">#produtividade</span>
+                        <span class="eio-tag">#metas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audience Section -->
+            <div class="eio-content-section" data-section="audience">
+                <div class="eio-analytics-grid">
+                    <div class="eio-card">
+                        <div class="eio-card-header">
+                            <h3>👥 Distribuição por Gênero</h3>
+                        </div>
+                        <div class="eio-gender-stats">
+                            <div class="eio-gender-item">
+                                <div class="eio-gender-icon">👩</div>
+                                <div class="eio-gender-bar-container">
+                                    <div class="eio-gender-bar"
+                                        style="width: 62%; background: linear-gradient(90deg, #f093fb, #f5576c);"></div>
+                                </div>
+                                <span class="eio-gender-value">62% Feminino</span>
+                            </div>
+                            <div class="eio-gender-item">
+                                <div class="eio-gender-icon">👨</div>
+                                <div class="eio-gender-bar-container">
+                                    <div class="eio-gender-bar"
+                                        style="width: 38%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div>
+                                </div>
+                                <span class="eio-gender-value">38% Masculino</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eio-card">
+                        <div class="eio-card-header">
+                            <h3>📊 Faixa Etária</h3>
+                        </div>
+                        <div class="eio-age-stats">
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">18-24</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 28%;"></div>
+                                </div>
+                                <span class="eio-stat-value">28%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">25-34</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 42%;"></div>
+                                </div>
+                                <span class="eio-stat-value">42%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">35-44</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 18%;"></div>
+                                </div>
+                                <span class="eio-stat-value">18%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">45-54</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 8%;"></div>
+                                </div>
+                                <span class="eio-stat-value">8%</span>
+                            </div>
+                            <div class="eio-stat-item">
+                                <span class="eio-stat-label">55+</span>
+                                <div class="eio-stat-bar">
+                                    <div class="eio-stat-fill" style="width: 4%;"></div>
+                                </div>
+                                <span class="eio-stat-value">4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="eio-card" style="margin-top: 20px;">
+                    <div class="eio-card-header">
+                        <h3>🌍 Top Localizações</h3>
+                    </div>
+                    <div class="eio-locations-grid">
+                        <div class="eio-location-item">
+                            <span class="eio-location-flag">🇧🇷</span>
+                            <span class="eio-location-name">São Paulo, BR</span>
+                            <span class="eio-location-value">34.2%</span>
+                        </div>
+                        <div class="eio-location-item">
+                            <span class="eio-location-flag">🇧🇷</span>
+                            <span class="eio-location-name">Rio de Janeiro, BR</span>
+                            <span class="eio-location-value">18.7%</span>
+                        </div>
+                        <div class="eio-location-item">
+                            <span class="eio-location-flag">🇧🇷</span>
+                            <span class="eio-location-name">Belo Horizonte, BR</span>
+                            <span class="eio-location-value">12.4%</span>
+                        </div>
+                        <div class="eio-location-item">
+                            <span class="eio-location-flag">🇧🇷</span>
+                            <span class="eio-location-name">Brasília, BR</span>
+                            <span class="eio-location-value">8.9%</span>
+                        </div>
+                        <div class="eio-location-item">
+                            <span class="eio-location-flag">🇵🇹</span>
+                            <span class="eio-location-name">Lisboa, PT</span>
+                            <span class="eio-location-value">5.3%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="eio-content-section" data-section="reports">
+                <div class="eio-card">
+                    <div class="eio-card-header">
+                        <h3>📄 Relatórios Disponíveis</h3>
+                    </div>
+                    <div class="eio-reports-grid">
+                        <div class="eio-report-item">
+                            <div class="eio-report-icon">📊</div>
+                            <div class="eio-report-info">
+                                <h4>Relatório Mensal Completo</h4>
+                                <p>Análise completa do desempenho do mês</p>
+                            </div>
+                            <button class="eio-btn eio-btn-primary eio-btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                        d="M14 10V13C14 13.55 13.55 14 13 14H3C2.45 14 2 13.55 2 13V10M8 2V11M8 11L5 8M8 11L11 8"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                Baixar PDF
+                            </button>
+                        </div>
+                        <div class="eio-report-item">
+                            <div class="eio-report-icon">📈</div>
+                            <div class="eio-report-info">
+                                <h4>Relatório de Crescimento</h4>
+                                <p>Evolução de seguidores e alcance</p>
+                            </div>
+                            <button class="eio-btn eio-btn-primary eio-btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                        d="M14 10V13C14 13.55 13.55 14 13 14H3C2.45 14 2 13.55 2 13V10M8 2V11M8 11L5 8M8 11L11 8"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                Baixar PDF
+                            </button>
+                        </div>
+                        <div class="eio-report-item">
+                            <div class="eio-report-icon">💖</div>
+                            <div class="eio-report-info">
+                                <h4>Relatório de Engajamento</h4>
+                                <p>Interações e métricas de engajamento</p>
+                            </div>
+                            <button class="eio-btn eio-btn-primary eio-btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                        d="M14 10V13C14 13.55 13.55 14 13 14H3C2.45 14 2 13.55 2 13V10M8 2V11M8 11L5 8M8 11L11 8"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                Baixar PDF
+                            </button>
+                        </div>
+                        <div class="eio-report-item">
+                            <div class="eio-report-icon">👥</div>
+                            <div class="eio-report-info">
+                                <h4>Relatório de Audiência</h4>
+                                <p>Demografia e localização dos seguidores</p>
+                            </div>
+                            <button class="eio-btn eio-btn-primary eio-btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                        d="M14 10V13C14 13.55 13.55 14 13 14H3C2.45 14 2 13.55 2 13V10M8 2V11M8 11L5 8M8 11L11 8"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                Baixar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="eio-card" style="margin-top: 20px;">
+                    <div class="eio-card-header">
+                        <h3>📅 Histórico de Relatórios</h3>
+                    </div>
+                    <div class="eio-report-history">
+                        <div class="eio-history-item">
+                            <span class="eio-history-date">📄 Dezembro 2025</span>
+                            <span class="eio-history-type">Relatório Mensal</span>
+                            <button class="eio-btn eio-btn-ghost eio-btn-sm">Baixar</button>
+                        </div>
+                        <div class="eio-history-item">
+                            <span class="eio-history-date">📄 Novembro 2025</span>
+                            <span class="eio-history-type">Relatório Mensal</span>
+                            <button class="eio-btn eio-btn-ghost eio-btn-sm">Baixar</button>
+                        </div>
+                        <div class="eio-history-item">
+                            <span class="eio-history-date">📄 Outubro 2025</span>
+                            <span class="eio-history-type">Relatório Mensal</span>
+                            <button class="eio-btn eio-btn-ghost eio-btn-sm">Baixar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- ✅ FIX SPACING SCRIPT - REMOVIDO PARA ROLLBACK -->
+    <script>
+        console.log('✅ Spacing fix script removed for stability rollback to V6');
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="api.js"></script>

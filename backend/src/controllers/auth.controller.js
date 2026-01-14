@@ -130,14 +130,17 @@ exports.register = async (req, res, next) => {
  */
 exports.login = async (req, res, next) => {
     try {
-        const { instagram_handle, password } = req.body;
+        const { email, instagram_handle, password } = req.body;
 
-        // Buscar usuário pelo Instagram Handle
-        const user = await User.findOne({ where: { instagram_handle } });
+        // Buscar usuário pelo Email ou Instagram Handle
+        const user = await User.findOne({
+            where: email ? { email } : { instagram_handle }
+        });
+
         if (!user) {
             return res.status(401).json({
                 error: 'Invalid credentials',
-                message: 'Instagram ou senha incorretos'
+                message: 'Usuário ou senha incorretos'
             });
         }
 

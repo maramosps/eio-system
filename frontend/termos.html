@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos de Uso e Responsabilidade | E.I.O System</title>
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="icon" href="public/assets/official_brand_rocket.png" type="image/png">
+    <style>
+        body {
+            background-color: var(--eio-dark-900);
+            color: var(--eio-text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        .termos-header {
+            background: linear-gradient(135deg, #16161e 0%, #0d0d12 100%);
+            padding: 80px 0 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .termos-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .termos-content {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--eio-purple-400);
+            font-size: 1.5rem;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--eio-purple-500);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-top: 25px;
+        }
+
+        p,
+        li {
+            color: #aaa;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        .highlight-box {
+            background: rgba(255, 143, 0, 0.1);
+            border-left: 4px solid #FF8F00;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 40px;
+            color: var(--eio-purple-400);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .last-update {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="termos-header">
+        <div class="eio-container">
+            <h1>Termos de Uso e Responsabilidade</h1>
+            <p class="last-update">Última atualização: <span id="lastUpdateDate">12 de Janeiro de 2026</span></p>
+        </div>
+    </header>
+
+    <script>
+        // Script para manter a data sempre atualizada com a última versão do sistema
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tenta pegar a data da última modificação do arquivo
+            const lastMod = new Date(document.lastModified);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
+            // Se a data for válida, usa ela. Senão, usa um fallback fixo.
+            let formattedDate = "12 de Janeiro de 2026";
+            if (!isNaN(lastMod.getTime())) {
+                formattedDate = lastMod.toLocaleDateString('pt-BR', options);
+            }
+
+            const dateEl = document.getElementById('lastUpdateDate');
+            if (dateEl) dateEl.textContent = formattedDate;
+        });
+    </script>
+
+    <div class="termos-container">
+        <div class="termos-content">
+            <p>Bem-vindo ao <strong>E.I.O System (Engajamento Inteligente Orgânico)</strong>. Ao utilizar nosso
+                software, extensão de navegador, website e serviços, você concorda expressamente com os termos descritos
+                abaixo. Leia com atenção.</p>
+
+            <h2>1. Natureza do Serviço</h2>
+            <p>O E.I.O System é uma ferramenta de produtividade e automação de marketing projetada para auxiliar
+                usuários na gestão de interações na plataforma Instagram. O software atua simulando interações humanas
+                (cliques, rolagens, digitação) diretamente no navegador do usuário (Client-Side).</p>
+
+            <h2>2. Isenção de Responsabilidade (Anti-Ban)</h2>
+            <div class="highlight-box">
+                <p><strong>IMPORTANTE:</strong> Embora o E.I.O utilize tecnologia avançada de "Humanização" e
+                    "Intervalos Aleatórios" para minimizar riscos, o uso de qualquer ferramenta de automação em
+                    plataformas de terceiros (como o Instagram) viola, em tese, os termos de serviço dessas plataformas.
+                </p>
+                <p>A MS Assessoria e os desenvolvedores do E.I.O <strong>NÃO SE RESPONSABILIZAM</strong> por eventuais
+                    bloqueios temporários, "shadowbans" ou suspensões de conta. O usuário assume total responsabilidade
+                    pelo uso da ferramenta e pela configuração dos limites de velocidade.</p>
+            </div>
+
+            <h2>3. Explorador de Leads e Coleta de Dados</h2>
+            <p>A funcionalidade "Explorador de Leads" realiza a varredura de dados <strong>públicos</strong> disponíveis
+                em perfis comerciais.</p>
+            <ul>
+                <li>O sistema coleta apenas informações que o próprio usuário tornou públicas (Bio, E-mail de contato,
+                    Telefone comercial).</li>
+                <li>O E.I.O atua em conformidade com a LGPD (Lei Geral de Proteção de Dados), processando esses dados
+                    localmente no dispositivo do usuário para fins legítimos de prospecção B2B.</li>
+                <li>É proibido utilizar os dados extraídos para práticas de SPAM, assédio ou atividades ilegais.</li>
+            </ul>
+
+            <h2>4. Propriedade Intelectual</h2>
+            <p>Todo o código-fonte, design, logotipos ("E.I.O System"), algoritmos de IA e materiais educativos são
+                propriedade exclusiva da MS Assessoria. É estritamente proibida a engenharia reversa, redistribuição,
+                cópia ou venda não autorizada do software.</p>
+
+            <h2>5. Política de Reembolso e Cancelamento</h2>
+            <p>Oferecemos um período de teste gratuito de 5 dias. Após a contratação do plano pago:</p>
+            <ul>
+                <li>O usuário tem direito a solicitar reembolso integral em até 7 dias após a compra (Art. 49 do CDC).
+                </li>
+                <li>Cancelamentos posteriores não geram reembolso proporcional, mas cancelam a renovação automática.
+                </li>
+            </ul>
+
+            <h2>6. Alterações nos Termos</h2>
+            <p>Reservamo-nos o direito de atualizar estes termos a qualquer momento para refletir mudanças na lei ou em
+                nossos serviços. O uso contínuo do sistema após as alterações constitui aceitação dos novos termos.</p>
+
+            <a href="index.html" class="btn-back">← Voltar para a Página Inicial</a>
+        </div>
+    </div>
+
+</body>
+
+</html>

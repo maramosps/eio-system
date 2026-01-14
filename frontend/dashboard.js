@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!token && !demoMode) {
         console.warn('⚠️ Usuário não autenticado. Redirecionando para login...');
+        localStorage.clear(); // Garante limpeza se houver lixo
         window.location.href = 'login.html';
         return;
     }
@@ -55,6 +56,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (legacyName) legacyName.textContent = user.name || user.instagram_handle || 'Usuário';
     if (legacyEmail) legacyEmail.textContent = user.email || user.instagram_handle || '';
 
+    // Show Admin sections if user is admin
+    if (user.role === 'admin') {
+        console.log('🔐 Admin user detected - showing admin sections');
+        const adminSectionsContainer = document.getElementById('adminSectionsContainer');
+        if (adminSectionsContainer) adminSectionsContainer.style.display = 'block';
+
+        // Hide old links if they exist
+        const adminDropdownLink = document.getElementById('adminDropdownLink');
+        if (adminDropdownLink) adminDropdownLink.style.display = 'none';
+    }
+
     // Navigation
     const navItems = document.querySelectorAll('.eio-nav-item');
     const sections = document.querySelectorAll('.eio-content-section');
@@ -74,14 +86,25 @@ document.addEventListener('DOMContentLoaded', () => {
         sections.forEach(s => {
             if (s.getAttribute('data-section') === page) {
                 s.classList.add('eio-content-active');
+                s.style.display = 'block';  // Force display block
             } else {
                 s.classList.remove('eio-content-active');
+                s.style.display = 'none';  // Force hide inactive
             }
         });
 
         const activeItem = document.querySelector(`.eio-nav-item[data-page="${page}"]`);
         if (activeItem) {
             document.querySelector('.eio-page-title').textContent = activeItem.querySelector('span').textContent;
+        }
+
+        // ✅ SCROLL AO TOPO: Garante que o conteúdo sempre apareça no início
+        const pageContent = document.querySelector('.eio-page-content');
+        if (pageContent) {
+            pageContent.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Scroll suave para melhor UX
+            });
         }
     }
 
@@ -193,8 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLogout) {
         btnLogout.addEventListener('click', (e) => {
             e.preventDefault();
-            localStorage.removeItem('eio_token');
-            localStorage.removeItem('eio_user');
+            console.log('🚪 Logout Total - Limpando Sessão...');
+
+            // Limpa absolutamente tudo para evitar redirecionamentos indesejados
+            localStorage.clear();
+            sessionStorage.clear();
+
             window.location.href = 'login.html';
         });
     }
@@ -293,9 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnConnectAccount) {
         btnConnectAccount.addEventListener('click', () => {
-            const currentAccounts = document.querySelectorAll('.eio-account-list > div').length;
+            const currentAccounts = document.querySelectorAll('.eio-account-list div[style*="background: rgba(255,255,255,0.02)"]').length;
 
-            if (currentAccounts >= 2) {
+            if (currentAccounts >= 1) {
                 // Fetch user data for the message
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const clientData = `Nome: ${user.name || 'N/A'}, Email: ${user.email || 'N/A'}, Tel: ${user.whatsapp || 'N/A'}`;
@@ -315,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="eio-modal-body" style="padding-top: 0;">
                             <h3 style="color: #fff; margin-bottom: 10px;">Limite de Contas Atingido</h3>
-                            <p style="color: #aaa; margin-bottom: 20px;">Seu plano atual permite conectar até <strong>2 contas</strong> do Instagram.</p>
+                            <p style="color: #aaa; margin-bottom: 20px;">Seu plano atual permite conectar <strong>1 conta</strong> do Instagram.</p>
                             <p style="color: #fff; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
                                 Deseja conectar mais perfis? Adicione contas extras por apenas <strong style="color: #4CAF50;">R$ 150,00/cada</strong>.
                             </p>
@@ -436,9 +463,9 @@ async function initExtensionDownload() {
     const extensionSize = document.getElementById('extensionSize');
     const extensionVersion = document.getElementById('extensionVersion');
 
-    // Set default values
-    if (extensionSize) extensionSize.textContent = '~5 MB';
-    if (extensionVersion) extensionVersion.textContent = '1.0.0';
+    // Set default values based on the latest package
+    if (extensionSize) extensionSize.textContent = '4.8 MB (Nova)';
+    if (extensionVersion) extensionVersion.textContent = '2.1.0';
 
     // Download button - Direct download approach (works on all browsers)
     if (btnDownload) {
@@ -454,7 +481,7 @@ async function initExtensionDownload() {
                 `;
 
                 // Direct download using anchor tag - works on all browsers
-                const downloadUrl = 'downloads/eio-extension.zip';
+                const downloadUrl = '/downloads/eio-extension.zip';
                 const a = document.createElement('a');
                 a.href = downloadUrl;
                 a.download = 'eio-extension.zip';
@@ -923,31 +950,49 @@ function initAgentTabs() {
 }
 
 // Toggle switches
+// Toggle switches with persistence
 function initToggleSwitches() {
-    document.querySelectorAll('.eio-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const ball = toggle.querySelector('div');
-            const isActive = ball.style.right === '2px';
+    const toggles = document.querySelectorAll('.eio-toggle');
 
-            if (isActive) {
-                // Turn off
-                ball.style.right = 'auto';
-                ball.style.left = '2px';
-                toggle.style.background = '#333';
-            } else {
-                // Turn on
-                ball.style.left = 'auto';
-                ball.style.right = '2px';
-                // Keep original color based on toggle type
-                const colors = {
-                    'toggleAssistant': '#6246ea',
-                    'toggleQualifier': '#FF9800',
-                    'toggleFaq': '#4CAF50'
-                };
-                toggle.style.background = colors[toggle.id] || '#6246ea';
-            }
+    toggles.forEach(toggle => {
+        const id = toggle.id;
+        const ball = toggle.querySelector('div');
+
+        // Load saved state
+        const savedState = localStorage.getItem(`eio_${id}_enabled`);
+        // Default to true if not saved, except for maybe specific ones. Assuming true for demo.
+        let isActive = savedState !== 'false';
+
+        // Apply initial state
+        updateAgentToggleVisual(toggle, ball, isActive);
+
+        toggle.addEventListener('click', () => {
+            isActive = !isActive;
+            localStorage.setItem(`eio_${id}_enabled`, isActive.toString());
+            updateAgentToggleVisual(toggle, ball, isActive);
+
+            // Feedback
+            const name = id.replace('toggle', '');
+            console.log(`Agent ${name} is now ${isActive ? 'active' : 'inactive'}`);
         });
     });
+}
+
+function updateAgentToggleVisual(toggle, ball, isActive) {
+    if (isActive) {
+        ball.style.left = 'auto';
+        ball.style.right = '2px';
+        const colors = {
+            'toggleAssistant': '#6246ea',
+            'toggleQualifier': '#FF9800',
+            'toggleFaq': '#4CAF50'
+        };
+        toggle.style.background = colors[toggle.id] || '#6246ea';
+    } else {
+        ball.style.right = 'auto';
+        ball.style.left = '2px';
+        toggle.style.background = '#333';
+    }
 }
 
 // Save buttons
@@ -2099,3 +2144,226 @@ window.simulateTyping = function (text) {
 
     return steps;
 };
+
+// ═══════════════════════════════════════════════════════════
+// EXPLORADOR DE LEADS & CENTRAL DE SUCESSO
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- 1. Lógica da Central de Sucesso (Mostrar apenas na Home) ---
+    const successCenter = document.getElementById('successCenter');
+
+    // Sobrescrever a função de navegação original para controlar a visibilidade da Central
+    // Hook se possível, mas aqui vamos monitorar cliques
+
+    const navLinks = document.querySelectorAll('.eio-nav-item');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            const page = link.getAttribute('data-page');
+            if (successCenter) {
+                if (page === 'dashboard' || !page) {
+                    successCenter.style.display = 'block';
+                } else {
+                    successCenter.style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // Inicializar visibilidade correta
+    if (successCenter) {
+        const hash = window.location.hash.replace('#', '') || 'dashboard';
+        if (hash === 'dashboard' || hash === '') {
+            successCenter.style.display = 'block';
+        } else {
+            successCenter.style.display = 'none';
+        }
+    }
+
+
+    // --- 2. Gerador de PDF Guide ---
+    const downloadBtn = document.getElementById('downloadGuideBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Conteúdo do PDF
+            const content = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: 'Helvetica', sans-serif; color: #000000; padding: 20px; background: #ffffff; }
+                    .header { text-align: center; border-bottom: 2px solid #7F5AF0; padding-bottom: 20px; margin-bottom: 30px; }
+                    .logo { font-size: 24px; font-weight: bold; color: #7F5AF0; }
+                    h1 { font-size: 24px; margin: 10px 0; color: #000000; }
+                    p { color: #333333; }
+                    .section { margin-bottom: 25px; background: #f0f0f5; padding: 15px; border-radius: 8px; border-left: 5px solid #7F5AF0; color: #000000; }
+                    h2 { font-size: 16px; color: #7F5AF0; margin-top: 0; }
+                    .checkbox-item { margin-bottom: 10px; font-size: 14px; color: #000000 !important; }
+                    .checkbox-item strong { color: #000000; }
+                    .footer { text-align: center; font-size: 10px; color: #666; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
+                </style>
+            </head>
+            <body style="background-color: #ffffff; color: #000000;">
+                <div class="header">
+                    <div class="logo">E.I.O System</div>
+                    <h1>Checklist: Decolagem em 5 Passos 🚀</h1>
+                    <p>Guia de configuração rápida para capturar leads nas próximas 24 horas.</p>
+                </div>
+                <div class="section">
+                    <h2>1. Instalação e Conexão 🛠️</h2>
+                    <div class="checkbox-item">⬜ <strong>Baixe a Extensão:</strong> Instale a extensão oficial E.I.O.</div>
+                    <div class="checkbox-item">⬜ <strong>Login Seguro:</strong> Conecte sua conta do Instagram.</div>
+                    <div class="checkbox-item">⬜ <strong>Ative o Escudo:</strong> Verifique os limites de segurança.</div>
+                </div>
+                <div class="section">
+                    <h2>2. Configure seu Agente 🤖</h2>
+                    <div class="checkbox-item">⬜ <strong>Saudação:</strong> Escreva uma mensagem humana.</div>
+                    <div class="checkbox-item">⬜ <strong>Variáveis:</strong> Use {primeiro_nome} para personalizar.</div>
+                </div>
+                <div class="section">
+                    <h2>3. Primeira Mineração 🔍</h2>
+                    <div class="checkbox-item">⬜ <strong>Escolha o Nicho:</strong> Digite o cargo do cliente ideal.</div>
+                    <div class="checkbox-item">⬜ <strong>Filtro Brasil:</strong> Ative "Brasil Only".</div>
+                    <div class="checkbox-item">⬜ <strong>Extração:</strong> Clique em "Explorar".</div>
+                </div>
+                <div class="section">
+                    <h2>4. Organização no CRM 📈</h2>
+                    <div class="checkbox-item">⬜ <strong>Mover Leads:</strong> Envie para "Prospecção".</div>
+                    <div class="checkbox-item">⬜ <strong>Tags:</strong> Identifique "Cliente Quente".</div>
+                </div>
+                <div class="section">
+                    <h2>5. Controle Financeiro 💰</h2>
+                    <div class="checkbox-item">⬜ <strong>Anexe Comprovante:</strong> Para liberação rápida.</div>
+                </div>
+                <div class="footer">&copy; 2026 E.I.O System. Sucesso garantido.</div>
+            </body>
+            </html>`;
+
+            // Configuração html2pdf
+            const opt = {
+                margin: 10,
+                filename: 'CHECKLIST_EIO_DECOLAGEM.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Gerar - Verificando se a lib carregou
+            if (window.html2pdf) {
+                html2pdf().from(content).set(opt).save().then(() => {
+                    alert('✅ Guia baixado com sucesso! Siga o passo a passo para resultados imediatos.');
+                });
+            } else {
+                alert('⚠️ Biblioteca de PDF carregando... Tente novamente em alguns segundos.');
+            }
+        });
+    }
+
+
+    // --- 3. Lógica do Explorador de Leads (Simulação Inteligente) ---
+    const btnStartExploration = document.getElementById('btnStartExploration');
+    const explorerResults = document.getElementById('explorerResults');
+    const explorerSearch = document.getElementById('explorerSearch');
+
+    if (btnStartExploration) {
+        btnStartExploration.addEventListener('click', () => {
+            const query = explorerSearch.value.trim();
+            const brazilOnly = document.getElementById('filterBrazil').checked;
+            const contactOnly = document.getElementById('filterContact').checked;
+
+            if (!query) {
+                alert('⚠️ Digite um termo para buscar (ex: Nutricionista, Loja de Roupas)');
+                return;
+            }
+
+            // UI Feedback
+            btnStartExploration.disabled = true;
+            btnStartExploration.innerHTML = `<span class="spinner" style="width:20px;height:20px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px"></span> Minerando...`;
+
+            explorerResults.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #aaa;">
+                        <div style="margin-bottom: 20px; font-size: 2rem;">🛰️</div>
+                        <div>Conectando ao Instagram... Explorando perfis para "<b>${query}</b>"</div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">Isso pode levar alguns segundos. Respeitando limites de segurança.</div>
+                    </td>
+                </tr>
+            `;
+
+            // Simulação de busca (API Mockada para demonstração sem custo)
+            // Em produção real, isso enviaria uma mensagem para a extensão fazer o scraping
+            setTimeout(() => {
+                const mockResults = [
+                    { user: 'dra.anasilva', name: 'Dra. Ana Silva', bio: 'Nutricionista Funcional | Emagrecimento Saudável 🥗 Agende sua consulta 👇', contact: 'ana.nutri@email.com | (11) 99999-8888', status: 'Novo' },
+                    { user: 'loja.modafit', name: 'Moda Fit Store', bio: 'Roupas para treino com estilo 💪 Enviamos para todo Brasil 🇧🇷', contact: 'vendas@modafit.com.br', status: 'Novo' },
+                    { user: 'consultoria.tech', name: 'Tech Solutions', bio: 'Consultoria de TI para empresas. Transformação Digital. 💻', contact: 'contato@techsol.com', status: 'Novo' },
+                    { user: 'joao.personal', name: 'João Trainer', bio: 'Personal Trainer | Consultoria Online. Mude seu corpo em 30 dias. 🔥', contact: '(21) 98888-7777', status: 'Novo' },
+                    { user: 'cafe.gourmet_sp', name: 'Café & Aroma', bio: 'O melhor café do centro de SP. Venha nos visitar! ☕', contact: 'Sem contato visível', status: 'Baixa Intenção' }
+                ];
+
+                // Filtro "Possui Contato"
+                const filtered = contactOnly
+                    ? mockResults.filter(r => r.contact !== 'Sem contato visível')
+                    : mockResults;
+
+                // Renderizar
+                let html = '';
+                filtered.forEach(lead => {
+                    const hasContact = lead.contact !== 'Sem contato visível';
+                    const intentionBadge = hasContact
+                        ? '<span style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Alta Intenção</span>'
+                        : '<span style="background: rgba(255, 255, 255, 0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Baixa</span>';
+
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 15px;"><input type="checkbox" class="lead-checkbox"></td>
+                            <td style="padding: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-radius: 50%;"></div>
+                                    <div>
+                                        <div style="font-weight: bold; color: #fff;">${lead.name}</div>
+                                        <div style="font-size: 0.85rem; color: #aaa;">@${lead.user}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 15px; max-width: 200px; color: #ccc; font-size: 0.9rem;">${lead.bio}</td>
+                            <td style="padding: 15px; font-size: 0.9rem; color: #fff;">${lead.contact}</td>
+                            <td style="padding: 15px;">${intentionBadge}</td>
+                        </tr>
+                    `;
+                });
+
+                explorerResults.innerHTML = html;
+
+                // Reset botão
+                btnStartExploration.disabled = false;
+                btnStartExploration.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Explorar Agora`;
+
+                // Alert Toast
+                alert(`✅ Varredura Concluída! ${filtered.length} leads encontrados.`);
+
+            }, 3000); // 3 sec delay simulation
+        });
+    }
+
+    // Botão Exportar Excel (Simulação)
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    if (btnExportExcel) {
+        btnExportExcel.addEventListener('click', () => {
+            alert('📊 Exportando lista para .CSV...');
+        });
+    }
+
+    // Botão Enviar CRM (Simulação)
+    const btnSendToCRM = document.getElementById('btnSendToCRM');
+    if (btnSendToCRM) {
+        btnSendToCRM.addEventListener('click', () => {
+            alert('📥 4 Leads enviados para a coluna "Prospecção" do CRM!');
+        });
+    }
+
+});

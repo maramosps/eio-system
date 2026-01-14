@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Suspenso - E.I.O System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0A0A0F 0%, #1a1a2e 50%, #0d1f3c 100%);
+            font-family: 'Inter', sans-serif;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(127, 90, 240, 0.1) 0%, transparent 70%);
+            top: -300px;
+            right: -300px;
+            animation: pulse 10s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 0, 85, 0.08) 0%, transparent 70%);
+            bottom: -200px;
+            left: -200px;
+            animation: pulse 12s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 580px;
+            width: 95%;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(24, 24, 31, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 36px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon-lock {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(255, 0, 85, 0.2), rgba(127, 90, 240, 0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .icon-waiting {
+            background: linear-gradient(135deg, rgba(247, 147, 30, 0.2), rgba(255, 193, 7, 0.2));
+        }
+
+        .icon-waiting svg {
+            stroke: #f7931e;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .icon-lock svg {
+            width: 45px;
+            height: 45px;
+            stroke: #ff0055;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff0055, #7F5AF0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        h1.waiting {
+            background: linear-gradient(135deg, #f7931e, #FFC107);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .user-info-box {
+            background: rgba(127, 90, 240, 0.1);
+            border: 1px solid rgba(127, 90, 240, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .user-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .user-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .user-info-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+        }
+
+        .user-info-value {
+            color: #7F5AF0;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(17, 17, 24, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #7F5AF0;
+            box-shadow: 0 0 0 4px rgba(127, 90, 240, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 24px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider span {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plan-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .plan-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 18px 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .plan-option:hover {
+            border-color: #7F5AF0;
+            background: rgba(127, 90, 240, 0.1);
+        }
+
+        .plan-option.selected {
+            border-color: #7F5AF0;
+            background: rgba(127, 90, 240, 0.15);
+        }
+
+        .plan-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .plan-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .plan-price {
+            color: #7F5AF0;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .plan-period {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(127, 90, 240, 0.3);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            background: rgba(127, 90, 240, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #7F5AF0;
+            background: rgba(127, 90, 240, 0.1);
+        }
+
+        .upload-area.has-file {
+            border-color: #25D366;
+            background: rgba(37, 211, 102, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+        }
+
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(37, 211, 102, 0.15);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .file-preview.show {
+            display: flex;
+        }
+
+        .file-name {
+            flex: 1;
+            color: #25D366;
+            font-weight: 600;
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-remove {
+            color: #ff4d4d;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .btn-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #7F5AF0, #5a3fd4);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(127, 90, 240, 0.3);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(127, 90, 240, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .waiting-box {
+            background: linear-gradient(135deg, rgba(247, 147, 30, 0.15), rgba(255, 193, 7, 0.1));
+            border: 1px solid rgba(247, 147, 30, 0.3);
+            border-radius: 16px;
+            padding: 25px 20px;
+            margin-bottom: 24px;
+        }
+
+        .waiting-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #f7931e;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .waiting-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(247, 147, 30, 0.3);
+            border-top-color: #f7931e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .waiting-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .footer-links {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #7F5AF0;
+        }
+
+        .logout-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #ff4d4d !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 30px 20px;
+            }
+
+            .plan-options {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- STATUS: BLOQUEADO (formulário de envio) -->
+            <div id="blockedView">
+                <div class="icon-lock">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+
+                <h1>Acesso de Testes Suspenso</h1>
+                <p class="subtitle">
+                    Seu período de teste expirou. Para continuar usando o E.I.O,
+                    escolha seu plano e envie o comprovante de pagamento.
+                </p>
+
+                <!-- User Info Box -->
+                <div class="user-info-box">
+                    <div class="user-info-row">
+                        <span class="user-info-label">📧 E-mail</span>
+                        <span class="user-info-value" id="displayEmail">Carregando...</span>
+                    </div>
+                    <div class="user-info-row">
+                        <span class="user-info-label">🆔 ID da Conta</span>
+                        <span class="user-info-value" id="displayId">#---</span>
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <span>Escolha seu Plano</span>
+                </div>
+
+                <!-- Plan Selection -->
+                <div class="plan-options">
+                    <div class="plan-option" data-plan="mensal" data-price="399.90">
+                        <div class="plan-icon">📅</div>
+                        <div class="plan-name">Mensal</div>
+                        <div class="plan-price">R$ 399,90</div>
+                        <div class="plan-period">/mês</div>
+                    </div>
+                    <div class="plan-option selected" data-plan="anual" data-price="3999.00">
+                        <div class="plan-icon">🎉</div>
+                        <div class="plan-name">Anual</div>
+                        <div class="plan-price">R$ 3.999</div>
+                        <div class="plan-period">/ano (2 meses grátis)</div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="form-group">
+                    <label class="form-label">💳 Método de Pagamento</label>
+                    <select class="form-select" id="paymentMethod">
+                        <option value="pix">PIX (Liberação em até 1h)</option>
+                        <option value="cartao">Cartão de Crédito/Débito</option>
+                    </select>
+                </div>
+
+                <div class="divider">
+                    <span>Anexe o Comprovante</span>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📎</div>
+                    <div class="upload-text">Clique para enviar o comprovante</div>
+                    <div class="upload-hint">Imagem (JPG, PNG) ou PDF - Máx 5MB</div>
+                    <input type="file" id="fileInput" accept="image/*,.pdf" style="display: none;">
+                </div>
+
+                <div class="file-preview" id="filePreview">
+                    <span style="font-size: 1.5rem;">📄</span>
+                    <span class="file-name" id="fileName">comprovante.pdf</span>
+                    <span class="file-remove" id="fileRemove">✕</span>
+                </div>
+
+                <button class="btn-submit" id="btnSubmit" disabled>
+                    📤 Enviar Comprovante para Aprovação
+                </button>
+
+                <div class="footer-links">
+                    <a href="mailto:suporte@eio.com">Precisa de ajuda?</a>
+                    <br>
+                    <a href="#" class="logout-link" id="btnLogout">Sair da conta</a>
+                </div>
+            </div>
+
+            <!-- STATUS: AGUARDANDO CONFERÊNCIA -->
+            <div id="waitingView" class="hidden">
+                <div class="icon-lock icon-waiting">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+
+                <h1 class="waiting">Aguardando Conferência</h1>
+                <p class="subtitle">
+                    Seu comprovante foi recebido com sucesso!
+                </p>
+
+                <div class="waiting-box">
+                    <div class="waiting-status">
+                        <div class="waiting-spinner"></div>
+                        Em Análise
+                    </div>
+                    <div class="waiting-message">
+                        Nossa equipe confirmará o crédito em seu banco em <strong>até 60 minutos</strong>.
+                        Assim que aprovado, seu acesso será liberado automaticamente e você receberá uma notificação.
+                    </div>
+                </div>
+
+                <div class="user-info-box">
+                    <div class="user-info-row">
+                        <span class="user-info-label">📧 E-mail</span>
+                        <span class="user-info-value" id="waitingEmail">-</span>
+                    </div>
+                    <div class="user-info-row">
+                        <span class="user-info-label">💎 Plano</span>
+                        <span class="user-info-value" id="waitingPlan">-</span>
+                    </div>
+                    <div class="user-info-row">
+                        <span class="user-info-label">📤 Enviado em</span>
+                        <span class="user-info-value" id="waitingSentAt">-</span>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <a href="mailto:suporte@eio.com">Precisa de ajuda? Fale conosco</a>
+                    <br>
+                    <a href="#" class="logout-link" id="btnLogoutWaiting">Sair da conta</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+
+        // Get user data
+        const userData = localStorage.getItem('user') || localStorage.getItem('eio_user');
+        let userEmail = '';
+        let userId = '';
+        let selectedPlan = 'anual';
+        let selectedPrice = 3999.00;
+        let uploadedFile = null;
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                userEmail = user.email || '';
+                userId = user.id || '';
+
+                document.getElementById('displayEmail').textContent = userEmail || 'Não identificado';
+                document.getElementById('displayId').textContent = '#' + (userId ? userId.substring(0, 8).toUpperCase() : 'N/A');
+
+                // Check if already waiting for approval
+                checkPendingPayment();
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+        }
+
+        // Check if user has pending payment
+        async function checkPendingPayment() {
+            try {
+                const token = localStorage.getItem('accessToken') || localStorage.getItem('eio_token');
+                const response = await fetch(`${API_URL}/payments/pending`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.pending) {
+                        showWaitingView(data.payment);
+                    }
+                }
+            } catch (e) {
+                console.log('No pending payment or error:', e);
+            }
+        }
+
+        function showWaitingView(payment = null) {
+            document.getElementById('blockedView').classList.add('hidden');
+            document.getElementById('waitingView').classList.remove('hidden');
+
+            document.getElementById('waitingEmail').textContent = userEmail;
+            document.getElementById('waitingPlan').textContent = payment?.plan || selectedPlan;
+            document.getElementById('waitingSentAt').textContent = payment?.sentAt || new Date().toLocaleString('pt-BR');
+        }
+
+        // Plan selection
+        const planOptions = document.querySelectorAll('.plan-option');
+        planOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                planOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedPlan = option.dataset.plan;
+                selectedPrice = parseFloat(option.dataset.price);
+            });
+        });
+
+        // Upload area
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileRemove = document.getElementById('fileRemove');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Arquivo muito grande! Máximo 5MB.');
+                    return;
+                }
+                uploadedFile = file;
+                fileName.textContent = file.name;
+                filePreview.classList.add('show');
+                uploadArea.classList.add('has-file');
+                btnSubmit.disabled = false;
+            }
+        });
+
+        fileRemove.addEventListener('click', (e) => {
+            e.stopPropagation();
+            uploadedFile = null;
+            fileInput.value = '';
+            filePreview.classList.remove('show');
+            uploadArea.classList.remove('has-file');
+            btnSubmit.disabled = true;
+        });
+
+        // Submit payment
+        btnSubmit.addEventListener('click', async () => {
+            if (!uploadedFile) {
+                alert('Por favor, anexe o comprovante de pagamento.');
+                return;
+            }
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="waiting-spinner" style="width:18px;height:18px;border-width:2px;"></span> Enviando...';
+
+            try {
+                const token = localStorage.getItem('accessToken') || localStorage.getItem('eio_token');
+                const paymentMethod = document.getElementById('paymentMethod').value;
+
+                // Convert file to base64
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    const base64File = e.target.result;
+
+                    const response = await fetch(`${API_URL}/payments/submit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            plan: selectedPlan,
+                            price: selectedPrice,
+                            method: paymentMethod,
+                            file: base64File,
+                            fileName: uploadedFile.name
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Save pending status locally
+                        localStorage.setItem('eio_pending_payment', JSON.stringify({
+                            plan: selectedPlan,
+                            price: selectedPrice,
+                            sentAt: new Date().toLocaleString('pt-BR')
+                        }));
+
+                        showWaitingView({
+                            plan: selectedPlan === 'anual' ? 'Anual Premium' : 'Mensal',
+                            sentAt: new Date().toLocaleString('pt-BR')
+                        });
+                    } else {
+                        throw new Error(data.message || 'Erro ao enviar');
+                    }
+                };
+                reader.readAsDataURL(uploadedFile);
+
+            } catch (error) {
+                console.error('Error submitting payment:', error);
+                alert('Erro ao enviar comprovante: ' + error.message);
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '📤 Enviar Comprovante para Aprovação';
+            }
+        });
+
+        // Logout handlers
+        document.getElementById('btnLogout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        document.getElementById('btnLogoutWaiting').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        // Check local pending status
+        const pendingPayment = localStorage.getItem('eio_pending_payment');
+        if (pendingPayment) {
+            try {
+                const pending = JSON.parse(pendingPayment);
+                showWaitingView(pending);
+            } catch (e) { }
+        }
+    </script>
+</body>
+
+</html>

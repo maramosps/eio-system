@@ -16,14 +16,14 @@
   --eio-dark-700: #1F1F28;
   --eio-dark-600: #28283A;
   --eio-dark-500: #35354A;
-  
+
   /* Grafite Suave */
   --eio-graphite-900: #2A2A36;
   --eio-graphite-800: #35354A;
   --eio-graphite-700: #424256;
   --eio-graphite-600: #52526B;
   --eio-graphite-500: #6B6B88;
-  
+
   /* Azul Tecnologia - Acento Principal */
   --eio-blue-900: #0A2463;
   --eio-blue-800: #0D47A1;
@@ -33,48 +33,48 @@
   --eio-blue-400: #42A5F5;
   --eio-blue-300: #64B5F6;
   --eio-blue-neon: #00D9FF;
-  
+
   /* Cyan Luminoso - Acento Secundário */
   --eio-cyan-600: #00897B;
   --eio-cyan-500: #00ACC1;
   --eio-cyan-400: #00BCD4;
   --eio-cyan-300: #26C6DA;
   --eio-cyan-glow: #00E5FF;
-  
+
   /* Roxo Premium - Acento de Status */
   --eio-purple-700: #4A148C;
   --eio-purple-600: #6A1B9A;
   --eio-purple-500: #7B1FA2;
   --eio-purple-400: #9C27B0;
   --eio-purple-300: #BA68C8;
-  
+
   /* Laranja Energia - CTA e Alertas */
   --eio-orange-600: #E65100;
   --eio-orange-500: #FF6F00;
   --eio-orange-400: #FF8F00;
   --eio-orange-300: #FFA726;
   --eio-orange-glow: #FFB74D;
-  
+
   /* Verdes - Status e Sucesso */
   --eio-green-600: #2E7D32;
   --eio-green-500: #388E3C;
   --eio-green-400: #4CAF50;
   --eio-green-300: #66BB6A;
   --eio-green-glow: #00E676;
-  
+
   /* Vermelhos - Alertas e Perigos */
   --eio-red-600: #C62828;
   --eio-red-500: #D32F2F;
   --eio-red-400: #F44336;
   --eio-red-300: #E57373;
-  
+
   /* Gradientes Premium */
   --eio-gradient-primary: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
   --eio-gradient-secondary: linear-gradient(135deg, #7B1FA2 0%, #2196F3 100%);
   --eio-gradient-accent: linear-gradient(135deg, #FF6F00 0%, #FFA726 100%);
   --eio-gradient-dark: linear-gradient(180deg, #111118 0%, #0A0A0F 100%);
   --eio-gradient-glow: linear-gradient(135deg, #00D9FF 0%, #00E5FF 50%, #00E676 100%);
-  
+
   /* Sombras e Profundidade */
   --eio-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --eio-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
@@ -84,16 +84,16 @@
   --eio-shadow-glow-cyan: 0 0 24px rgba(0, 229, 255, 0.4);
   --eio-shadow-glow-purple: 0 0 24px rgba(156, 39, 176, 0.4);
   --eio-shadow-glow-orange: 0 0 24px rgba(255, 111, 0, 0.4);
-  
+
   /* Glassmorphism */
   --eio-glass-bg: rgba(24, 24, 31, 0.7);
   --eio-glass-border: rgba(255, 255, 255, 0.1);
   --eio-glass-blur: blur(16px);
-  
+
   /* Tipografia */
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-secondary: 'Plus Jakarta Sans', sans-serif;
-  
+
   /* Espaçamento */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -102,14 +102,14 @@
   --spacing-xl: 32px;
   --spacing-2xl: 48px;
   --spacing-3xl: 64px;
-  
+
   /* Bordas */
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
-  
+
   /* Transições */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -140,7 +140,12 @@ body {
 }
 
 /* ===== TIPOGRAFIA PREMIUM ===== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-secondary);
   font-weight: 700;
   line-height: 1.2;
@@ -230,20 +235,21 @@ p {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--eio-blue-500), transparent);
-  opacity: 0;
+  height: 2px;
+  background: var(--eio-gradient-primary);
+  opacity: 0.3;
   transition: opacity var(--transition-base);
 }
 
 .eio-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--eio-shadow-lg);
+  transform: translateY(-5px);
+  box-shadow: var(--eio-shadow-glow-blue);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
 .eio-card:hover::before {
   opacity: 1;
+  box-shadow: 0 0 15px var(--eio-purple-500);
 }
 
 /* Botões Premium */
@@ -288,6 +294,7 @@ p {
   background: var(--eio-gradient-primary);
   color: #FFFFFF;
   box-shadow: var(--eio-shadow-glow-blue);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .eio-btn-primary:hover {
@@ -395,6 +402,7 @@ p {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -406,6 +414,7 @@ p {
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -413,18 +422,24 @@ p {
 }
 
 @keyframes eio-glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
 }
 
 @keyframes eio-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }

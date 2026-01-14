@@ -19,15 +19,23 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir arquivos estáticos do frontend
+// Servir arquivos estáticos do frontend e downloads
 app.use(express.static(path.join(__dirname, '../frontend')));
+app.use('/downloads', express.static(path.join(__dirname, '../public/downloads')));
+app.use('/eio-extension.zip', express.static(path.join(__dirname, '../public/downloads/eio-extension.zip')));
 
 // Rotas da API
 const authRoutes = require('./src/routes/auth.routes');
 const licenseRoutes = require('./src/routes/license.routes');
+const leadRoutes = require('./src/routes/lead.routes');
+const adminRoutes = require('./src/routes/admin.routes');
+const userRoutes = require('./src/routes/user.routes');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/license', licenseRoutes);
+app.use('/api/v1/leads', leadRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Rota raiz
 app.get('/', (req, res) => {

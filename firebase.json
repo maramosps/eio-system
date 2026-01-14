@@ -1,0 +1,49 @@
+{
+    "hosting": {
+        "public": "frontend",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "/api/**",
+                "function": "api"
+            }
+        ],
+        "headers": [
+            {
+                "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|css|js)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=31536000, immutable"
+                    }
+                ]
+            },
+            {
+                "source": "**/*.html",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=0, must-revalidate"
+                    }
+                ]
+            },
+            {
+                "source": "/downloads/**",
+                "headers": [
+                    {
+                        "key": "Content-Disposition",
+                        "value": "attachment"
+                    },
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=0"
+                    }
+                ]
+            }
+        ]
+    }
+}

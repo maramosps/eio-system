@@ -135,7 +135,7 @@ module.exports = async (req, res) => {
 
             // Gerar token
             const token = jwt.sign(
-                { userId: user.id, email: user.email },
+                { userId: user.id, email: user.email, role: user.role || 'user' },
                 jwtSecret,
                 { expiresIn: '30d' }
             );
@@ -143,7 +143,7 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 token,
-                user: { id: user.id, name: user.name, email: user.email }
+                user: { id: user.id, name: user.name, email: user.email, role: user.role || 'user' }
             });
         }
 
@@ -189,7 +189,7 @@ module.exports = async (req, res) => {
             const isPaid = subscription && subscription.status === 'active' && subscription.plan !== 'trial';
 
             const token = jwt.sign(
-                { userId: user.id, email: user.email },
+                { userId: user.id, email: user.email, role: user.role || 'user' },
                 jwtSecret,
                 { expiresIn: '30d' }
             );
@@ -197,7 +197,7 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 token,
-                user: { id: user.id, name: user.name, email: user.email },
+                user: { id: user.id, name: user.name, email: user.email, role: user.role || 'user' },
                 subscription: subscription ? {
                     status: subscription.status,
                     plan: subscription.plan,
@@ -262,8 +262,12 @@ module.exports = async (req, res) => {
                     .single();
 
                 const trialStartDate = new Date(user.created_at);
-                const trialEndDate = new Date(trialStartDate);
-                trialEndDate.setDate(trialEndDate.getDate() + 5);
+                const standardTrialEndDate = new Date(trialStartDate);
+                standardTrialEndDate.setDate(standardTrialEndDate.getDate() + 5);
+
+                const trialEndDate = (subscription && (subscription.expires_at || subscription.trial_end))
+                    ? new Date(subscription.expires_at || subscription.trial_end)
+                    : standardTrialEndDate;
 
                 const now = new Date();
                 const isTrialActive = now < trialEndDate;
@@ -330,8 +334,12 @@ module.exports = async (req, res) => {
                 .single();
 
             const trialStartDate = new Date(user.created_at);
-            const trialEndDate = new Date(trialStartDate);
-            trialEndDate.setDate(trialEndDate.getDate() + 5);
+            const standardTrialEndDate = new Date(trialStartDate);
+            standardTrialEndDate.setDate(standardTrialEndDate.getDate() + 5);
+
+            const trialEndDate = (subscription && (subscription.expires_at || subscription.trial_end))
+                ? new Date(subscription.expires_at || subscription.trial_end)
+                : standardTrialEndDate;
 
             const now = new Date();
             const isTrialActive = now < trialEndDate;
@@ -416,11 +424,11 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    version: '1.0.0',
-                    size: '2.5 MB',
+                    version: '2.0.0',
+                    size: '4.6 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
-                    downloadUrl: 'https://github.com/ms-assessoria-digital/eio-extension/releases/latest/download/eio-extension.zip'
+                    downloadUrl: '/downloads/eio-extension.zip'
                 }
             });
         }
@@ -469,7 +477,7 @@ module.exports = async (req, res) => {
                     success: true,
                     accounts: accounts || [],
                     count: (accounts || []).length,
-                    limit: 2
+                    limit: 1
                 });
             } catch (err) {
                 return res.status(401).json({ message: 'Token inválido' });
@@ -510,9 +518,9 @@ module.exports = async (req, res) => {
                     .select('id')
                     .eq('user_id', decoded.userId);
 
-                if ((existingAccounts || []).length >= 2) {
+                if ((existingAccounts || []).length >= 1) {
                     return res.status(400).json({
-                        message: 'Limite de 2 contas atingido. Remova uma conta antes de adicionar outra.',
+                        message: 'Limite de 1 conta atingido. Remova a conta atual antes de adicionar outra.',
                         code: 'LIMIT_REACHED'
                     });
                 }
@@ -556,6 +564,99 @@ module.exports = async (req, res) => {
             } catch (err) {
                 console.error('Erro:', err);
                 return res.status(401).json({ message: 'Token inválido' });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // NOVAS ROTAS PARA EXTENSÃO
+        // ═══════════════════════════════════════════════════════════
+
+        // Sincronização de Leads (CRM)
+        if ((path === '/api/v1/leads/batch' || pathFromQuery === 'v1/leads/batch') && method === 'POST') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ success: false, message: 'Token não fornecido' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                const { leads } = req.body;
+
+                if (!leads || !Array.isArray(leads)) {
+                    return res.status(400).json({ success: false, message: 'Dados de leads inválidos' });
+                }
+
+                // Inserir leads no Supabase
+                const { error } = await supabase
+                    .from('leads')
+                    .insert(leads.map(l => ({
+                        user_id: decoded.userId,
+                        username: l.username,
+                        full_name: l.name,
+                        avatar_url: l.avatar,
+                        status: 'new',
+                        extracted_at: new Date().toISOString()
+                    })));
+
+                if (error) throw error;
+
+                return res.json({
+                    success: true,
+                    message: `${leads.length} leads sincronizados com sucesso`
+                });
+            } catch (err) {
+                console.error('Lead sync error:', err);
+                return res.status(401).json({ success: false, message: 'Token inválido ou erro no banco' });
+            }
+        }
+
+        // Logs da Extensão
+        if ((path === '/api/v1/logs' || pathFromQuery === 'v1/logs') && method === 'POST') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) return res.status(401).json({ success: false });
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                const { level, message, meta } = req.body;
+
+                await supabase.from('logs').insert([{
+                    user_id: decoded.userId,
+                    level,
+                    message,
+                    meta,
+                    created_at: new Date().toISOString()
+                }]);
+
+                return res.json({ success: true });
+            } catch (err) {
+                return res.status(401).json({ success: false });
+            }
+        }
+
+        // Logs de Execução de Ações
+        if ((path === '/api/v1/executions/log' || pathFromQuery === 'v1/executions/log') && method === 'POST') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) return res.status(401).json({ success: false });
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                const { action, result, timestamp } = req.body;
+
+                await supabase.from('logs').insert([{
+                    user_id: decoded.userId,
+                    level: 'success',
+                    action,
+                    message: `${action.toUpperCase()} em @${result?.username || 'perfil'}`,
+                    meta: result,
+                    created_at: timestamp || new Date().toISOString()
+                }]);
+
+                return res.json({ success: true });
+            } catch (err) {
+                return res.status(401).json({ success: false });
             }
         }
 

@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS instagram_accounts (
 CREATE INDEX IF NOT EXISTS idx_instagram_accounts_handle ON instagram_accounts(instagram_handle);
 CREATE INDEX IF NOT EXISTS idx_instagram_accounts_user_id ON instagram_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_instagram_handle ON users(instagram_handle);
--- 4. Função para contar contas de um usuário (máximo 2)
+-- 4. Função para contar contas de um usuário (máximo 1)
 CREATE OR REPLACE FUNCTION check_instagram_account_limit() RETURNS TRIGGER AS $$
 DECLARE account_count INTEGER;
 BEGIN
@@ -31,7 +31,7 @@ SELECT COUNT(*) INTO account_count
 FROM instagram_accounts
 WHERE user_id = NEW.user_id
     AND status = 'active';
-IF account_count >= 2 THEN RAISE EXCEPTION 'Limite de 2 contas Instagram por usuário atingido';
+IF account_count >= 1 THEN RAISE EXCEPTION 'Limite de 1 conta Instagram por usuário atingido';
 END IF;
 RETURN NEW;
 END;

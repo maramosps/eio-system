@@ -1,0 +1,105 @@
+/*
+═══════════════════════════════════════════════════════════
+  E.I.O - FIX SPACING V11 (FLEX FIX)
+  1. Correção de Layout usando Flex Column (mais seguro que Block)
+  2. Correção de PDF mantida
+═══════════════════════════════════════════════════════════
+*/
+
+/* 
+   ✅ CORREÇÃO DE LAYOUT DO DASHBOARD
+   Evita centralização do body.
+*/
+body.eio-dashboard-body {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+}
+
+/*
+   ✅ CORREÇÃO SEGURA DE ESPAÇAMENTO (VERSÃO SIMPLIFICADA)
+   Evita conflitos com CSS inline do dashboard.html
+*/
+div[data-section].eio-content-active,
+.eio-content-section.eio-content-active {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ajuste fino para o primeiro elemento */
+div[data-section].eio-content-active>*:first-child {
+    margin-top: 0 !important;
+}
+
+/* Header sem margem extra */
+.eio-section-header-dash {
+    margin-top: 0 !important;
+    margin-bottom: 16px !important;
+}
+
+/* Stats grid e cards */
+.eio-stats-grid,
+.eio-card {
+    margin-top: 0 !important;
+}
+
+/*
+   ✅ CORREÇÃO ESPECÍFICA PARA MENSAGENS E OUTROS GRIDS
+   Garante que containers internos preencham o espaço
+*/
+.eio-messages-container,
+.eio-accounts-grid,
+.eio-users-table-container {
+    flex: 1 !important;
+    width: 100% !important;
+}
+
+/* 
+   ✅ CORREÇÃO PARA PDF (PRINT MEDIA)
+*/
+@media print {
+
+    body,
+    .eio-dashboard-body,
+    .eio-page-content {
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .eio-card,
+    div {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    span,
+    li,
+    label,
+    strong,
+    b,
+    i,
+    em {
+        color: #000000 !important;
+        text-shadow: none !important;
+    }
+
+    * {
+        color: #000 !important;
+    }
+
+    .eio-sidebar,
+    .eio-topbar,
+    .eio-btn {
+        display: none !important;
+    }
+}

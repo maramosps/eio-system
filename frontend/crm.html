@@ -7,7 +7,8 @@
     <title>CRM Instagram - E.I.O</title>
     <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="dashboard.css">
-    <link rel="stylesheet" href="crm.css">
+    <link rel="stylesheet" href="crm.css?v=11">
+    <link rel="stylesheet" href="fix-spacing.css?v=11">
 </head>
 
 <body class="eio-dashboard-body">
@@ -35,7 +36,8 @@
                 <span>Agentes IA</span>
             </a>
 
-            <a href="#all" class="eio-nav-item eio-nav-item-active" data-view="all">
+            <a href="#all" class="eio-nav-item eio-nav-item-active" data-view="all"
+                onclick="filterKanban('all'); updateActiveNav(this); return false;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path
                         d="M17 21V19C17 17.9 16.6 16.9 15.8 16.2C15 15.4 14 15 13 15H5C3.9 15 2.9 15.4 2.2 16.2C1.4 16.9 1 17.9 1 19V21"
@@ -45,14 +47,16 @@
                 <span>Todos os Leads</span>
             </a>
 
-            <a href="#new" class="eio-nav-item" data-view="new">
+            <a href="#new" class="eio-nav-item" data-view="new"
+                onclick="filterKanban('new'); updateActiveNav(this); return false;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M10 2V18M2 10H18" stroke="currentColor" stroke-width="2" />
                 </svg>
                 <span>Novos</span>
             </a>
 
-            <a href="#contacted" class="eio-nav-item" data-view="contacted">
+            <a href="#contacted" class="eio-nav-item" data-view="contacted"
+                onclick="filterKanban('contacted'); updateActiveNav(this); return false;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path
                         d="M18 10C18 14.42 14.42 18 10 18C9 18 8 17.8 7 17.4L3 18L4 14C3 12.5 2 10.8 2 10C2 5.58 5.58 2 10 2C14.42 2 18 5.58 18 10Z"
@@ -61,7 +65,8 @@
                 <span>Contactados</span>
             </a>
 
-            <a href="#qualified" class="eio-nav-item" data-view="qualified">
+            <a href="#qualified" class="eio-nav-item" data-view="qualified"
+                onclick="filterKanban('qualified'); updateActiveNav(this); return false;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path
                         d="M9 12L11 14L15 10M21 12C21 16.97 16.97 21 12 21C7.03 21 3 16.97 3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12Z"
@@ -70,7 +75,8 @@
                 <span>Qualificados</span>
             </a>
 
-            <a href="#converted" class="eio-nav-item" data-view="converted">
+            <a href="#converted" class="eio-nav-item" data-view="converted"
+                onclick="filterKanban('converted'); updateActiveNav(this); return false;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path
                         d="M20 12C20 16.42 16.42 20 12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12Z"

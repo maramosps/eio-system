@@ -2,17 +2,17 @@
 ═══════════════════════════════════════════════════════════
   E.I.O - LICENSE MANAGER
   Sistema de Controle de Licenças e Período de Teste
-  Email Suporte: msasdigital@gmail.com
+  Email Suporte: maramosps@gmail.com
 ═══════════════════════════════════════════════════════════
 */
 
 const LICENSE_CONFIG = {
     TRIAL_DAYS: 5,
     API_URL: 'https://eio-system.vercel.app', // ✅ URL de Produção
-    SUPPORT_EMAIL: 'msasdigital@gmail.com',
+    SUPPORT_EMAIL: 'maramosps@gmail.com',
     COMPANY_NAME: 'MS Assessoria Digital',
-    // Modo de produção - ATIVADO
-    DEV_MODE: false, // ✅ Produção
+    // Modo de produção
+    DEV_MODE: false,
     DEV_SKIP_LICENSE: false
 };
 
@@ -31,8 +31,8 @@ class LicenseManager {
 
         // MODO DE DESENVOLVIMENTO - PULAR VERIFICAÇÃO
         if (LICENSE_CONFIG.DEV_MODE && LICENSE_CONFIG.DEV_SKIP_LICENSE) {
-            console.warn('⚠️ MODO DE DESENVOLVIMENTO - Licença pulada');
-            console.warn('⚠️ DESATIVAR EM PRODUÇÃO!');
+            console.log('ℹ️ MODO DE DESENVOLVIMENTO - Licença pulada');
+            console.log('ℹ️ DESATIVAR EM PRODUÇÃO!');
             this.isValid = true;
             this.userEmail = 'dev@test.com';
             return true;
@@ -81,65 +81,62 @@ class LicenseManager {
      * Solicitar login do usuário
      */
     async requestLogin() {
-        return new Promise((resolve) => {
-            const modal = this.createLoginModal();
-            document.body.appendChild(modal);
+        // Agora o login é gerenciado pelo popup.html através de loginWithHandle
+        // Este método permanece para compatibilidade se algo chamar internamente
+        return false;
+    }
 
-            window.handleInstagramLogin = async (instagram_handle) => {
-                try {
-                    const response = await fetch(`${LICENSE_CONFIG.API_URL}/api/v1/auth/instagram-login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ instagram_handle })
-                    });
+    /**
+     * Realizar login via Handle do Instagram (chamado pelo popup)
+     */
+    async loginWithHandle(instagram_handle) {
+        try {
+            const handle = instagram_handle.replace('@', '').trim().toLowerCase();
 
-                    const data = await response.json();
+            if (!handle) {
+                throw new Error('Instagram @ é obrigatório');
+            }
 
-                    if (!response.ok) {
-                        // Mensagem de erro personalizada baseada no código
-                        let errorMessage = data.message || 'Erro ao fazer login';
+            const response = await fetch(`${LICENSE_CONFIG.API_URL}/api/v1/auth/instagram-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instagram_handle: handle })
+            });
 
-                        if (data.code === 'INSTAGRAM_NOT_FOUND') {
-                            errorMessage = '❌ Este @ não está cadastrado no sistema.\n\nCadastre-se no dashboard ou entre em contato com o suporte.';
-                        } else if (data.code === 'LICENSE_EXPIRED') {
-                            errorMessage = '⏰ Sua licença expirou!\n\nRenove sua assinatura para continuar usando.';
-                        } else if (data.code === 'ACCOUNT_DISABLED') {
-                            errorMessage = '🚫 Esta conta está desativada.\n\nEntre em contato com o suporte.';
-                        }
+            const data = await response.json();
 
-                        alert(errorMessage);
-                        return;
-                    }
-
-                    // Salvar licença
-                    await this.saveLicense({
-                        userEmail: data.user.email,
-                        instagramHandle: instagram_handle,
-                        token: data.token,
-                        subscription: data.subscription,
-                        trialStartDate: data.trialStartDate || new Date().toISOString(),
-                        isPaid: data.isPaid || false,
-                        userId: data.user.id
-                    });
-
-                    modal.remove();
-                    this.isValid = true;
-                    this.userEmail = data.user.email;
-                    resolve(true);
-
-                    if (typeof showToast === 'function') {
-                        showToast(`✅ Login realizado! Bem-vindo @${instagram_handle}`, 'success');
-                    }
-
-                    // Recarregar a página para aplicar a licença
-                    window.location.reload();
-
-                } catch (error) {
-                    console.error('Erro no login:', error);
-                    alert('❌ Erro de conexão. Verifique sua internet e tente novamente.');
+            if (!response.ok) {
+                let errorMessage = data.message || 'Erro ao fazer login';
+                if (data.code === 'INSTAGRAM_NOT_FOUND') {
+                    errorMessage = '❌ Este @ não está cadastrado no sistema.\n\nCadastre-se no dashboard ou entre em contato com o suporte.';
+                } else if (data.code === 'LICENSE_EXPIRED') {
+                    errorMessage = '⏰ Sua licença expirou!\n\nRenove sua assinatura para continuar usando.';
                 }
-            };
-        });
+                throw new Error(errorMessage);
+            }
+
+            // Salvar licença
+            await this.saveLicense({
+                userEmail: data.user.email,
+                instagramHandle: handle,
+                token: data.token,
+                subscription: data.subscription,
+                trialStartDate: data.trialStartDate,
+                isPaid: data.isPaid || false,
+                userId: data.user.id,
+                lastLogin: new Date().toISOString()
+            });
+
+            this.isValid = true;
+            this.userEmail = data.user.email;
+            this.licenseData = data;
+
+            return { success: true, user: data.user };
+
+        } catch (error) {
+            console.error('Erro no loginWithHandle:', error);
+            throw error;
+        }
     }
 
     /**

