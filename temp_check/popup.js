@@ -1,0 +1,1720 @@
+/*
+═══════════════════════════════════════════════════════════
+  E.I.O - POPUP SCRIPT (ADVANCED VERSION)
+  Complete functionality for account management
+═══════════════════════════════════════════════════════════
+*/
+
+// ═══════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+const AppState = {
+    accounts: [],
+    filteredAccounts: [],
+    selectedAccounts: new Set(),
+    currentPage: 1,
+    pageSize: 50,
+    sortColumn: 'username',
+    sortDirection: 'asc',
+    currentProfile: '@user',
+    targetProfile: '',
+    mediaQueue: [],
+    isAuthenticated: false,
+    automationRunning: false,
+    filters: {
+        followersMin: 0,
+        followersMax: 100000,
+        followingMin: 0,
+        followingMax: 10000,
+        ratioMin: 0,
+        ratioMax: 100,
+        postsMin: 0,
+        postsMax: 1000,
+        lastPostDays: null,
+        hasPhoto: null,
+        isPrivate: null,
+        isVerified: null,
+        followsMe: null,
+        bioContains: '',
+        businessCategory: ''
+    },
+    config: {
+        delayAfterAction: 60,
+        delayAfterSkip: 1,
+        randomDelayPercent: 50,
+        showProfilePics: true,
+        showBadges: true,
+        autoSaveQueue: true
+    },
+    logs: [],
+    mediaQueue: []
+};
+
+// ═══════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('E.I.O Popup initialized');
+
+    // Update time display
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // Load saved state
+    await loadState();
+
+    // Check authentication
+    checkAuthentication();
+
+    // Initialize UI
+    initializeTabs();
+    initializeDropdowns();
+    initializeFilters();
+    initializeConfigSections();
+    initializeTableHandlers();
+    initializeActionButtons();
+    initializeMediaHandlers();
+
+    // Render initial data
+    renderAccountsTable();
+    renderLogs();
+
+    // Detect current Instagram profile
+    detectCurrentProfile();
+});
+
+// ═══════════════════════════════════════════════════════════
+// DATE/TIME
+// ═══════════════════════════════════════════════════════════
+function updateDateTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).replace(',', ' -');
+
+    const el = document.getElementById('currentDateTime');
+    if (el) el.textContent = formatted;
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATE PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+async function loadState() {
+    try {
+        const result = await chrome.storage.local.get(['eioAppState', 'eioAccounts', 'eioSelectedAccounts']);
+
+        // Load accounts separately (they're larger data)
+        if (result.eioAccounts) {
+            AppState.accounts = result.eioAccounts;
+            AppState.filteredAccounts = [...result.eioAccounts];
+        }
+
+        // Load selected accounts (convert array back to Set)
+        if (result.eioSelectedAccounts) {
+            AppState.selectedAccounts = new Set(result.eioSelectedAccounts);
+        }
+
+        // Load other state
+        if (result.eioAppState) {
+            const saved = result.eioAppState;
+            AppState.currentPage = saved.currentPage || 1;
+            AppState.pageSize = saved.pageSize || 50;
+            AppState.sortColumn = saved.sortColumn || 'username';
+            AppState.sortDirection = saved.sortDirection || 'asc';
+            AppState.targetProfile = saved.targetProfile || '';
+            AppState.filters = saved.filters || AppState.filters;
+            AppState.config = saved.config || AppState.config;
+            AppState.logs = saved.logs || [];
+            AppState.mediaQueue = saved.mediaQueue || [];
+        }
+
+        console.log(`✅ Estado carregado: ${AppState.accounts.length} contas`);
+    } catch (e) {
+        console.error('Error loading state:', e);
+    }
+}
+
+async function saveState() {
+    try {
+        // Save accounts separately
+        await chrome.storage.local.set({
+            eioAccounts: AppState.accounts,
+            eioSelectedAccounts: Array.from(AppState.selectedAccounts),
+            eioAppState: {
+                currentPage: AppState.currentPage,
+                pageSize: AppState.pageSize,
+                sortColumn: AppState.sortColumn,
+                sortDirection: AppState.sortDirection,
+                targetProfile: AppState.targetProfile,
+                filters: AppState.filters,
+                config: AppState.config,
+                logs: AppState.logs.slice(0, 100), // Limitar logs
+                mediaQueue: AppState.mediaQueue || []
+            }
+        });
+        console.log(`💾 Estado salvo: ${AppState.accounts.length} contas`);
+    } catch (e) {
+        console.error('Error saving state:', e);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTHENTICATION
+// ═══════════════════════════════════════════════════════════
+function checkAuthentication() {
+    chrome.storage.local.get(['extensionLicense'], (result) => {
+        if (result.extensionLicense && result.extensionLicense.validated) {
+            AppState.isAuthenticated = true;
+            AppState.currentProfile = result.extensionLicense.igHandle || '@user';
+            document.getElementById('currentProfile').textContent = AppState.currentProfile;
+            hideTermsModal();
+        } else {
+            showTermsModal();
+        }
+    });
+}
+
+function showTermsModal() {
+    document.getElementById('termsModal').classList.add('active');
+}
+
+function hideTermsModal() {
+    document.getElementById('termsModal').classList.remove('active');
+}
+
+// Login handlers
+document.getElementById('btnGoToLogin')?.addEventListener('click', () => {
+    document.getElementById('termsStep1').style.display = 'none';
+    document.getElementById('termsStep2').style.display = 'block';
+});
+
+document.getElementById('btnSubmitExtensionLogin')?.addEventListener('click', async () => {
+    const handle = document.getElementById('loginInstagramHandle').value.trim();
+    if (!handle) {
+        alert('Por favor, digite seu @');
+        return;
+    }
+
+    // Simulate validation (in production, would call backend)
+    AppState.isAuthenticated = true;
+    AppState.currentProfile = `@${handle.replace('@', '')}`;
+
+    chrome.storage.local.set({
+        extensionLicense: {
+            validated: true,
+            igHandle: AppState.currentProfile,
+            validatedAt: new Date().toISOString()
+        }
+    });
+
+    document.getElementById('currentProfile').textContent = AppState.currentProfile;
+    hideTermsModal();
+    addLog('success', `Login realizado: ${AppState.currentProfile}`);
+});
+
+// ═══════════════════════════════════════════════════════════
+// TABS NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function initializeTabs() {
+    const tabs = document.querySelectorAll('.eio-tab');
+    const contents = document.querySelectorAll('.eio-tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('eio-tab-active'));
+            tab.classList.add('eio-tab-active');
+
+            // Update active content
+            contents.forEach(c => c.classList.remove('eio-tab-content-active'));
+            document.getElementById(`${targetTab}Tab`)?.classList.add('eio-tab-content-active');
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// DROPDOWNS
+// ═══════════════════════════════════════════════════════════
+function initializeDropdowns() {
+    const dropdownTriggers = document.querySelectorAll('.eio-dropdown-trigger');
+
+    dropdownTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = trigger.closest('.eio-dropdown');
+
+            // Close other dropdowns
+            document.querySelectorAll('.eio-dropdown.open').forEach(d => {
+                if (d !== dropdown) d.classList.remove('open');
+            });
+
+            dropdown.classList.toggle('open');
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.eio-dropdown.open').forEach(d => {
+            d.classList.remove('open');
+        });
+    });
+
+    // Prevent dropdown menu from closing when clicking inside
+    document.querySelectorAll('.eio-dropdown-menu').forEach(menu => {
+        menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
+
+    // Load Accounts Menu Actions
+    initializeLoadAccountsMenu();
+    initializeSelectMenu();
+    initializeProcessQueueMenu();
+}
+
+function initializeLoadAccountsMenu() {
+    const menu = document.getElementById('loadAccountsMenu');
+    if (!menu) return;
+
+    menu.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            handleLoadAccountsAction(action);
+        });
+    });
+}
+
+function handleLoadAccountsAction(action) {
+    const limit = document.getElementById('limitQueue')?.checked
+        ? parseInt(document.getElementById('queueLimit')?.value) || 50
+        : 1000;
+
+    addLog('info', `Carregando contas: ${action} (limite: ${limit})`);
+
+    switch (action) {
+        case 'load-whitelist':
+            loadWhitelist();
+            break;
+        case 'load-pending':
+            loadPendingRequests();
+            break;
+        case 'load-followers':
+            loadFromInstagram('followers', limit);
+            break;
+        case 'load-following':
+            loadFromInstagram('following', limit);
+            break;
+        case 'load-likers':
+            loadFromInstagram('likers', limit);
+            break;
+        case 'load-commenters':
+            loadFromInstagram('commenters', limit);
+            break;
+        case 'load-saved-queue':
+            loadSavedQueue();
+            break;
+    }
+
+    // Close dropdown
+    document.querySelector('.eio-dropdown.open')?.classList.remove('open');
+}
+
+function initializeSelectMenu() {
+    const menu = document.getElementById('selectMenu');
+    if (!menu) return;
+
+    menu.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            handleSelectAction(action);
+            document.querySelector('.eio-dropdown.open')?.classList.remove('open');
+        });
+    });
+}
+
+function handleSelectAction(action) {
+    switch (action) {
+        case 'select-all':
+            AppState.filteredAccounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
+            break;
+        case 'select-none':
+            AppState.selectedAccounts.clear();
+            break;
+        case 'invert-selection':
+            AppState.filteredAccounts.forEach(acc => {
+                if (AppState.selectedAccounts.has(acc.username)) {
+                    AppState.selectedAccounts.delete(acc.username);
+                } else {
+                    AppState.selectedAccounts.add(acc.username);
+                }
+            });
+            break;
+        case 'remove-selected':
+            AppState.accounts = AppState.accounts.filter(acc => !AppState.selectedAccounts.has(acc.username));
+            AppState.selectedAccounts.clear();
+            applyFilters();
+            break;
+        case 'add-to-whitelist':
+            addSelectedToWhitelist();
+            break;
+    }
+
+    renderAccountsTable();
+    updateSelectedCount();
+}
+
+function initializeProcessQueueMenu() {
+    // The menu uses radio buttons, handled on process start
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACCOUNTS TABLE
+// ═══════════════════════════════════════════════════════════
+function initializeTableHandlers() {
+    // Select all checkbox
+    document.getElementById('selectAllAccounts')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        const visibleAccounts = getPageAccounts();
+
+        visibleAccounts.forEach(acc => {
+            if (checked) {
+                AppState.selectedAccounts.add(acc.username);
+            } else {
+                AppState.selectedAccounts.delete(acc.username);
+            }
+        });
+
+        renderAccountsTable();
+        updateSelectedCount();
+    });
+
+    // Sortable columns
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.sort;
+            if (AppState.sortColumn === column) {
+                AppState.sortDirection = AppState.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                AppState.sortColumn = column;
+                AppState.sortDirection = 'asc';
+            }
+            sortAccounts();
+            renderAccountsTable();
+        });
+    });
+
+    // Page size change
+    document.getElementById('pageSize')?.addEventListener('change', (e) => {
+        AppState.pageSize = parseInt(e.target.value);
+        AppState.currentPage = 1;
+        renderAccountsTable();
+    });
+
+    // Page number change
+    document.getElementById('pageNumber')?.addEventListener('change', (e) => {
+        const maxPage = Math.ceil(AppState.filteredAccounts.length / AppState.pageSize);
+        AppState.currentPage = Math.max(1, Math.min(parseInt(e.target.value) || 1, maxPage));
+        renderAccountsTable();
+    });
+}
+
+function renderAccountsTable() {
+    const gridContainer = document.getElementById('accountsGrid');
+    const emptyState = document.getElementById('tableEmptyState');
+
+    if (!gridContainer) return;
+
+    // Função interna de renderização
+    const performRender = () => {
+        const accounts = getPageAccounts();
+
+        if (accounts.length === 0) {
+            gridContainer.innerHTML = '';
+            if (emptyState) emptyState.style.display = 'flex';
+            return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+
+        // Criar header
+        const headerHtml = `
+            <div class="eio-grid-header">
+                <label>
+                    <input type="checkbox" id="selectAllGrid" ${AppState.selectedAccounts.size === accounts.length ? 'checked' : ''}>
+                    <span>Selecionar Todos</span>
+                </label>
+            </div>
+        `;
+
+        // Criar cards
+        const cardsHtml = accounts.map(acc => {
+            const initial = (acc.username || '?').replace('@', '')[0]?.toUpperCase() || '?';
+            const isSelected = AppState.selectedAccounts.has(acc.username);
+            const cleanUsername = (acc.username || '').replace('@', '');
+            
+            let avatarHtml = '';
+            if (acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
+                avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                              <div class="card-placeholder" style="display:none;">${initial}</div>`;
+            } else {
+                avatarHtml = `<div class="card-placeholder">${initial}</div>`;
+            }
+
+            return `
+                <div class="eio-account-card ${isSelected ? 'selected' : ''}" data-username="${acc.username}">
+                    <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
+                    ${avatarHtml}
+                    <div class="card-info">
+                        <div class="card-username">
+                            <a href="https://instagram.com/${cleanUsername}" target="_blank">@${cleanUsername}</a>
+                        </div>
+                        ${acc.fullName ? `<div class="card-name">${acc.fullName}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        gridContainer.innerHTML = headerHtml + cardsHtml;
+
+        // Re-attach handlers
+        const selectAllGrid = document.getElementById('selectAllGrid');
+        if (selectAllGrid) {
+            selectAllGrid.addEventListener('change', (e) => {
+                const allCards = gridContainer.querySelectorAll('.eio-account-card');
+                const allCheckboxes = gridContainer.querySelectorAll('.card-checkbox');
+                
+                allCards.forEach((card, idx) => {
+                    const username = card.dataset.username;
+                    if (e.target.checked) {
+                        AppState.selectedAccounts.add(username);
+                        card.classList.add('selected');
+                        allCheckboxes[idx].checked = true;
+                    } else {
+                        AppState.selectedAccounts.delete(username);
+                        card.classList.remove('selected');
+                        allCheckboxes[idx].checked = false;
+                    }
+                });
+                
+                updateSelectedCount();
+            });
+        }
+
+        gridContainer.querySelectorAll('.eio-account-card').forEach(card => {
+            const checkbox = card.querySelector('.card-checkbox');
+            card.addEventListener('click', (e) => {
+                if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
+                checkbox.checked = !checkbox.checked;
+                toggleCardSelection(card, checkbox.checked);
+            });
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                toggleCardSelection(card, e.target.checked);
+            });
+        });
+
+        updatePaginationInfo();
+    };
+
+    // Otimização: Spinner
+    if (AppState.filteredAccounts.length > 200) {
+        gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
+        
+        // setTimeout para processar
+        setTimeout(() => {
+            requestAnimationFrame(performRender);
+        }, 50);
+    } else {
+        performRender();
+    }
+}
+
+/**
+ * Alterna seleção de um card
+ */
+function toggleCardSelection(card, isSelected) {
+    const username = card.dataset.username;
+
+    if (isSelected) {
+        AppState.selectedAccounts.add(username);
+        card.classList.add('selected');
+    } else {
+        AppState.selectedAccounts.delete(username);
+        card.classList.remove('selected');
+    }
+
+    updateSelectedCount();
+}
+
+function getPageAccounts() {
+    const start = (AppState.currentPage - 1) * AppState.pageSize;
+    const end = start + AppState.pageSize;
+    return AppState.filteredAccounts.slice(start, end);
+}
+
+function updatePaginationInfo() {
+    const total = AppState.filteredAccounts.length;
+    const start = (AppState.currentPage - 1) * AppState.pageSize + 1;
+    const end = Math.min(AppState.currentPage * AppState.pageSize, total);
+
+    const el = document.getElementById('queuePagination');
+    if (el) {
+        el.textContent = `📊 ${start} - ${end} / ${total} (${AppState.accounts.length})`;
+    }
+
+    const pageInput = document.getElementById('pageNumber');
+    if (pageInput) {
+        pageInput.value = AppState.currentPage;
+        pageInput.max = Math.ceil(total / AppState.pageSize) || 1;
+    }
+}
+
+function updateSelectedCount() {
+    const el = document.getElementById('selectedCount');
+    if (el) {
+        el.textContent = `${AppState.selectedAccounts.size} selected`;
+    }
+}
+
+function sortAccounts() {
+    AppState.filteredAccounts.sort((a, b) => {
+        let aVal = a[AppState.sortColumn];
+        let bVal = b[AppState.sortColumn];
+
+        if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal?.toLowerCase() || '';
+        }
+
+        if (aVal < bVal) return AppState.sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return AppState.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return '-';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num.toString();
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD ACCOUNTS FROM INSTAGRAM
+// ═══════════════════════════════════════════════════════════
+async function loadFromInstagram(type, limit) {
+    addLog('info', `🔄 Iniciando extração de ${type}...`);
+
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const activeTab = tabs[0];
+
+        if (!activeTab?.url?.includes('instagram.com')) {
+            addLog('error', '❌ Por favor, navegue para o Instagram primeiro');
+            alert('Por favor, navegue para o Instagram e abra a lista de seguidores/seguindo antes de clicar aqui.');
+            return;
+        }
+
+        addLog('info', '📋 Certifique-se de que a janela de seguidores/seguindo está aberta!');
+
+        const response = await chrome.tabs.sendMessage(activeTab.id, {
+            action: 'execute_extraction',
+            payload: {
+                type: type,
+                limit: limit,
+                filters: AppState.filters
+            }
+        });
+
+        if (response?.success && response.data) {
+            // Map data correctly from content script
+            const newAccounts = response.data.map(lead => ({
+                username: lead.username || '',
+                fullName: lead.fullName || lead.name || '',
+                avatar: lead.avatar || null,
+                bio: lead.bio || '',
+                posts: lead.posts || null,
+                followers: lead.followers || null,
+                following: lead.following || null,
+                ratio: lead.ratio || null,
+                mutual: lead.mutual || false,
+                followedByMe: lead.followedByMe || false,
+                followsMe: lead.followsMe || false,
+                isPrivate: lead.isPrivate || false,
+                isVerified: lead.isVerified || false,
+                hasStory: lead.hasStory || false,
+                source: type
+            }));
+
+            // Merge with existing accounts (avoid duplicates)
+            const existingUsernames = new Set(AppState.accounts.map(a => a.username));
+            const uniqueNew = newAccounts.filter(a => !existingUsernames.has(a.username));
+
+            AppState.accounts = [...AppState.accounts, ...uniqueNew];
+            applyFilters();
+            renderAccountsTable();
+            saveState();
+
+            addLog('success', `✅ ${uniqueNew.length} novas contas carregadas!`);
+
+            if (uniqueNew.length === 0 && newAccounts.length > 0) {
+                addLog('warning', '⚠️ Todas as contas já estavam na lista');
+            }
+        } else {
+            addLog('error', response?.message || 'Falha na extração. A janela de seguidores está aberta?');
+            alert('Por favor, clique em "Seguidores" ou "Seguindo" no perfil do Instagram para abrir a lista antes de extrair.');
+        }
+    } catch (error) {
+        console.error('Load error:', error);
+        addLog('error', `❌ Erro: ${error.message}`);
+        alert('Erro ao carregar contas. Certifique-se de que:\n1. Você está em instagram.com\n2. A janela de seguidores/seguindo está aberta\n3. Recarregue a página do Instagram e tente novamente');
+    }
+}
+
+function loadWhitelist() {
+    chrome.storage.local.get(['eioWhitelist'], (result) => {
+        if (result.eioWhitelist && result.eioWhitelist.length > 0) {
+            const newAccounts = result.eioWhitelist.map(username => ({
+                username: username,
+                fullName: '',
+                avatar: null,
+                bio: '',
+                posts: null,
+                followers: null,
+                following: null,
+                ratio: null,
+                whitelisted: true
+            }));
+
+            AppState.accounts = [...newAccounts, ...AppState.accounts];
+            applyFilters();
+            renderAccountsTable();
+            addLog('success', `✅ ${newAccounts.length} contas da whitelist carregadas`);
+        } else {
+            addLog('warning', '⚠️ Whitelist vazia');
+        }
+    });
+}
+
+function loadPendingRequests() {
+    addLog('info', '⏳ Carregando pedidos pendentes... (requer estar na página de solicitações)');
+    loadFromInstagram('pending', 100);
+}
+
+function loadSavedQueue() {
+    chrome.storage.local.get(['eioSavedQueue'], (result) => {
+        if (result.eioSavedQueue && result.eioSavedQueue.length > 0) {
+            AppState.accounts = result.eioSavedQueue;
+            applyFilters();
+            renderAccountsTable();
+            addLog('success', `✅ ${result.eioSavedQueue.length} contas restauradas`);
+        } else {
+            addLog('warning', '⚠️ Nenhuma fila salva encontrada');
+        }
+    });
+}
+
+function addSelectedToWhitelist() {
+    chrome.storage.local.get(['eioWhitelist'], (result) => {
+        const whitelist = new Set(result.eioWhitelist || []);
+        AppState.selectedAccounts.forEach(username => whitelist.add(username));
+
+        chrome.storage.local.set({ eioWhitelist: Array.from(whitelist) });
+        addLog('success', `✅ ${AppState.selectedAccounts.size} contas adicionadas à whitelist`);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════
+function initializeFilters() {
+    // Range sliders
+    const rangeSliders = [
+        { min: 'followersMin', max: 'followersMax', minVal: 'followersMinVal', maxVal: 'followersMaxVal' },
+        { min: 'followingMin', max: 'followingMax', minVal: 'followingMinVal', maxVal: 'followingMaxVal' },
+        { min: 'ratioMin', max: 'ratioMax', minVal: 'ratioMinVal', maxVal: 'ratioMaxVal' },
+        { min: 'postsMin', max: 'postsMax', minVal: 'postsMinVal', maxVal: 'postsMaxVal' }
+    ];
+
+    rangeSliders.forEach(slider => {
+        const minEl = document.getElementById(slider.min);
+        const maxEl = document.getElementById(slider.max);
+        const minValEl = document.getElementById(slider.minVal);
+        const maxValEl = document.getElementById(slider.maxVal);
+
+        if (minEl && maxEl) {
+            minEl.addEventListener('input', () => {
+                if (minValEl) minValEl.textContent = formatNumber(parseInt(minEl.value));
+            });
+            maxEl.addEventListener('input', () => {
+                if (maxValEl) maxValEl.textContent = formatNumber(parseInt(maxEl.value));
+            });
+        }
+    });
+
+    // Apply filters button
+    document.getElementById('btnApplyFilters')?.addEventListener('click', () => {
+        collectFilters();
+        applyFilters();
+        renderAccountsTable();
+        addLog('info', `🎯 Filtros aplicados: ${AppState.filteredAccounts.length} contas`);
+    
+        // Feedback UX: Ir para aba contas
+        setTimeout(() => {
+            const tab = document.querySelector('.eio-tab[data-tab="contas"]');
+            if (tab) tab.click();
+        }, 100);
+    });
+
+    // Reset filters button
+    document.getElementById('btnResetFilters')?.addEventListener('click', () => {
+        resetFilters();
+        renderAccountsTable();
+        addLog('info', '🔄 Filtros redefinidos');
+    });
+}
+
+function collectFilters() {
+    AppState.filters = {
+        followersMin: parseInt(document.getElementById('followersMin')?.value) || 0,
+        followersMax: parseInt(document.getElementById('followersMax')?.value) || 100000,
+        followingMin: parseInt(document.getElementById('followingMin')?.value) || 0,
+        followingMax: parseInt(document.getElementById('followingMax')?.value) || 10000,
+        ratioMin: parseFloat(document.getElementById('ratioMin')?.value) || 0,
+        ratioMax: parseFloat(document.getElementById('ratioMax')?.value) || 100,
+        postsMin: parseInt(document.getElementById('postsMin')?.value) || 0,
+        postsMax: parseInt(document.getElementById('postsMax')?.value) || 1000,
+        lastPostDays: parseInt(document.getElementById('lastPostDays')?.value) || null,
+        hasPhoto: document.getElementById('filterHasPhoto')?.checked || null,
+        noPhoto: document.getElementById('filterNoPhoto')?.checked || null,
+        isPrivate: document.getElementById('filterPrivate')?.checked || null,
+        isPublic: document.getElementById('filterPublic')?.checked || null,
+        followsMe: document.getElementById('filterFollowsMe')?.checked || null,
+        notFollowsMe: document.getElementById('filterNotFollowsMe')?.checked || null,
+        isVerified: document.getElementById('filterVerified')?.checked || null,
+        bioContains: document.getElementById('bioContains')?.value || '',
+        businessCategory: document.getElementById('businessCategory')?.value || ''
+    };
+}
+
+function applyFilters() {
+    AppState.filteredAccounts = AppState.accounts.filter(acc => {
+        const f = AppState.filters;
+
+        // Followers range
+        if (acc.followers !== null) {
+            if (acc.followers < f.followersMin || acc.followers > f.followersMax) return false;
+        }
+
+        // Following range
+        if (acc.following !== null) {
+            if (acc.following < f.followingMin || acc.following > f.followingMax) return false;
+        }
+
+        // Ratio range
+        if (acc.ratio !== null) {
+            if (acc.ratio < f.ratioMin || acc.ratio > f.ratioMax) return false;
+        }
+
+        // Posts range
+        if (acc.posts !== null) {
+            if (acc.posts < f.postsMin || acc.posts > f.postsMax) return false;
+        }
+
+        // Photo filter
+        if (f.hasPhoto && !acc.avatar) return false;
+        if (f.noPhoto && acc.avatar) return false;
+
+        // Private/Public
+        if (f.isPrivate && !acc.isPrivate) return false;
+        if (f.isPublic && acc.isPrivate) return false;
+
+        // Follows me
+        if (f.followsMe && !acc.followsMe) return false;
+        if (f.notFollowsMe && acc.followsMe) return false;
+
+        // Verified
+        if (f.isVerified && !acc.isVerified) return false;
+
+        // Bio contains
+        if (f.bioContains && acc.bio && !acc.bio.toLowerCase().includes(f.bioContains.toLowerCase())) {
+            return false;
+        }
+
+        // Business category
+        if (f.businessCategory && acc.businessCategory && !acc.businessCategory.toLowerCase().includes(f.businessCategory.toLowerCase())) {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Sort after filtering
+    sortAccounts();
+
+    // Reset to page 1
+    AppState.currentPage = 1;
+
+    renderAccountsTable();
+    addLog('success', `Filtros aplicados. ${AppState.filteredAccounts.length} contas encontradas.`);
+    // UX: Switch to accounts tab explicitly
+    setTimeout(() => { const btn = document.querySelector('.eio-tab[data-tab="contas"]'); if(btn) btn.click(); }, 200);
+}
+
+function resetFilters() {
+    // Reset form values
+    document.getElementById('followersMin').value = 0;
+    document.getElementById('followersMax').value = 100000;
+    document.getElementById('followingMin').value = 0;
+    document.getElementById('followingMax').value = 10000;
+    document.getElementById('ratioMin').value = 0;
+    document.getElementById('ratioMax').value = 100;
+    document.getElementById('postsMin').value = 0;
+    document.getElementById('postsMax').value = 1000;
+    document.getElementById('lastPostDays').value = '';
+
+    // Reset checkboxes
+    document.querySelectorAll('.eio-filter-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+    // Reset text filters
+    document.getElementById('bioContains').value = '';
+    document.getElementById('businessCategory').value = '';
+
+    // Update display values
+    document.getElementById('followersMinVal').textContent = '0';
+    document.getElementById('followersMaxVal').textContent = '100k';
+    document.getElementById('followingMinVal').textContent = '0';
+    document.getElementById('followingMaxVal').textContent = '10k';
+    document.getElementById('ratioMinVal').textContent = '0';
+    document.getElementById('ratioMaxVal').textContent = '100';
+    document.getElementById('postsMinVal').textContent = '0';
+    document.getElementById('postsMaxVal').textContent = '1000';
+
+    // Reset state and reapply
+    AppState.filters = {};
+    AppState.filteredAccounts = [...AppState.accounts];
+    AppState.currentPage = 1;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONFIG SECTIONS
+// ═══════════════════════════════════════════════════════════
+function initializeConfigSections() {
+    document.querySelectorAll('.eio-config-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const collapseId = header.dataset.collapse;
+            const content = document.getElementById(collapseId);
+
+            if (content) {
+                content.classList.toggle('collapsed');
+                const arrow = header.querySelector('span');
+                if (arrow) {
+                    arrow.textContent = content.classList.contains('collapsed')
+                        ? arrow.textContent.replace('▼', '▶')
+                        : arrow.textContent.replace('▶', '▼');
+                }
+            }
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTION BUTTONS
+// ═══════════════════════════════════════════════════════════
+function initializeActionButtons() {
+    // Save Queue
+    document.getElementById('btnSaveQueue')?.addEventListener('click', () => {
+        chrome.storage.local.set({ eioSavedQueue: AppState.accounts });
+        addLog('success', `💾 Fila salva: ${AppState.accounts.length} contas`);
+    });
+
+    // Export CSV
+    document.getElementById('btnExportCSV')?.addEventListener('click', () => {
+        exportToCSV();
+    });
+
+    // Start automation
+    document.getElementById('btnStartAutomation')?.addEventListener('click', () => {
+        startAutomation();
+    });
+
+    // Pause automation
+    document.getElementById('btnPauseAutomation')?.addEventListener('click', () => {
+        pauseAutomation();
+    });
+
+    // Stop automation
+    document.getElementById('btnStopAutomation')?.addEventListener('click', () => {
+        stopAutomation();
+    });
+
+    // Mini automation controls - pause and stop only (start is handled separately)
+    document.getElementById('btnPauseAuto')?.addEventListener('click', () => {
+        pauseAutomation();
+    });
+    document.getElementById('btnStopAuto')?.addEventListener('click', () => {
+        stopAutomation();
+    });
+
+    // Clear logs
+    document.getElementById('clearLogBtn')?.addEventListener('click', () => {
+        AppState.logs = [];
+        renderLogs();
+    });
+
+    // Trim logs
+    document.getElementById('trimLogBtn')?.addEventListener('click', () => {
+        AppState.logs = AppState.logs.slice(0, 50);
+        renderLogs();
+    });
+
+    // Quick actions - old tab cards
+    document.querySelectorAll('.eio-action-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const actionId = card.id;
+            handleQuickAction(actionId);
+        });
+    });
+
+    // NEW: Toggle action buttons (combinable)
+    document.querySelectorAll('.eio-action-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Toggle active state
+            btn.classList.toggle('active');
+
+            // If unfollow is selected, deselect all others
+            if (btn.dataset.action === 'unfollow' && btn.classList.contains('active')) {
+                document.querySelectorAll('.eio-action-toggle:not([data-action="unfollow"])').forEach(b => {
+                    b.classList.remove('active');
+                });
+            } else if (btn.dataset.action !== 'unfollow') {
+                // If any other action is selected, deselect unfollow
+                document.querySelector('.eio-action-toggle[data-action="unfollow"]')?.classList.remove('active');
+            }
+
+            // Update queue status display
+            updateSelectedActions();
+        });
+    });
+
+    // Start automation with selected actions
+    document.getElementById('btnStartAuto')?.addEventListener('click', () => {
+        const selectedActions = getSelectedActions();
+        if (selectedActions.length === 0) {
+            alert('Selecione pelo menos uma ação (Seguir, Curtir, etc.)');
+            return;
+        }
+        if (AppState.selectedAccounts.size === 0) {
+            alert('Selecione pelo menos uma conta na lista');
+            return;
+        }
+        prepareAndStartAutomation(selectedActions);
+    });
+
+    // Popout button
+    document.getElementById('popoutBtn')?.addEventListener('click', () => {
+        chrome.windows.create({
+            url: 'popup.html',
+            type: 'popup',
+            width: 800,
+            height: 900
+        });
+    });
+}
+
+function getSelectedActions() {
+    const actions = [];
+    document.querySelectorAll('.eio-action-toggle.active').forEach(btn => {
+        actions.push(btn.dataset.action);
+    });
+    return actions;
+}
+
+function getQueueOptions() {
+    return {
+        likePosts: document.getElementById('optLikePosts')?.checked ?? true,
+        likeCount: parseInt(document.getElementById('optLikeCount')?.value) || 3,
+        viewStory: document.getElementById('optViewStory')?.checked ?? true,
+        useDashboardMsg: document.getElementById('optUseDashboardMsg')?.checked ?? false
+    };
+}
+
+function updateSelectedActions() {
+    const actions = getSelectedActions();
+    const actionEl = document.getElementById('queueActionType');
+    const countEl = document.getElementById('queueCount');
+
+    if (actions.length === 0) {
+        if (actionEl) actionEl.textContent = 'Nenhuma ação';
+    } else {
+        const labels = actions.map(a => ACTION_LABELS[a] || a).join(' + ');
+        if (actionEl) actionEl.textContent = labels;
+    }
+
+    if (countEl) countEl.textContent = `${AppState.selectedAccounts.size} contas`;
+}
+
+async function prepareAndStartAutomation(selectedActions) {
+    const options = getQueueOptions();
+    const selectedUsernames = Array.from(AppState.selectedAccounts);
+    const accounts = AppState.accounts.filter(a => selectedUsernames.includes(a.username));
+
+    if (accounts.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta selecionada');
+        return;
+    }
+
+    // Build queue with combined actions
+    const queue = accounts.map(acc => ({
+        ...acc,
+        actions: selectedActions,
+        options: options
+    }));
+
+    addLog('info', `🎯 Preparando ${selectedActions.join('+')} para ${queue.length} contas...`);
+
+    // Send to background
+    chrome.runtime.sendMessage({
+        action: 'setQueue',
+        queue: queue,
+        actionType: selectedActions.join('+'),
+        options: options
+    }, (response) => {
+        if (response?.success) {
+            addLog('success', `✅ Fila criada: ${queue.length} contas`);
+            // Auto start
+            startAutomation();
+        }
+    });
+}
+
+function exportToCSV() {
+    const accounts = AppState.selectedAccounts.size > 0
+        ? AppState.filteredAccounts.filter(a => AppState.selectedAccounts.has(a.username))
+        : AppState.filteredAccounts;
+
+    if (accounts.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta para exportar');
+        return;
+    }
+
+    const headers = ['username', 'fullName', 'bio', 'posts', 'followers', 'following', 'ratio', 'isPrivate', 'isVerified'];
+    const csvContent = [
+        headers.join(','),
+        ...accounts.map(acc => headers.map(h => {
+            const val = acc[h];
+            if (typeof val === 'string') return `"${val.replace(/"/g, '""')}"`;
+            return val ?? '';
+        }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eio_accounts_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    addLog('success', `📄 Exportado: ${accounts.length} contas`);
+}
+
+async function startAutomation() {
+    const selectedAction = document.querySelector('input[name="processAction"]:checked')?.value || 'follow';
+    const accountsToProcess = AppState.selectedAccounts.size > 0
+        ? AppState.filteredAccounts.filter(a => AppState.selectedAccounts.has(a.username))
+        : AppState.filteredAccounts;
+
+    if (accountsToProcess.length === 0) {
+        addLog('warning', '⚠️ Nenhuma conta selecionada para processar');
+        return;
+    }
+
+    addLog('info', `🚀 Iniciando ${selectedAction} em ${accountsToProcess.length} contas...`);
+
+    AppState.automationRunning = true;
+    updateAutomationUI('running');
+
+    // Send to background script
+    chrome.runtime.sendMessage({
+        action: 'loadQueue',
+        payload: {
+            actions: accountsToProcess.map(acc => ({
+                type: selectedAction,
+                target: acc.username
+            }))
+        }
+    });
+
+    chrome.runtime.sendMessage({ action: 'startAutomation' });
+}
+
+function pauseAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
+    AppState.automationRunning = false;
+    updateAutomationUI('paused');
+    addLog('warning', '⏸️ Automação pausada');
+}
+
+function stopAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
+    AppState.automationRunning = false;
+    updateAutomationUI('idle');
+    addLog('info', '⏹️ Automação parada');
+}
+
+function updateAutomationUI(status) {
+    const statusEl = document.querySelector('.eio-status-indicator');
+    if (statusEl) {
+        statusEl.className = `eio-status-indicator eio-status-${status}`;
+        statusEl.querySelector('span').textContent = {
+            'running': 'Executando',
+            'paused': 'Pausado',
+            'idle': 'Parado'
+        }[status] || 'Parado';
+    }
+}
+
+function handleQuickAction(actionId) {
+    const actions = {
+        'actionFollow': 'follow',
+        'actionLike': 'like',
+        'actionComment': 'comment',
+        'actionDM': 'dm',
+        'actionUnfollow': 'unfollow',
+        'actionStory': 'viewStory'
+    };
+
+    const action = actions[actionId];
+    if (action) {
+        addLog('info', `⚡ Ação rápida: ${action}`);
+        // Execute on current profile
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]?.url?.includes('instagram.com')) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'execute',
+                    payload: { type: action }
+                });
+            }
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOGS
+// ═══════════════════════════════════════════════════════════
+function addLog(level, message) {
+    const now = new Date();
+    const timestamp = now.toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    AppState.logs.unshift({ level, message, timestamp });
+
+    if (AppState.logs.length > 500) {
+        AppState.logs = AppState.logs.slice(0, 500);
+    }
+
+    renderLogs();
+    saveState();
+}
+
+function renderLogs() {
+    const container = document.getElementById('consoleLog');
+    if (!container) return;
+
+    container.innerHTML = AppState.logs.map(log => `
+        <div class="eio-log-entry log-${log.level}">
+            <span class="eio-log-time">${log.timestamp}</span>
+            <span class="eio-log-message">${log.message}</span>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROFILE DETECTION
+// ═══════════════════════════════════════════════════════════
+async function detectCurrentProfile() {
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const activeTab = tabs[0];
+
+        if (!activeTab?.url?.includes('instagram.com')) {
+            updateProfileDisplay('(abra o Instagram)');
+            addLog('warning', '⚠️ Por favor, navegue para o Instagram');
+            return;
+        }
+
+        // Extract profile from URL
+        const url = new URL(activeTab.url);
+        const pathParts = url.pathname.split('/').filter(p => p && !['p', 'reel', 'stories', 'explore', 'direct', 'reels'].includes(p));
+
+        if (pathParts.length > 0) {
+            const profileName = `@${pathParts[0]}`;
+            AppState.targetProfile = profileName;
+            updateProfileDisplay(profileName);
+            addLog('info', `📍 Perfil detectado: ${profileName}`);
+        } else {
+            updateProfileDisplay('@feed');
+            addLog('info', '📍 Você está no feed principal');
+        }
+
+        // Also try to get detailed info from content script
+        try {
+            const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'get_profile_info' });
+            if (response?.username) {
+                const profileName = response.username.startsWith('@') ? response.username : `@${response.username}`;
+                AppState.targetProfile = profileName;
+                updateProfileDisplay(profileName);
+            }
+        } catch (e) {
+            // Content script might not be ready
+            console.log('Could not get profile info from content script');
+        }
+
+    } catch (error) {
+        console.error('Error detecting profile:', error);
+        updateProfileDisplay('(erro)');
+    }
+}
+
+function updateProfileDisplay(profileName) {
+    // Update target profile name in dropdown
+    const targetEl = document.getElementById('targetProfileName');
+    if (targetEl) targetEl.textContent = profileName;
+
+    // Update all profile-ref elements
+    document.querySelectorAll('.profile-ref').forEach(el => {
+        el.textContent = profileName;
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// QUICK ACTIONS
+// ═══════════════════════════════════════════════════════════
+const ACTION_LABELS = {
+    'follow': 'Seguir',
+    'like': 'Curtir',
+    'comment': 'Comentar',
+    'dm': 'Enviar DM',
+    'unfollow': 'Deixar de Seguir',
+    'story': 'Ver Stories'
+};
+
+async function handleQuickAction(actionType) {
+    const selectedCount = AppState.selectedAccounts.size;
+
+    if (selectedCount === 0) {
+        addLog('warning', '⚠️ Selecione pelo menos uma conta primeiro');
+        alert('Por favor, selecione as contas na lista antes de executar uma ação.');
+        return;
+    }
+
+    const actionLabel = ACTION_LABELS[actionType] || actionType;
+    addLog('info', `🎯 Preparando "${actionLabel}" para ${selectedCount} contas...`);
+
+    // Build queue from selected accounts
+    const selectedUsernames = Array.from(AppState.selectedAccounts);
+    const queue = AppState.accounts.filter(a => selectedUsernames.includes(a.username));
+
+    // Update queue status display
+    updateQueueStatus(actionLabel, queue.length);
+
+    // Save queue to storage and set action type
+    chrome.runtime.sendMessage({
+        action: 'setQueue',
+        queue: queue,
+        actionType: actionType
+    }, (response) => {
+        if (response?.success) {
+            addLog('success', `✅ Fila "${actionLabel}" criada com ${queue.length} contas`);
+            updateAutomationUI('ready');
+        }
+    });
+}
+
+function updateQueueStatus(actionLabel, count) {
+    const actionEl = document.getElementById('queueActionType');
+    const countEl = document.getElementById('queueCount');
+
+    if (actionEl) actionEl.textContent = actionLabel;
+    if (countEl) countEl.textContent = `${count} contas`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTOMATION CONTROL
+// ═══════════════════════════════════════════════════════════
+function startAutomation() {
+    chrome.runtime.sendMessage({ action: 'startAutomation' }, (response) => {
+        if (response?.success) {
+            addLog('success', '▶️ Automação iniciada!');
+            updateAutomationUI('running');
+        } else {
+            addLog('error', response?.message || 'Erro ao iniciar automação');
+        }
+    });
+}
+
+function pauseAutomation() {
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' }, (response) => {
+        addLog('warning', '⏸️ Automação pausada');
+        updateAutomationUI('paused');
+    });
+}
+
+function stopAutomation() {
+    chrome.runtime.sendMessage({ action: 'stopAutomation' }, (response) => {
+        addLog('info', '⏹️ Automação parada');
+        updateAutomationUI('stopped');
+    });
+}
+
+function updateAutomationUI(status) {
+    // Update mini status in Contas tab
+    const dot = document.getElementById('automationStatusDot');
+    const text = document.getElementById('automationStatusText');
+
+    if (dot) {
+        dot.classList.remove('running', 'paused');
+        if (status === 'running') {
+            dot.classList.add('running');
+        } else if (status === 'paused') {
+            dot.classList.add('paused');
+        }
+    }
+
+    if (text) {
+        const statusLabels = {
+            'running': 'Executando...',
+            'paused': 'Pausado',
+            'stopped': 'Parado',
+            'ready': 'Pronto'
+        };
+        text.textContent = statusLabels[status] || 'Parado';
+    }
+
+    // Update status in Ações tab
+    const statusIndicator = document.querySelector('.eio-status-indicator');
+    if (statusIndicator) {
+        statusIndicator.className = `eio-status-indicator eio-status-${status === 'running' ? 'active' : 'idle'}`;
+        const statusSpan = statusIndicator.querySelector('span');
+        if (statusSpan) {
+            statusSpan.textContent = status === 'running' ? 'Executando' :
+                status === 'paused' ? 'Pausado' : 'Parado';
+        }
+    }
+
+    AppState.automationRunning = status === 'running';
+}
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGE LISTENER
+// ═══════════════════════════════════════════════════════════
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    switch (message.type) {
+        case 'statsUpdate':
+            updateStats(message.stats);
+            break;
+        case 'consoleMessage':
+            addLog(message.level, message.message);
+            break;
+        case 'automationStarted':
+            updateAutomationUI('running');
+            break;
+        case 'automationPaused':
+            updateAutomationUI('paused');
+            break;
+        case 'automationStopped':
+            updateAutomationUI('stopped');
+            break;
+        case 'automationProgress':
+            updateAutomationProgress(message.current, message.total);
+            break;
+        case 'extraction_progress':
+            addLog('info', `📊 Extração: ${message.count} contas`);
+            break;
+    }
+});
+
+function updateAutomationProgress(current, total) {
+    document.getElementById('automationCounter').textContent = `${current}/${total}`;
+    document.getElementById('automationProgress').textContent = `${current}/${total}`;
+
+    const progressBar = document.getElementById('automationProgressBar');
+    if (progressBar && total > 0) {
+        progressBar.style.width = `${(current / total) * 100}%`;
+    }
+}
+
+function updateStats(stats) {
+    if (stats) {
+        const total = (stats.followsToday || 0) + (stats.likesToday || 0) + (stats.commentsToday || 0) + (stats.dmsToday || 0);
+        const actionsEl = document.getElementById('actionsToday');
+        if (actionsEl) actionsEl.textContent = total;
+    }
+}
+
+// Initial filter application
+AppState.filteredAccounts = [...AppState.accounts];
+
+// ═══════════════════════════════════════════════════════════
+// MEDIA QUEUE HANDLERS
+// ═══════════════════════════════════════════════════════════
+
+function initializeMediaHandlers() {
+    const btnAddMedia = document.getElementById('btnAddMedia');
+    const mediaUrlInput = document.getElementById('mediaUrl');
+    const mediaExtractType = document.getElementById('mediaExtractType');
+
+    if (btnAddMedia) {
+        btnAddMedia.addEventListener('click', async () => {
+            const originalText = btnAddMedia.textContent;
+            btnAddMedia.textContent = 'Carregando...';
+            btnAddMedia.disabled = true;
+
+            try {
+                let url = mediaUrlInput.value.trim();
+                const type = mediaExtractType.value;
+
+                if (!url) {
+                    addLog('error', 'Por favor, insira uma URL.');
+                    return;
+                }
+
+                // Se o usuário digitou apenas um username (ex: msassessoria), vamos assumir que ele quer extrair
+                // de um perfil, mas avisar que aqui é para Posts.
+                // OU, se ele for teimoso, podemos tentar transformar em URL de perfil.
+                // Mas a lógica de extração abaixo espera POSTS para 'likers'/'commenters'.
+
+                const isUsername = /^[a-zA-Z0-9._]+$/.test(url);
+                if (isUsername) {
+                    addLog('warning', 'Você inseriu um nome de usuário. Para extrair Seguidores, use a aba "Contas".');
+                    // Opcional: Podemos tentar converter para URL de perfil se o tipo for compatível?
+                    // Por enquanto, vamos pedir a URL completa se ele quis dizer um post.
+                    url = `https://www.instagram.com/${url}/`;
+                }
+
+                if (!url.includes('instagram.com')) {
+                    addLog('error', 'A URL deve ser do Instagram (ex: https://instagram.com/p/...).');
+                    return;
+                }
+
+                if (!AppState.mediaQueue) AppState.mediaQueue = [];
+
+                AppState.mediaQueue.push({
+                    url: url,
+                    type: type,
+                    status: 'pending', // pending, processing, completed, error
+                    addedAt: new Date().toISOString()
+                });
+
+                mediaUrlInput.value = '';
+                addLog('success', 'Mídia adicionada à fila.');
+                saveState();
+                renderMediaQueue();
+
+            } catch (e) {
+                console.error(e);
+                addLog('error', 'Erro ao adicionar mídia.');
+            } finally {
+                btnAddMedia.textContent = originalText;
+                btnAddMedia.disabled = false;
+            }
+        });
+    }
+
+    renderMediaQueue();
+}
+
+function renderMediaQueue() {
+    const listContainer = document.getElementById('mediaQueueList');
+    if (!listContainer) return;
+
+    if (!AppState.mediaQueue || AppState.mediaQueue.length === 0) {
+        listContainer.innerHTML = `
+            <div class="eio-empty-state">
+                <p>Nenhuma mídia na fila</p>
+            </div>
+        `;
+        return;
+    }
+
+    listContainer.innerHTML = AppState.mediaQueue.map((item, index) => {
+        let icon = '📷';
+        if (item.url.includes('/reel/')) icon = '🎬';
+        if (item.url.includes('/stories/')) icon = '⏱️';
+
+        let statusClass = '';
+        let statusText = 'Pendente';
+
+        if (item.status === 'processing') {
+            statusClass = 'eio-status-processing';
+            statusText = 'Extraindo...';
+        } else if (item.status === 'completed') {
+            statusClass = 'eio-status-success';
+            statusText = 'Concluído';
+        } else if (item.status === 'error') {
+            statusClass = 'eio-status-error';
+            statusText = 'Erro';
+        }
+
+        const typeLabels = {
+            'likers': 'Curtidores',
+            'commenters': 'Comentadores',
+            'tagged': 'Marcados',
+            'all': 'Todos'
+        };
+
+        return `
+            <div class="eio-media-item ${statusClass}" style="display: flex; align-items: center; padding: 10px; background: var(--eio-dark-600); border-radius: 8px; margin-bottom: 8px; gap: 10px;">
+                <div class="eio-media-icon" style="font-size: 1.2rem;">${icon}</div>
+                <div class="eio-media-info" style="flex: 1; overflow: hidden;">
+                    <a href="${item.url}" target="_blank" class="eio-media-url" title="Abrir Post" style="text-decoration:none; color:var(--eio-primary); cursor:pointer; font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.url} <span style="font-size:0.8em">↗️</span></a>
+                    <div class="eio-media-meta" style="font-size: 0.8rem; color: var(--eio-text-secondary); display: flex; gap: 8px;">
+                        <span>${typeLabels[item.type] || item.type}</span> • 
+                        <span>${statusText}</span>
+                    </div>
+                </div>
+                <div class="eio-media-actions" style="display: flex; gap: 5px;">
+                    ${item.status === 'pending' ? `
+                        <button class="eio-btn-icon" onclick="processMediaItem(${index})" title="Processar agora" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                            ▶️
+                        </button>
+                    ` : ''}
+                    <button class="eio-btn-icon" onclick="removeMediaFromQueue(${index})" title="Remover" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                        ❌
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Global functions for inline onclick handlers
+window.removeMediaFromQueue = function (index) {
+    if (!AppState.mediaQueue) return;
+    AppState.mediaQueue.splice(index, 1);
+    saveState();
+    renderMediaQueue();
+    addLog('info', 'Mídia removida da fila.');
+};
+
+window.processMediaItem = function (index) {
+    if (!AppState.mediaQueue) return;
+    const item = AppState.mediaQueue[index];
+    if (!item) return;
+
+    addLog('info', `Processando: ${item.url}`);
+
+    // Simulating processing state for UI feedback
+    item.status = 'processing';
+    renderMediaQueue();
+
+    // Trigger existing extraction logic
+    loadFromInstagram(item.type, 1000);
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// EXTRACTION LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function loadFromInstagram(type, limit) {
+    addLog('info', `Iniciando extração: ${type} (max: ${limit})`);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) {
+            addLog('error', 'Nenhuma aba ativa encontrada.');
+            return;
+        }
+
+        const tab = tabs[0];
+
+        let extractionType = 'followers'; // default
+
+        switch (type) {
+            case 'followers': extractionType = 'followers'; break;
+            case 'following': extractionType = 'following'; break;
+            case 'likers': extractionType = 'likers'; break; // From post
+            case 'commenters': extractionType = 'comments'; break; // From post
+            case 'comments': extractionType = 'comments'; break; // Alias
+            default: extractionType = 'followers';
+        }
+
+        chrome.tabs.sendMessage(tab.id, {
+            action: 'execute_extraction',
+            payload: {
+                type: extractionType,
+                limit: limit
+            }
+        }, (response) => {
+            if (chrome.runtime.lastError) {
+                // Ignore connection errors if content script is reloading
+                console.warn(chrome.runtime.lastError.message);
+
+                // Fallback: try to inject script if it's missing? 
+                // For now, just log to user
+                addLog('error', `Erro na comunicação. Recarregue a página.`);
+                return;
+            }
+
+            if (response && response.success) {
+                if (response.data && response.data.length === 0 && (extractionType === 'likers' || extractionType === 'comments')) {
+                    addLog('warning', 'Certifique-se de ter aberto o modal de curtidas/comentários no post.');
+                } else {
+                    addLog('success', `Extração finalizada. ${response.data ? response.data.length : 0} contas coletadas.`);
+                }
+
+                if (response.data && response.data.length > 0) {
+                    processExtractedAccounts(response.data);
+                }
+            } else {
+                addLog('warning', `Extração: ${response?.message || 'Sem dados retornados'}`);
+
+                // Aba Ajuda removida conforme solicitação
+                // Apenas logar o erro
+                console.log('Erro de container não encontrado e aba ajuda desativada.');
+            }
+        });
+    });
+}
+
+function processExtractedAccounts(newAccounts) {
+    let addedCount = 0;
+
+    newAccounts.forEach(acc => {
+        // Check for duplicates
+        if (!AppState.accounts.some(existing => existing.username === acc.username)) {
+            AppState.accounts.push(acc);
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        addLog('success', `${addedCount} novas contas adicionadas à lista.`);
+        saveState();
+
+        // Re-apply filters e render
+        if (typeof applyFiltersLogic === 'function') {
+            AppState.filteredAccounts = applyFiltersLogic(AppState.accounts);
+        } else {
+            // Fallback if filter function is named differently or handled elsewhere
+            AppState.filteredAccounts = [...AppState.accounts];
+        }
+
+        renderAccountsTable();
+    } else {
+        addLog('info', 'Nenhuma conta nova (todas já existiam na lista).');
+    }
+}

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.I.O - Decole seu Insta</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="flow-builder-styles.css">
+</head>
+
+<body>
+    <div class="eio-popup-container">
+        <!-- Header Premium -->
+        <header class="eio-popup-header">
+            <div class="eio-logo-compact">
+                <img src="public/assets/official_brand_rocket.png" alt="E.I.O" class="eio-logo-rocket" id="mainLogo">
+                <div class="eio-logo-text">
+                    <span class="eio-title">E.I.O SYSTEM</span>
+                    <span class="eio-subtitle">Decole seu Instagram</span>
+                </div>
+            </div>
+            <div class="eio-header-actions">
+                <div class="eio-current-time" id="currentDateTime">--</div>
+                <button class="eio-icon-btn" id="popoutBtn" title="Destacar Janela (Fixa na Tela)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+                <button class="eio-icon-btn" id="settingsBtn" title="Configurações">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Barra de Status Conectado -->
+        <div class="eio-connection-bar">
+            <div class="eio-status-dot"></div>
+            <span class="eio-connection-text">Current profile: <strong
+                    id="currentProfile">@msassessoriadigital</strong></span>
+            <div class="eio-quick-stats">
+                <span class="eio-mini-stat" title="Ações Hoje"><span id="actionsToday">0</span> ações</span>
+            </div>
+        </div>
+
+        <!-- Navegação com 6 abas -->
+        <nav class="eio-tabs-nav">
+            <button class="eio-tab eio-tab-active" data-tab="contas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Contas</span>
+            </button>
+            <button class="eio-tab" data-tab="midias">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>Mídias</span>
+            </button>
+            <button class="eio-tab" data-tab="filtros">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filtros</span>
+            </button>
+            <button class="eio-tab" data-tab="config">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>Config</span>
+            </button>
+            <button class="eio-tab" data-tab="logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                <span>Logs</span>
+            </button>
+            <button class="eio-tab" data-tab="guia">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Tutorial</span>
+            </button>
+        </nav>
+
+        <main class="eio-main-scroll">
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA CONTAS - Tabela de perfis com seleção                   -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content eio-tab-content-active" id="contasTab">
+                <!-- Ações Rápidas (selecionáveis/combináveis) -->
+                <div class="eio-quick-actions-bar">
+                    <span class="eio-actions-label">Ações:</span>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleFollow" data-action="follow"
+                        title="Seguir">
+                        <span class="eio-quick-icon">➕</span>
+                        <span>Seguir</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleLike" data-action="like"
+                        title="Curtir 3 posts">
+                        <span class="eio-quick-icon">❤️</span>
+                        <span>Curtir</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleComment" data-action="comment"
+                        title="Comentar (usar mensagens do dashboard)">
+                        <span class="eio-quick-icon">💬</span>
+                        <span>Comentar</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleDM" data-action="dm"
+                        title="Enviar DM (usar mensagens do dashboard)">
+                        <span class="eio-quick-icon">✉️</span>
+                        <span>DM</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleStory" data-action="story"
+                        title="Ver e curtir stories">
+                        <span class="eio-quick-icon">👁️</span>
+                        <span>Story</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle eio-action-danger" id="toggleUnfollow"
+                        data-action="unfollow" title="Deixar de seguir">
+                        <span class="eio-quick-icon">➖</span>
+                        <span>Unfollow</span>
+                    </button>
+                </div>
+
+                <!-- Opções da Fila -->
+                <div class="eio-queue-options">
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="optLikePosts" checked> Curtir até <input type="number"
+                                id="optLikeCount" value="3" min="1" max="5" class="eio-mini-input"> posts</label>
+                    </div>
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="optViewStory" checked> Ver stories</label>
+                    </div>
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="optUseDashboardMsg"> Usar msg do Dashboard</label>
+                    </div>
+                </div>
+
+                <!-- Barra de Automação -->
+                <div class="eio-automation-bar">
+                    <div class="eio-automation-status-mini">
+                        <span class="eio-status-dot-mini" id="automationStatusDot"></span>
+                        <span id="automationStatusText">Parado</span>
+                        <span class="eio-automation-counter" id="automationCounter">0/0</span>
+                    </div>
+                    <div class="eio-automation-controls">
+                        <button class="eio-ctrl-btn eio-ctrl-start" id="btnStartAuto" title="Iniciar">▶</button>
+                        <button class="eio-ctrl-btn eio-ctrl-pause" id="btnPauseAuto" title="Pausar">⏸</button>
+                        <button class="eio-ctrl-btn eio-ctrl-stop" id="btnStopAuto" title="Parar">⏹</button>
+                    </div>
+                </div>
+
+                <!-- Status da Fila de Ações -->
+                <div class="eio-queue-status-bar" id="queueStatusBar">
+                    <div class="eio-queue-status-info">
+                        <span class="eio-queue-label">📋 Fila:</span>
+                        <span class="eio-queue-action" id="queueActionType">Nenhuma ação</span>
+                        <span class="eio-queue-count" id="queueCount">0 contas</span>
+                    </div>
+                    <div class="eio-queue-limits">
+                        <span title="Limite de segurança">🛡️ Limite: <strong id="dailyLimit">200/dia</strong></span>
+                        <span title="Intervalo entre ações">⏱️ Delay: <strong id="actionDelay">60s</strong></span>
+                    </div>
+                </div>
+
+                <!-- Barra de Ferramentas -->
+                <div class="eio-queue-toolbar">
+                    <div class="eio-queue-info">
+                        <span id="queuePagination">📊 1 - 10 / 50 (50)</span>
+                        <span>Page: <input type="number" id="pageNumber" value="1" min="1"
+                                class="eio-page-input"></span>
+                        <select id="pageSize" class="eio-select-mini">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="eio-queue-actions">
+                        <span id="selectedCount">0 selected</span>
+                    </div>
+                </div>
+
+                <!-- Grid de Contas (3 colunas) -->
+                <div class="eio-accounts-grid-container">
+                    <div class="eio-accounts-grid" id="accountsGrid">
+                        <!-- Dados serão inseridos via JS como cards -->
+                    </div>
+                    <!-- Mantemos a tabela oculta para compatibilidade -->
+                    <table class="eio-accounts-table" id="accountsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllAccounts"></th>
+                                <th>Pic</th>
+                                <th>@Username</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                        </tbody>
+                    </table>
+                    <div class="eio-table-empty" id="tableEmptyState">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="17" y1="11" x2="23" y2="11"></line>
+                        </svg>
+                        <p>Nenhuma conta carregada</p>
+                        <small>Use "Carregar contas" para começar</small>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação (Fixos na base) -->
+                <div class="eio-action-buttons-bar">
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Carregar contas ▾
+                        </button>
+                        <div class="eio-dropdown-menu" id="loadAccountsMenu">
+                            <div class="eio-dropdown-section-title">Do perfil: <span id="targetProfileName"
+                                    class="profile-ref">detectando...</span></div>
+                            <button data-action="load-followers">👥 Carregar Seguidores</button>
+                            <button data-action="load-following">➡️ Carregar Seguindo</button>
+                            <div class="eio-dropdown-divider"></div>
+                            <div class="eio-dropdown-section-title">Do post atual:</div>
+                            <button data-action="load-likers">❤️ Carregar Curtidores</button>
+                            <button data-action="load-commenters">💬 Carregar Comentadores</button>
+                            <div class="eio-dropdown-divider"></div>
+                            <button data-action="load-saved-queue">💾 Carregar Fila Salva</button>
+                            <div class="eio-dropdown-divider"></div>
+                            <div class="eio-dropdown-item-inline">
+                                <label><input type="checkbox" id="limitQueue" checked> Limite:</label>
+                                <input type="number" id="queueLimit" value="100" min="10" max="1000"
+                                    class="eio-input-mini">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect">
+                            Selecionar ▾
+                        </button>
+                        <div class="eio-dropdown-menu" id="selectMenu">
+                            <button data-action="select-all">✓ Selecionar Todos da listagem</button>
+                            <button data-action="remove-selected">🗑️ Remover selecionados da listagem</button>
+                        </div>
+                    </div>
+
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-accent eio-dropdown-trigger" id="btnProcessQueue">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Processar Fila ▾
+                        </button>
+                        <div class="eio-dropdown-menu" id="processQueueMenu">
+                            <div class="eio-dropdown-section-title">Ação a executar:</div>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="follow" checked> ✅ Seguir
+                            </label>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="follow-like"> 💜 Seguir + Curtir
+                            </label>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="like-only"> ❤️ Apenas Curtir
+                            </label>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="view-stories"> 👁️ Ver Stories
+                            </label>
+                            <div class="eio-dropdown-divider"></div>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="unfollow"> ➖ Deixar de Seguir
+                            </label>
+                            <label class="eio-dropdown-radio">
+                                <input type="radio" name="processAction" value="block"> 🚫 Bloquear
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Salvar Fila
+                    </button>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar CSV">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA MÍDIAS - Carregar de posts/reels                        -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="midiasTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">📷 Fila de Mídias</h3>
+                    </div>
+                    <p class="eio-description">Adicione URLs de posts, reels ou stories para extrair interações.</p>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">URL do Post/Reel</label>
+                        <input type="text" class="eio-input" id="mediaUrl"
+                            placeholder="https://www.instagram.com/p/XXXX ou /reel/XXXX">
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Tipo de Extração</label>
+                        <select class="eio-select" id="mediaExtractType">
+                            <option value="likers">Curtidores</option>
+                            <option value="commenters">Comentadores</option>
+                            <option value="tagged">Usuários Marcados</option>
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+
+                    <button class="eio-btn eio-btn-primary" style="width: 100%;" id="btnAddMedia">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Adicionar à Fila de Mídias
+                    </button>
+
+                    <div class="eio-media-queue" id="mediaQueueList">
+                        <div class="eio-empty-state">
+                            <p>Nenhuma mídia na fila</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA AÇÕES - Flow Builder e automações                       -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="acoesTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">⚡ Ações Rápidas</h3>
+                    </div>
+
+                    <div class="eio-quick-actions-grid">
+                        <button class="eio-action-card" id="actionFollow">
+                            <div class="eio-action-icon">➕</div>
+                            <span>Seguir</span>
+                        </button>
+                        <button class="eio-action-card" id="actionLike">
+                            <div class="eio-action-icon">❤️</div>
+                            <span>Curtir</span>
+                        </button>
+                        <button class="eio-action-card" id="actionComment">
+                            <div class="eio-action-icon">💬</div>
+                            <span>Comentar</span>
+                        </button>
+                        <button class="eio-action-card" id="actionDM">
+                            <div class="eio-action-icon">✉️</div>
+                            <span>Enviar DM</span>
+                        </button>
+                        <button class="eio-action-card" id="actionUnfollow">
+                            <div class="eio-action-icon">➖</div>
+                            <span>Unfollow</span>
+                        </button>
+                        <button class="eio-action-card" id="actionStory">
+                            <div class="eio-action-icon">👁️</div>
+                            <span>Ver Story</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">🤖 Automação em Execução</h3>
+                    </div>
+
+                    <div class="eio-automation-status" id="automationStatus">
+                        <div class="eio-status-indicator eio-status-idle">
+                            <div class="eio-status-pulse"></div>
+                            <span>Parado</span>
+                        </div>
+                        <div class="eio-automation-progress">
+                            <div class="eio-progress-info">
+                                <span>Progresso: <strong id="automationProgress">0/0</strong></span>
+                                <span id="automationETA">--</span>
+                            </div>
+                            <div class="eio-progress-bar-bg">
+                                <div class="eio-progress-bar-fill" id="automationProgressBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="btnStartAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Iniciar
+                        </button>
+                        <button class="eio-btn eio-btn-warning" style="flex: 1;" id="btnPauseAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                            Pausar
+                        </button>
+                        <button class="eio-btn eio-btn-danger" style="flex: 1;" id="btnStopAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                            </svg>
+                            Parar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA FILTROS - Filtros avançados com sliders                 -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="filtrosTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">🎯 Filtros de Conta</h3>
+                    </div>
+                    <p class="eio-description">Você pode habilitar a aplicação automática de filtros ao seguir ou deixar
+                        de seguir nas configurações.</p>
+
+                    <!-- Sliders de Range -->
+                    <div class="eio-filter-sliders">
+                        <div class="eio-filter-group">
+                            <label class="eio-label">Seguidores</label>
+                            <div class="eio-range-slider">
+                                <input type="range" id="followersMin" min="0" max="100000" value="0" class="eio-range">
+                                <input type="range" id="followersMax" min="0" max="100000" value="100000"
+                                    class="eio-range">
+                            </div>
+                            <div class="eio-range-values">
+                                <span id="followersMinVal">0</span> - <span id="followersMaxVal">100k</span>
+                            </div>
+                        </div>
+
+                        <div class="eio-filter-group">
+                            <label class="eio-label">Seguindo</label>
+                            <div class="eio-range-slider">
+                                <input type="range" id="followingMin" min="0" max="10000" value="0" class="eio-range">
+                                <input type="range" id="followingMax" min="0" max="10000" value="10000"
+                                    class="eio-range">
+                            </div>
+                            <div class="eio-range-values">
+                                <span id="followingMinVal">0</span> - <span id="followingMaxVal">10k</span>
+                            </div>
+                        </div>
+
+                        <div class="eio-filter-group">
+                            <label class="eio-label">Razão de Seguidores (Followers/Following)</label>
+                            <div class="eio-range-slider">
+                                <input type="range" id="ratioMin" min="0" max="100" value="0" step="0.1"
+                                    class="eio-range">
+                                <input type="range" id="ratioMax" min="0" max="100" value="100" step="0.1"
+                                    class="eio-range">
+                            </div>
+                            <div class="eio-range-values">
+                                <span id="ratioMinVal">0</span> - <span id="ratioMaxVal">100</span>
+                            </div>
+                        </div>
+
+                        <div class="eio-filter-group">
+                            <label class="eio-label">Postagens</label>
+                            <div class="eio-range-slider">
+                                <input type="range" id="postsMin" min="0" max="1000" value="0" class="eio-range">
+                                <input type="range" id="postsMax" min="0" max="1000" value="1000" class="eio-range">
+                            </div>
+                            <div class="eio-range-values">
+                                <span id="postsMinVal">0</span> - <span id="postsMaxVal">1000</span>
+                            </div>
+                        </div>
+
+                        <div class="eio-filter-group">
+                            <label class="eio-label">Última Postagem (dias atrás)</label>
+                            <input type="number" class="eio-input" id="lastPostDays" placeholder="Ex: 30" value="">
+                        </div>
+                    </div>
+
+                    <!-- Checkboxes de Qualidade -->
+                    <div class="eio-filter-checkboxes">
+                        <div class="eio-filter-row">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterNoPhoto"> Não Tem Foto de Perfil
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterHasPhoto"> Tem Foto de Perfil
+                            </label>
+                        </div>
+                        <div class="eio-filter-row">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterPrivate"> Contas Privadas
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterPublic"> Contas Públicas
+                            </label>
+                        </div>
+                        <div class="eio-filter-row">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterFollowsMe"> Contas que me Seguem
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterNotFollowsMe"> Contas que Não me Seguem
+                            </label>
+                        </div>
+                        <div class="eio-filter-row">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterVerified"> Contas Verificadas
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="filterNotVerified"> Contas Não Verificadas
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Filtros de Texto -->
+                    <div class="eio-filter-text-group">
+                        <div class="eio-form-group">
+                            <label class="eio-label">Link na Bio</label>
+                            <div class="eio-input-group">
+                                <select class="eio-select-mini" id="bioLinkType">
+                                    <option value="">--</option>
+                                    <option value="contains">Contém</option>
+                                    <option value="not-contains">Não Contém</option>
+                                </select>
+                                <input type="text" class="eio-input" id="bioLinkText" placeholder="youtube.com">
+                            </div>
+                        </div>
+
+                        <div class="eio-form-group">
+                            <label class="eio-label">Bio Contém</label>
+                            <input type="text" class="eio-input" id="bioContains" placeholder="Ex: empreendedor">
+                        </div>
+
+                        <div class="eio-form-group">
+                            <label class="eio-label">Categoria Comercial</label>
+                            <input type="text" class="eio-input" id="businessCategory" placeholder="Ex: Personal Blog">
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="btnResetFilters">
+                            🔄 Redefinir Filtros
+                        </button>
+                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="btnApplyFilters">
+                            ✅ Aplicar Filtros à Fila Atual
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA CONFIG - Configurações avançadas                        -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="configTab">
+                <div class="eio-config-sections">
+                    <!-- Opções de Desempenho -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="perfomance">
+                            <span>▼ Opções de Desempenho</span>
+                        </button>
+                        <div class="eio-config-content" id="perfomance">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowBadges" checked> Mostrar selos na fila
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowConvenienceButtons" checked> Mostrar botões de
+                                conveniência no feed
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowQueueOnScreen"> Show Queue on Screen
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configRemoveUncheckedColumns"> Remove Unchecked Columns From
+                                Queue Data
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowLikes" checked> Mostrar curtidas na fila
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowProfilePics" checked> Mostrar fotos de perfil na
+                                fila
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDismissNotifications"> Clique em 'Agora Não' quando o
+                                Instagram solicitar notificações
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configLoadLastQueue"> Carregar a última fila conhecida na
+                                inicialização
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Configurar Tempos de Espera -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="delays">
+                            <span>▶ Configurar Tempos de Espera</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="delays">
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delayAfterAction" value="60">
+                                <span>segundos após seguir/deixar de seguir/curtir</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delayAfterSkip" value="1">
+                                <span>segundos após pular</span>
+                            </div>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configRandomDelay" checked> Tempo de espera aleatório de até
+                                <input type="number" class="eio-input-mini" id="randomDelayPercent" value="50">%
+                            </label>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delaySoftLimit" value="10">
+                                <span>minutos após limite suave de taxa</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delayHardLimit" value="1">
+                                <span>horas após limite rígido</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delay429" value="10">
+                                <span>minutos após erro 429</span>
+                            </div>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDelayAdditionalInfo"> Aguardar
+                                <input type="number" class="eio-input-mini" id="delayAdditionalInfo" value="2">
+                                segundos após carregar info adicional
+                            </label>
+                            <div class="eio-config-row">
+                                <label>Retry</label>
+                                <input type="number" class="eio-input-mini" id="retry404" value="10">
+                                <span>times after 404 error</span>
+                            </div>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDailyLimit"> Aguardar
+                                <input type="number" class="eio-input-mini" id="dailyLimitHours" value="24">
+                                horas após realizar
+                                <input type="number" class="eio-input-mini" id="dailyLimitActions" value="50">
+                                segue/deixa de seguir
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opções de Processamento da Fila -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="queueProcessing">
+                            <span>▶ Opções de Processamento da Fila</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="queueProcessing">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configAutoSaveQueue" checked> Salvar automaticamente a fila
+                                após cada conta processada
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opções de Seguimento -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="followOptions">
+                            <span>▶ Opções de Seguimento</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="followOptions">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configFollowPreviouslyTried"> Seguir pessoas que já tentei
+                                anteriormente
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configAutoApplyFiltersFollow"> Aplicar Filtros
+                                Automaticamente ao Seguir
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opções de Deixar de Seguir -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="unfollowOptions">
+                            <span>▶ Opções de Deixar de Seguir</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="unfollowOptions">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDontUnfollowFollowers" checked> Não deixar de seguir
+                                pessoas que me seguem
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configUnfollowAfterDays"> Deixar de seguir pessoas que
+                                comecei a seguir há mais de
+                                <input type="number" class="eio-input-mini" id="unfollowAfterDays" value="30">
+                                dias
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDontUnfollowRecent" checked> Não deixar de seguir
+                                pessoas que comecei a seguir há menos de
+                                <input type="number" class="eio-input-mini" id="dontUnfollowRecentDays" value="3">
+                                dias
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDontUnfollowExternal"> Não deixar de seguir pessoas
+                                seguidas fora da ferramenta
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDontUnfollowMatchingFilters" checked> Não deixar de
+                                seguir pessoas que correspondem aos meus filtros
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opções de Remoção e Bloqueio -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="blockOptions">
+                            <span>▶ Opções de Remoção e Bloqueio</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="blockOptions">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDontBlockMatchingFilters" checked> Não remover ou
+                                bloquear pessoas que correspondem aos meus filtros
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Colunas para Exibir -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="columns">
+                            <span>▶ Columns to Show in Queue and CSV Export *BETA*</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="columns">
+                            <div class="eio-columns-grid">
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="pic" checked>
+                                    Pic</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="username" checked>
+                                    @username</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="fullName" checked>
+                                    Full Name</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="bio" checked>
+                                    Bio</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="posts" checked>
+                                    Posts</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followers"
+                                        checked> Followers</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="following"
+                                        checked> Following</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="ratio" checked>
+                                    Ratio</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="mutual" checked>
+                                    Mutual</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followedByMe"
+                                        checked> Followed By Me</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followsMe"
+                                        checked> Follows Me</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="private" checked>
+                                    Private</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="verified" checked>
+                                    Verified</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="businessCategory">
+                                    Business Category</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="lastPosted"> Last
+                                    Posted</label>
+                                <label class="eio-checkbox-label"><input type="checkbox" data-column="pronouns">
+                                    Pronouns</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA LOGS - Console de registros                             -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="logsTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">📋 Registro</h3>
+                        <div class="eio-header-actions-inline">
+                            <button class="eio-btn eio-btn-ghost eio-btn-mini" id="trimLogBtn">Trim Log</button>
+                            <button class="eio-btn eio-btn-ghost eio-btn-mini" id="clearLogBtn">Limpar</button>
+                        </div>
+                    </div>
+                    <div class="eio-console-box" id="consoleLog">
+                        <!-- Logs injetados aqui -->
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ABA AJUDA - Instruções e Guias                              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    
+            <!-- ABA GUIA -->
+            <div class="eio-tab-content" id="guiaTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">🎓 Manual de Uso Passo a Passo</h3>
+                    </div>
+                    <div class="eio-guide-container" style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px;">
+                        
+                        <div class="eio-card" style="border-left: 4px solid var(--eio-primary);">
+                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.2em">👥</span> 1. Extração de Contas (Seguidores)
+                            </h4>
+                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
+                                <li>Acesse o perfil alvo no Instagram (ex: concorrente).</li>
+                                <li><strong>Clique no número de "Seguidores" ou "Seguindo"</strong> no Instagram para abrir a lista na tela.</li>
+                                <li>Abra esta extensão e vá na aba <strong>Contas</strong>.</li>
+                                <li>Clique em <strong>Carregar Contas</strong> e escolha a opção correspondente.</li>
+                                <li>Aguarde a extração terminar (não feche a lista do Instagram).</li>
+                            </ol>
+                        </div>
+
+                        <div class="eio-card" style="border-left: 4px solid var(--eio-purple-400);">
+                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.2em">📸</span> 2. Extração de Mídias (Posts/Reels)
+                            </h4>
+                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
+                                <li>Na aba <strong>Mídias</strong>, cole o link do Post/Reel e clique em Adicionar.</li>
+                                <li><strong>Clique no link azul</strong> do item na fila para abrir o post em uma nova aba.</li>
+                                <li>Lá no post, <strong>clique em "curtidas"</strong> para abrir a lista de pessoas.</li>
+                                <li>Com a lista aberta, abra a extensão e clique no botão <strong>Play (▶️)</strong> ao lado do link.</li>
+                            </ol>
+                        </div>
+
+                        <div class="eio-card" style="border-left: 4px solid var(--eio-green-400);">
+                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.2em">🎯</span> 3. Usando Filtros
+                            </h4>
+                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
+                                <li>Com as contas carregadas, vá na aba <strong>Filtros</strong>.</li>
+                                <li>Ajuste os critérios (ex: mínimo de seguidores, não privado).</li>
+                                <li>Clique no botão verde <strong>✅ Aplicar Filtros à Fila Atual</strong>.</li>
+                                <li>A aba Contas mostrará apenas os resultados filtrados.</li>
+                            </ol>
+                        </div>
+
+                        <div class="eio-card" style="border-left: 4px solid var(--eio-red-400);">
+                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.2em">⚡</span> 4. Executando Ações (Seguir)
+                            </h4>
+                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
+                                <li>Na aba <strong>Contas</strong>, marque os perfis desejados (ou 'Selecionar Todos').</li>
+                                <li>No menu de ações inferior, escolha <strong>Seguir</strong>.</li>
+                                <li>Deixe a extensão aberta enquanto ela trabalha. O sistema fará pausas para evitar bloqueios.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</main>
+
+    <footer class="eio-popup-footer">
+        <div class="eio-footer-actions">
+            <a href="https://wa.me/5521975312662" target="_blank" class="eio-footer-link" title="Suporte via WhatsApp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Suporte
+            </a>
+            <a href="https://eio-system.vercel.app/guia" target="_blank" class="eio-footer-link" id="userGuideLink"
+                title="Ver Guia Completo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                Aprender a Usar
+            </a>
+        </div>
+    </footer>
+    </div>
+
+    <!-- Modal de Termos & Login -->
+    <div id="termsModal" class="eio-terms-modal">
+        <div class="eio-terms-content" id="termsStep1">
+            <span class="eio-terms-title">🛡️ Filtro de Segurança</span>
+            <div class="eio-terms-text">
+                O <b>E.I.O</b> utiliza navegação humana simulada altamente segura. Ao continuar, você concorda em
+                respeitar os limites de ações para preservar a saúde da sua conta.
+                <br><br>
+                <a href="https://eio-system.vercel.app/termos" target="_blank"
+                    style="color: var(--eio-blue-400); text-decoration: underline;">Ler Termo de Responsabilidade
+                    Completo</a>
+            </div>
+            <button class="eio-btn eio-btn-primary" style="width: 100%; margin-top: 15px;" id="btnGoToLogin">Concordo e
+                Desejo Começar</button>
+        </div>
+
+        <div class="eio-terms-content" id="termsStep2" style="display: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">🚀</div>
+                <span class="eio-terms-title" style="margin-bottom: 5px;">Identificação de Acesso</span>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Digite o @ do seu Instagram cadastrado</p>
+            </div>
+
+            <div class="eio-form-group">
+                <label class="eio-label" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">@ DO
+                    INSTAGRAM</label>
+                <div style="position: relative;">
+                    <span
+                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6246ea; font-weight: 600;">@</span>
+                    <input type="text" id="loginInstagramHandle" class="eio-input" placeholder="seu_perfil"
+                        style="width: 100%; padding-left: 30px;">
+                </div>
+            </div>
+
+            <button class="eio-btn eio-btn-primary" style="width: 100%; margin-top: 20px;" id="btnSubmitExtensionLogin">
+                Entrar no Sistema
+            </button>
+
+            <div
+                style="margin-top: 20px; padding: 10px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.2); border-radius: 8px;">
+                <p style="font-size: 0.75rem; color: #FFC107; margin: 0; line-height: 1.4;">
+                    ⚠️ Acesso restrito a usuários cadastrados no dashboard.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="license-manager.js"></script>
+    <script src="settings-handler.js"></script>
+    <script src="flow-management.js"></script>
+    <script src="flow-builder-integration.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

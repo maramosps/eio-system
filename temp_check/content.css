@@ -1,0 +1,337 @@
+/*
+═══════════════════════════════════════════════════════════
+  E.I.O - CONTENT SCRIPT STYLES
+  Estilos do console flutuante injetado no Instagram
+═══════════════════════════════════════════════════════════
+*/
+
+#eio-console-float {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 400px;
+    background: rgba(17, 17, 24, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(33, 150, 243, 0.2);
+    z-index: 999999;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+}
+
+.eio-console-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
+    cursor: move;
+    user-select: none;
+}
+
+.eio-console-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.eio-console-logo svg {
+    flex-shrink: 0;
+}
+
+.eio-console-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eio-console-controls button {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.eio-console-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.eio-console-body {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    background: rgba(10, 10, 15, 0.95);
+}
+
+.eio-console-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.eio-console-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.eio-console-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.eio-console-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#eio-console-log {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.eio-log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.eio-log-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.eio-log-time {
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.eio-log-message {
+    color: rgba(255, 255, 255, 0.9);
+    flex: 1;
+}
+
+.eio-log-info .eio-log-message {
+    color: #42A5F5;
+}
+
+.eio-log-success .eio-log-message {
+    color: #4CAF50;
+}
+
+.eio-log-warning .eio-log-message {
+    color: #FF8F00;
+}
+
+.eio-log-error .eio-log-message {
+    color: #F44336;
+}
+
+/* Animação de entrada */
+@keyframes eioSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#eio-console-float {
+    animation: eioSlideIn 0.3s ease-out;
+}
+
+/* ===== ÍCONE FLUTUANTE (TOGGLE) - FOGUETE E.I.O ===== */
+#eio-floating-icon {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, rgba(17, 17, 24, 0.95) 0%, rgba(30, 30, 40, 0.95) 100%);
+    border-radius: 14px;
+    cursor: pointer;
+    z-index: 999999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(25, 118, 210, 0.4), 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(25, 118, 210, 0.5);
+    padding: 8px;
+}
+
+#eio-floating-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(25, 118, 210, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(25, 118, 210, 0.8);
+}
+
+#eio-floating-icon.active {
+    border-color: rgba(25, 118, 210, 1);
+    box-shadow: 0 4px 25px rgba(25, 118, 210, 0.7), 0 2px 10px rgba(0, 172, 193, 0.5);
+}
+
+#eio-floating-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+#eio-floating-icon .eio-icon-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #F44336, #E91E63);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== CONTAINER PRINCIPAL INJETADO ===== */
+#eio-main-container {
+    position: fixed;
+    top: 15px;
+    right: 1%;
+    width: 98%;
+    height: 96%;
+    background: #111118;
+    border-radius: 16px;
+    z-index: 99999999;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+#eio-main-container.visible {
+    display: flex;
+    animation: eioSlideIn 0.3s ease-out;
+}
+
+#eio-main-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #111118;
+}
+
+/* ===== BARRA DE CONTROLE DO CONTAINER ===== */
+#eio-container-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #1976D2 0%, #00ACC1 100%);
+    cursor: move;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+#eio-container-header .eio-header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#eio-container-header .eio-header-logo svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+}
+
+#eio-container-header .eio-header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+#eio-container-header .eio-header-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+#eio-container-header .eio-header-controls {
+    display: flex;
+    gap: 8px;
+}
+
+#eio-container-header .eio-header-controls button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#eio-container-header .eio-header-controls button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+#eio-container-header .eio-header-controls button.btn-minimize:hover {
+    background: rgba(255, 193, 7, 0.4);
+}
+
+#eio-container-header .eio-header-controls button.btn-close:hover {
+    background: rgba(244, 67, 54, 0.4);
+}

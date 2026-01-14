@@ -424,8 +424,8 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    version: '2.0.0',
-                    size: '4.6 MB',
+                    version: '2.1.0',
+                    size: '4.7 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
                     downloadUrl: '/downloads/eio-extension.zip'
