@@ -458,7 +458,7 @@ function renderAccountsTable() {
             const initial = (acc.username || '?').replace('@', '')[0]?.toUpperCase() || '?';
             const isSelected = AppState.selectedAccounts.has(acc.username);
             const cleanUsername = (acc.username || '').replace('@', '');
-            
+
             let avatarHtml = '';
             if (acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
                 avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -489,7 +489,7 @@ function renderAccountsTable() {
             selectAllGrid.addEventListener('change', (e) => {
                 const allCards = gridContainer.querySelectorAll('.eio-account-card');
                 const allCheckboxes = gridContainer.querySelectorAll('.card-checkbox');
-                
+
                 allCards.forEach((card, idx) => {
                     const username = card.dataset.username;
                     if (e.target.checked) {
@@ -502,7 +502,7 @@ function renderAccountsTable() {
                         allCheckboxes[idx].checked = false;
                     }
                 });
-                
+
                 updateSelectedCount();
             });
         }
@@ -526,7 +526,7 @@ function renderAccountsTable() {
     // Otimização: Spinner
     if (AppState.filteredAccounts.length > 200) {
         gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
-        
+
         // setTimeout para processar
         setTimeout(() => {
             requestAnimationFrame(performRender);
@@ -607,22 +607,187 @@ function formatNumber(num) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// LOAD ACCOUNTS FROM INSTAGRAM
+// SISTEMA DE LOADING PROFISSIONAL - UX PREMIUM
+// ═══════════════════════════════════════════════════════════
+
+const LoadingManager = {
+    modal: null,
+    timeoutId: null,
+    startTime: null,
+    isUnfollow: false,
+
+    init() {
+        this.modal = document.getElementById('loadingModal');
+        this.setupEventListeners();
+    },
+
+    setupEventListeners() {
+        document.getElementById('btnRefreshList')?.addEventListener('click', () => {
+            this.hide();
+            renderAccountsTable();
+        });
+
+        document.getElementById('closeSuccessToast')?.addEventListener('click', () => {
+            document.getElementById('successToast').style.display = 'none';
+        });
+    },
+
+    show(type) {
+        if (!this.modal) this.modal = document.getElementById('loadingModal');
+
+        this.isUnfollow = type === 'unfollow' || type === 'following';
+        this.startTime = Date.now();
+
+        // Definir conteúdo baseado no tipo
+        const timeLimit = this.isUnfollow ? 60 : 30;
+        const title = this.isUnfollow
+            ? '🔍 Carregando perfis para deixar de seguir…'
+            : '🚀 Preparando sua lista…';
+        const message = this.isUnfollow
+            ? `Estamos analisando sua conta e preparando a lista.<br>Esse processo pode levar até <strong>${timeLimit}</strong> segundos.<br>Não feche ou atualize a página.`
+            : `Estamos buscando e organizando os perfis selecionados.<br>Isso pode levar até <strong>${timeLimit}</strong> segundos.<br>Você não precisa sair desta tela.`;
+
+        document.getElementById('loadingTitle').innerHTML = title;
+        document.getElementById('loadingMessage').innerHTML = message;
+        document.getElementById('loadingTimeEstimate').textContent = timeLimit;
+        document.getElementById('loadingCount').textContent = '0';
+        document.getElementById('loadingTotal').textContent = '--';
+        document.getElementById('loadingPercentage').textContent = '0%';
+        document.getElementById('loadingProgressFill').style.width = '0%';
+        document.getElementById('loadingStatusText').textContent = 'Iniciando extração...';
+        document.getElementById('loadingTimeout').style.display = 'none';
+
+        // Mostrar modal IMEDIATAMENTE
+        this.modal.style.display = 'flex';
+
+        // Desabilitar botões
+        this.disableButtons(true);
+
+        // Configurar timeout
+        this.timeoutId = setTimeout(() => {
+            document.getElementById('loadingTimeout').style.display = 'block';
+            document.getElementById('loadingStatusText').textContent = 'O processo está demorando mais que o esperado...';
+        }, timeLimit * 1000);
+    },
+
+    updateProgress(loaded, total, statusText) {
+        const percent = total > 0 ? Math.round((loaded / total) * 100) : 0;
+        document.getElementById('loadingCount').textContent = loaded;
+        document.getElementById('loadingTotal').textContent = total || '--';
+        document.getElementById('loadingPercentage').textContent = `${percent}%`;
+        document.getElementById('loadingProgressFill').style.width = `${percent}%`;
+        if (statusText) {
+            document.getElementById('loadingStatusText').textContent = statusText;
+        }
+    },
+
+    hide() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+        if (this.modal) {
+            this.modal.style.display = 'none';
+        }
+        this.disableButtons(false);
+    },
+
+    showSuccess(count) {
+        this.hide();
+        const toast = document.getElementById('successToast');
+        document.getElementById('successToastCount').textContent = `${count} perfis prontos para processamento.`;
+        toast.style.display = 'flex';
+
+        // Auto-hide após 5 segundos
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 5000);
+    },
+
+    showError(message) {
+        this.hide();
+        addLog('error', `❌ ${message}`);
+    },
+
+    disableButtons(disabled) {
+        const buttons = ['btnLoadAccounts', 'btnProcessQueue', 'btnSelect'];
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = disabled;
+        });
+    }
+};
+
+// Inicializar LoadingManager quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => LoadingManager.init());
+
+// ═══════════════════════════════════════════════════════════
+// LOAD ACCOUNTS FROM INSTAGRAM - COM UX PROFISSIONAL
 // ═══════════════════════════════════════════════════════════
 async function loadFromInstagram(type, limit) {
+    console.log('🔄 loadFromInstagram chamado:', type, limit);
     addLog('info', `🔄 Iniciando extração de ${type}...`);
+
+    // FEEDBACK IMEDIATO (0-300ms) - Mostrar modal ANTES de qualquer operação assíncrona
+    // Tentar mostrar o modal de forma síncrona
+    const modal = document.getElementById('loadingModal');
+    if (modal) {
+        console.log('✅ Modal encontrado, exibindo...');
+
+        // Configurar conteúdo
+        const isUnfollow = type === 'unfollow' || type === 'following';
+        const timeLimit = isUnfollow ? 60 : 30;
+        const title = isUnfollow
+            ? '🔍 Carregando perfis para deixar de seguir…'
+            : '🚀 Preparando sua lista…';
+        const message = isUnfollow
+            ? `Estamos analisando sua conta e preparando a lista.<br>Esse processo pode levar até <strong>${timeLimit}</strong> segundos.<br>Não feche ou atualize a página.`
+            : `Estamos buscando e organizando os perfis selecionados.<br>Isso pode levar até <strong>${timeLimit}</strong> segundos.<br>Você não precisa sair desta tela.`;
+
+        const titleEl = document.getElementById('loadingTitle');
+        const messageEl = document.getElementById('loadingMessage');
+        const progressFill = document.getElementById('loadingProgressFill');
+        const statusText = document.getElementById('loadingStatusText');
+        const timeoutDiv = document.getElementById('loadingTimeout');
+
+        if (titleEl) titleEl.innerHTML = title;
+        if (messageEl) messageEl.innerHTML = message;
+        if (progressFill) progressFill.style.width = '0%';
+        if (statusText) statusText.textContent = 'Iniciando extração...';
+        if (timeoutDiv) timeoutDiv.style.display = 'none';
+
+        // MOSTRAR MODAL IMEDIATAMENTE
+        modal.style.display = 'flex';
+        console.log('✅ Modal exibido com display: flex');
+
+        // Desabilitar botões
+        ['btnLoadAccounts', 'btnProcessQueue', 'btnSelect'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = true;
+        });
+    } else {
+        console.error('❌ Modal não encontrado!');
+    }
+
+    // Forçar repaint do DOM
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
 
         if (!activeTab?.url?.includes('instagram.com')) {
+            hideLoadingModal();
             addLog('error', '❌ Por favor, navegue para o Instagram primeiro');
             alert('Por favor, navegue para o Instagram e abra a lista de seguidores/seguindo antes de clicar aqui.');
+            renderAccountsTable();
             return;
         }
 
-        addLog('info', '📋 Certifique-se de que a janela de seguidores/seguindo está aberta!');
+        // Atualizar status
+        const statusText = document.getElementById('loadingStatusText');
+        if (statusText) statusText.textContent = 'Conectando ao Instagram...';
+        addLog('info', '📋 Extraindo dados da lista aberta... Por favor aguarde.');
 
         const response = await chrome.tabs.sendMessage(activeTab.id, {
             action: 'execute_extraction',
@@ -634,7 +799,6 @@ async function loadFromInstagram(type, limit) {
         });
 
         if (response?.success && response.data) {
-            // Map data correctly from content script
             const newAccounts = response.data.map(lead => ({
                 username: lead.username || '',
                 fullName: lead.fullName || lead.name || '',
@@ -653,7 +817,12 @@ async function loadFromInstagram(type, limit) {
                 source: type
             }));
 
-            // Merge with existing accounts (avoid duplicates)
+            // Atualizar progresso
+            const progressFill = document.getElementById('loadingProgressFill');
+            const statusTextEl = document.getElementById('loadingStatusText');
+            if (progressFill) progressFill.style.width = '100%';
+            if (statusTextEl) statusTextEl.textContent = 'Processando perfis...';
+
             const existingUsernames = new Set(AppState.accounts.map(a => a.username));
             const uniqueNew = newAccounts.filter(a => !existingUsernames.has(a.username));
 
@@ -662,19 +831,58 @@ async function loadFromInstagram(type, limit) {
             renderAccountsTable();
             saveState();
 
+            // Mostrar sucesso
+            hideLoadingModal();
+            showSuccessToast(uniqueNew.length);
             addLog('success', `✅ ${uniqueNew.length} novas contas carregadas!`);
 
             if (uniqueNew.length === 0 && newAccounts.length > 0) {
                 addLog('warning', '⚠️ Todas as contas já estavam na lista');
             }
         } else {
-            addLog('error', response?.message || 'Falha na extração. A janela de seguidores está aberta?');
+            hideLoadingModal();
+            addLog('error', '❌ Falha na extração. A janela de seguidores está aberta?');
             alert('Por favor, clique em "Seguidores" ou "Seguindo" no perfil do Instagram para abrir a lista antes de extrair.');
+            renderAccountsTable();
         }
     } catch (error) {
         console.error('Load error:', error);
+        hideLoadingModal();
         addLog('error', `❌ Erro: ${error.message}`);
         alert('Erro ao carregar contas. Certifique-se de que:\n1. Você está em instagram.com\n2. A janela de seguidores/seguindo está aberta\n3. Recarregue a página do Instagram e tente novamente');
+        renderAccountsTable();
+    }
+}
+
+// Helper functions para modal de loading
+function hideLoadingModal() {
+    const modal = document.getElementById('loadingModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    // Reabilitar botões
+    ['btnLoadAccounts', 'btnProcessQueue', 'btnSelect'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = false;
+    });
+}
+
+function showSuccessToast(count) {
+    const toast = document.getElementById('successToast');
+    const countEl = document.getElementById('successToastCount');
+    if (toast && countEl) {
+        countEl.textContent = `${count} perfis prontos para processamento.`;
+        toast.style.display = 'flex';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 5000);
+    }
+}
+
+function resetLoadButton(btn, originalText) {
+    if (btn) {
+        btn.innerHTML = originalText || `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Preparar lista`;
+        btn.disabled = false;
     }
 }
 
@@ -702,6 +910,7 @@ function loadWhitelist() {
         }
     });
 }
+
 
 function loadPendingRequests() {
     addLog('info', '⏳ Carregando pedidos pendentes... (requer estar na página de solicitações)');
@@ -765,7 +974,7 @@ function initializeFilters() {
         applyFilters();
         renderAccountsTable();
         addLog('info', `🎯 Filtros aplicados: ${AppState.filteredAccounts.length} contas`);
-    
+
         // Feedback UX: Ir para aba contas
         setTimeout(() => {
             const tab = document.querySelector('.eio-tab[data-tab="contas"]');
@@ -865,7 +1074,7 @@ function applyFilters() {
     renderAccountsTable();
     addLog('success', `Filtros aplicados. ${AppState.filteredAccounts.length} contas encontradas.`);
     // UX: Switch to accounts tab explicitly
-    setTimeout(() => { const btn = document.querySelector('.eio-tab[data-tab="contas"]'); if(btn) btn.click(); }, 200);
+    setTimeout(() => { const btn = document.querySelector('.eio-tab[data-tab="contas"]'); if (btn) btn.click(); }, 200);
 }
 
 function resetFilters() {

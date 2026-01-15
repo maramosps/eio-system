@@ -424,7 +424,7 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    version: '2.1.0',
+                    version: '3.0.1',
                     size: '4.7 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),

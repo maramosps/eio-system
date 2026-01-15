@@ -447,18 +447,158 @@ async function executeInstagramAction(payload) {
     return { success: false, error: 'Unknown action' };
 }
 
+/**
+ * Executar follow DIRETAMENTE NA LISTA (sem navegar para cada perfil)
+ * Muito mais rápido e eficiente!
+ */
 async function executeFollow(target) {
+    const cleanTarget = target?.replace('@', '').toLowerCase();
+
+    // Verificar se estamos em uma lista (modal de seguidores)
+    const dialog = document.querySelector('div[role="dialog"]');
+
+    if (dialog) {
+        // Estamos em uma lista - procurar o usuário
+        const allItems = dialog.querySelectorAll('div[role="button"], li, div._aacl');
+
+        for (const item of allItems) {
+            const link = item.querySelector('a[href^="/"]');
+            if (!link) continue;
+
+            const href = link.getAttribute('href');
+            const username = href?.replace(/\//g, '').toLowerCase();
+
+            // Encontrou o usuário alvo?
+            if (username === cleanTarget) {
+                // Procurar o botão "Seguir" ao lado deste usuário
+                const buttons = item.querySelectorAll('button');
+
+                for (const btn of buttons) {
+                    const btnText = btn.textContent.toLowerCase();
+                    // Verificar se é botão de seguir (não "Seguindo", não "Solicitado")
+                    if (btnText.includes('seguir') && !btnText.includes('seguindo') && !btnText.includes('solicitado')) {
+                        btn.click();
+                        await randomDelay(500, 800);
+                        addConsoleLog('success', `✅ Seguiu @${cleanTarget}`);
+                        return { success: true, action: 'followed', username: cleanTarget };
+                    }
+                    // Verificar em inglês também
+                    if (btnText === 'follow') {
+                        btn.click();
+                        await randomDelay(500, 800);
+                        addConsoleLog('success', `✅ Seguiu @${cleanTarget}`);
+                        return { success: true, action: 'followed', username: cleanTarget };
+                    }
+                }
+
+                // Verificar se já está seguindo
+                for (const btn of buttons) {
+                    const btnText = btn.textContent.toLowerCase();
+                    if (btnText.includes('seguindo') || btnText.includes('following') || btnText.includes('solicitado') || btnText.includes('requested')) {
+                        addConsoleLog('info', `ℹ️ Já segue @${cleanTarget}`);
+                        return { success: true, action: 'already_following', username: cleanTarget };
+                    }
+                }
+
+                addConsoleLog('warning', `⚠️ Botão "Seguir" não encontrado para @${cleanTarget}`);
+                return { success: false, action: 'button_not_found' };
+            }
+        }
+
+        addConsoleLog('warning', `⚠️ Usuário @${cleanTarget} não encontrado na lista visível`);
+        return { success: false, action: 'user_not_in_list' };
+    }
+
+    // Fallback: se não estamos em uma lista, usar método do header (página do perfil)
     const followBtn = document.querySelector('header button');
     if (followBtn && !followBtn.textContent.toLowerCase().includes('seguindo')) {
         followBtn.click();
         await randomDelay(500, 1000);
         addConsoleLog('success', `✅ Seguiu ${target || 'perfil atual'}`);
-        return { action: 'followed' };
+        return { success: true, action: 'followed' };
     }
-    return { action: 'already_following' };
+    return { success: true, action: 'already_following' };
 }
 
+/**
+ * Executar unfollow DIRETAMENTE NA LISTA (sem navegar para cada perfil)
+ * Muito mais rápido e eficiente!
+ */
 async function executeUnfollow(target) {
+    const cleanTarget = target?.replace('@', '').toLowerCase();
+
+    // Primeiro, verificar se estamos na lista de "Seguindo"
+    const dialog = document.querySelector('div[role="dialog"]');
+
+    if (dialog) {
+        // Estamos em uma lista (modal de seguindo/seguidores)
+        // Procurar o usuário específico na lista
+        const allItems = dialog.querySelectorAll('div[role="button"], li, div._aacl');
+
+        for (const item of allItems) {
+            const link = item.querySelector('a[href^="/"]');
+            if (!link) continue;
+
+            const href = link.getAttribute('href');
+            const username = href?.replace(/\//g, '').toLowerCase();
+
+            // Encontrou o usuário alvo?
+            if (username === cleanTarget) {
+                // Procurar o botão "Seguindo" ao lado deste usuário
+                const buttons = item.querySelectorAll('button');
+
+                for (const btn of buttons) {
+                    const btnText = btn.textContent.toLowerCase();
+                    if (btnText.includes('seguindo') || btnText.includes('following') || btnText.includes('requested')) {
+                        // Clicar no botão "Seguindo"
+                        btn.click();
+                        await randomDelay(500, 800);
+
+                        // Aguardar e clicar no botão de confirmação "Deixar de seguir"
+                        await randomDelay(300, 500);
+
+                        // O Instagram abre um menu/modal de confirmação
+                        const confirmButtons = document.querySelectorAll('button');
+                        for (const confirmBtn of confirmButtons) {
+                            const text = confirmBtn.textContent.toLowerCase();
+                            if (text.includes('deixar de seguir') || text.includes('unfollow')) {
+                                confirmBtn.click();
+                                await randomDelay(300, 500);
+                                addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget}`);
+                                return { action: 'unfollowed', username: cleanTarget };
+                            }
+                        }
+
+                        // Fallback: procurar no dialog que aparece
+                        const dialogs = document.querySelectorAll('div[role="dialog"]');
+                        for (const dlg of dialogs) {
+                            const dlgButtons = dlg.querySelectorAll('button');
+                            for (const dlgBtn of dlgButtons) {
+                                const text = dlgBtn.textContent.toLowerCase();
+                                if (text.includes('deixar de seguir') || text.includes('unfollow')) {
+                                    dlgBtn.click();
+                                    await randomDelay(300, 500);
+                                    addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget}`);
+                                    return { action: 'unfollowed', username: cleanTarget };
+                                }
+                            }
+                        }
+
+                        addConsoleLog('warning', `⚠️ Clicou em Seguindo mas não encontrou confirmação para @${cleanTarget}`);
+                        return { action: 'confirm_not_found' };
+                    }
+                }
+
+                addConsoleLog('warning', `⚠️ Botão "Seguindo" não encontrado para @${cleanTarget}`);
+                return { action: 'button_not_found' };
+            }
+        }
+
+        addConsoleLog('warning', `⚠️ Usuário @${cleanTarget} não encontrado na lista visível`);
+        return { action: 'user_not_in_list' };
+    }
+
+    // Fallback: se não estamos em uma lista, tentar o método antigo (página do perfil)
     const followBtn = document.querySelector('header button');
     if (followBtn && followBtn.textContent.toLowerCase().includes('seguindo')) {
         followBtn.click();
@@ -500,10 +640,193 @@ async function executeComment(target, payload) {
     return { action: 'comment_failed' };
 }
 
+/**
+ * Envia Direct Message (DM) para um usuário
+ * Funciona navegando para a página de mensagens e enviando
+ */
 async function executeDM(target, payload) {
-    addConsoleLog('info', `✉️ DM para ${target} (implementação pendente)`);
-    return { action: 'dm_queued' };
+    const cleanTarget = target?.replace('@', '');
+    const message = payload?.message || payload?.text || '';
+
+    if (!message) {
+        addConsoleLog('warning', '⚠️ Nenhuma mensagem definida para enviar');
+        return { success: false, action: 'no_message' };
+    }
+
+    addConsoleLog('info', `✉️ Preparando DM para @${cleanTarget}...`);
+
+    try {
+        // Verificar se já estamos na página de DMs
+        const currentUrl = window.location.href;
+
+        if (currentUrl.includes('/direct/')) {
+            // Já estamos nas DMs - procurar ou criar conversa
+            return await sendDMInCurrentPage(cleanTarget, message);
+        }
+
+        // Se estamos no perfil do usuário, procurar botão de mensagem
+        if (currentUrl.includes(`/${cleanTarget}`)) {
+            const messageBtn = findMessageButton();
+            if (messageBtn) {
+                messageBtn.click();
+                await randomDelay(2000, 3000);
+                return await sendDMInCurrentPage(cleanTarget, message);
+            }
+        }
+
+        // Navegar para DMs do usuário
+        const dmUrl = `https://www.instagram.com/direct/t/${cleanTarget}/`;
+        addConsoleLog('info', `📩 Navegando para DM de @${cleanTarget}...`);
+
+        // Notificar background para navegar
+        chrome.runtime.sendMessage({
+            action: 'navigate',
+            url: dmUrl
+        });
+
+        await randomDelay(3000, 4000);
+
+        // Tentar enviar a mensagem
+        return await sendDMInCurrentPage(cleanTarget, message);
+
+    } catch (error) {
+        addConsoleLog('error', `❌ Erro ao enviar DM: ${error.message}`);
+        return { success: false, action: 'dm_error', error: error.message };
+    }
 }
+
+/**
+ * Encontra o botão de mensagem na página do perfil
+ */
+function findMessageButton() {
+    const buttons = document.querySelectorAll('button, div[role="button"]');
+    for (const btn of buttons) {
+        const text = btn.textContent?.toLowerCase() || '';
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+
+        if (text.includes('mensagem') || text.includes('message') ||
+            ariaLabel.includes('mensagem') || ariaLabel.includes('message')) {
+            return btn;
+        }
+    }
+
+    // Procurar pelo ícone de mensagem
+    const svgs = document.querySelectorAll('svg');
+    for (const svg of svgs) {
+        const parent = svg.closest('button, div[role="button"]');
+        if (parent) {
+            const ariaLabel = parent.getAttribute('aria-label')?.toLowerCase() || '';
+            if (ariaLabel.includes('mensagem') || ariaLabel.includes('message')) {
+                return parent;
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Envia mensagem na página de DMs atual
+ */
+async function sendDMInCurrentPage(target, message) {
+    // Aguardar a página carregar
+    await randomDelay(1000, 1500);
+
+    // Procurar campo de texto da mensagem
+    const messageInput = document.querySelector('textarea[placeholder*="Mensagem"], textarea[placeholder*="Message"]') ||
+        document.querySelector('div[contenteditable="true"][role="textbox"]') ||
+        document.querySelector('textarea');
+
+    if (!messageInput) {
+        addConsoleLog('warning', '⚠️ Campo de mensagem não encontrado');
+        return { success: false, action: 'input_not_found' };
+    }
+
+    // Focar no campo
+    messageInput.focus();
+    await randomDelay(300, 500);
+
+    // Personalizar mensagem com variáveis
+    const personalizedMessage = personalizeMessage(message, target);
+
+    // Digitar mensagem de forma humanizada (letra por letra)
+    await typeHumanized(messageInput, personalizedMessage);
+
+    await randomDelay(500, 800);
+
+    // Procurar botão de enviar
+    const sendBtn = document.querySelector('button[type="submit"]') ||
+        document.querySelector('div[role="button"] svg[aria-label*="Enviar"]')?.closest('div[role="button"]') ||
+        findSendButton();
+
+    if (sendBtn && !sendBtn.disabled) {
+        sendBtn.click();
+        await randomDelay(500, 800);
+        addConsoleLog('success', `✅ DM enviada para @${target}!`);
+        return { success: true, action: 'dm_sent', target };
+    }
+
+    // Se não encontrou botão, tentar Enter
+    messageInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await randomDelay(500, 800);
+
+    addConsoleLog('success', `✅ DM enviada para @${target} (via Enter)`);
+    return { success: true, action: 'dm_sent', target };
+}
+
+/**
+ * Encontra o botão de enviar na página de DMs
+ */
+function findSendButton() {
+    const allButtons = document.querySelectorAll('button, div[role="button"]');
+    for (const btn of allButtons) {
+        const text = btn.textContent?.toLowerCase() || '';
+        if (text === 'enviar' || text === 'send') {
+            return btn;
+        }
+    }
+    return null;
+}
+
+/**
+ * Personaliza mensagem com variáveis
+ */
+function personalizeMessage(message, target) {
+    return message
+        .replace(/\{\{nome\}\}/gi, target)
+        .replace(/\{\{username\}\}/gi, target)
+        .replace(/\{\{@\}\}/gi, `@${target}`)
+        .replace(/\{\{data\}\}/gi, new Date().toLocaleDateString('pt-BR'))
+        .replace(/\{\{hora\}\}/gi, new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+}
+
+/**
+ * Digita texto de forma humanizada (letra por letra)
+ */
+async function typeHumanized(element, text) {
+    if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
+        // Para textarea/input normal
+        element.value = '';
+        for (const char of text) {
+            element.value += char;
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            await randomDelay(30, 100); // Delay entre cada letra
+        }
+    } else if (element.getAttribute('contenteditable')) {
+        // Para contenteditable (usado no Instagram moderno)
+        element.textContent = '';
+        for (const char of text) {
+            element.textContent += char;
+            element.dispatchEvent(new InputEvent('input', {
+                bubbles: true,
+                inputType: 'insertText',
+                data: char
+            }));
+            await randomDelay(30, 100);
+        }
+    }
+}
+
 
 async function executeViewStory(target) {
     const storyRing = document.querySelector('canvas')?.closest('div[role="button"]');
@@ -642,3 +965,146 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         updateIconBadge(message.count || 0);
     }
 });
+
+// ═══════════════════════════════════════════════════════════
+// COMUNICAÇÃO COM O DASHBOARD (postMessage)
+// Permite que o Explorador de Leads e outras features funcionem
+// ═══════════════════════════════════════════════════════════
+
+window.addEventListener('message', async (event) => {
+    // Apenas processar mensagens do próprio site
+    if (event.source !== window) return;
+
+    const data = event.data;
+
+    // Responder ping do dashboard (detecta se extensão está ativa)
+    if (data?.type === 'EIO_PING') {
+        window.postMessage({
+            type: 'EIO_PONG',
+            extensionId: chrome.runtime.id,
+            version: '2.3.0'
+        }, '*');
+        return;
+    }
+
+    // Processar comandos do dashboard
+    if (data?.type === 'EIO_COMMAND') {
+        console.log('E.I.O Command received:', data);
+
+        try {
+            let response = { success: false };
+
+            switch (data.action) {
+                case 'exploreLeads':
+                    // O dashboard pediu para explorar leads
+                    // Isso só funciona se estivermos na página de seguidores/seguindo
+                    const leads = await extractAccountsFromList();
+                    response = {
+                        success: leads.length > 0,
+                        leads: leads,
+                        count: leads.length
+                    };
+                    break;
+
+                case 'getAccounts':
+                    // Retorna as contas carregadas
+                    const accounts = await extractAccountsFromList();
+                    response = { success: true, accounts };
+                    break;
+
+                case 'executeAction':
+                    // Executar uma ação específica
+                    const result = await executeInstagramAction(data.payload);
+                    response = { success: true, result };
+                    break;
+
+                default:
+                    response = { success: false, error: 'Unknown command' };
+            }
+
+            window.postMessage({ type: 'EIO_RESPONSE', ...response }, '*');
+
+        } catch (error) {
+            window.postMessage({
+                type: 'EIO_RESPONSE',
+                success: false,
+                error: error.message
+            }, '*');
+        }
+    }
+});
+
+// Função para extrair contas da lista (seguidores/seguindo)
+async function extractAccountsFromList() {
+    const accounts = [];
+
+    // Verificar se estamos em uma lista (modal de seguidores/seguindo)
+    const dialog = document.querySelector('div[role="dialog"]');
+    if (!dialog) {
+        console.log('E.I.O: Nenhum modal de lista encontrado');
+        return accounts;
+    }
+
+    // Procurar todos os itens da lista
+    const scrollContainer = dialog.querySelector('div[style*="overflow"]') ||
+        dialog.querySelector('ul') ||
+        dialog;
+
+    // Fazer scroll para carregar mais contas
+    const items = scrollContainer.querySelectorAll('a[href^="/"]');
+    console.log(`E.I.O: Encontrados ${items.length} links`);
+
+    const processedUsernames = new Set();
+
+    items.forEach(link => {
+        try {
+            const href = link.getAttribute('href');
+            if (!href || href === '/') return;
+
+            const username = href.replace(/\//g, '');
+            if (!username || processedUsernames.has(username)) return;
+
+            // Extrair informações do item
+            const container = link.closest('div[role="button"]') ||
+                link.closest('li') ||
+                link.parentElement?.parentElement;
+
+            if (!container) return;
+
+            // Pegar a foto de perfil
+            const img = container.querySelector('img');
+            const profilePic = img?.src || '';
+
+            // Pegar o nome completo
+            const spans = container.querySelectorAll('span');
+            let fullName = '';
+            spans.forEach(span => {
+                const text = span.textContent?.trim();
+                if (text && text !== username && !text.includes('Verificado')) {
+                    if (!fullName && text.length > 1) {
+                        fullName = text;
+                    }
+                }
+            });
+
+            processedUsernames.add(username);
+            accounts.push({
+                username: username,
+                fullName: fullName || username,
+                profilePic: profilePic,
+                followers: 0,
+                following: 0,
+                posts: 0,
+                bio: '',
+                contact: ''
+            });
+        } catch (e) {
+            console.log('Erro ao processar item:', e);
+        }
+    });
+
+    console.log(`E.I.O: Extraídas ${accounts.length} contas`);
+    return accounts;
+}
+
+console.log('E.I.O Content Script v2.3.0 - Dashboard communication enabled!');

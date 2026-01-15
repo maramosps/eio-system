@@ -151,6 +151,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'getHistory':
             sendResponse({ history: extensionState.actionHistory || [] });
             break;
+        case 'getAnalyticsData':
+            // Retornar dados completos para o Analytics do Dashboard
+            (async () => {
+                try {
+                    const result = await chrome.storage.local.get(['eio_analytics_history', 'eio_analytics_stats']);
+                    sendResponse({
+                        success: true,
+                        history: result.eio_analytics_history || [],
+                        stats: result.eio_analytics_stats || {},
+                        currentStats: extensionState.stats
+                    });
+                } catch (error) {
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indica resposta assíncrona
         case 'updateConfig':
             if (message.payload) {
                 extensionState.limits = { ...extensionState.limits, ...message.payload.limits };
@@ -162,6 +178,96 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Forward console log to popup if open
             notifyPopup('consoleMessage', { level: message.level, message: message.message });
             sendResponse({ success: true });
+            break;
+        case 'navigate':
+            // Navegar para uma URL específica (usado para DMs)
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (tabs[0]) {
+                    chrome.tabs.update(tabs[0].id, { url: message.url });
+                    sendResponse({ success: true });
+                } else {
+                    sendResponse({ success: false, error: 'No active tab' });
+                }
+            });
+            break;
+        case 'sendDM':
+            // Enviar DM para um usuário
+            (async () => {
+                try {
+                    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                    if (!tabs[0]?.url?.includes('instagram.com')) {
+                        sendResponse({ success: false, error: 'Navegue para o Instagram primeiro' });
+                        return;
+                    }
+
+                    const result = await chrome.tabs.sendMessage(tabs[0].id, {
+                        action: 'execute',
+                        payload: {
+                            type: 'dm',
+                            target: message.target,
+                            message: message.message
+                        }
+                    });
+
+                    sendResponse(result);
+                } catch (error) {
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            break;
+        case 'sendBulkDM':
+            // Enviar DMs em massa com delays
+            (async () => {
+                try {
+                    const targets = message.targets || [];
+                    const template = message.template || '';
+                    const delayMin = message.delayMin || 60000; // 1 min default
+                    const delayMax = message.delayMax || 120000; // 2 min default
+
+                    logAction('info', `📨 Iniciando envio de ${targets.length} DMs...`);
+
+                    for (let i = 0; i < targets.length; i++) {
+                        if (!extensionState.isRunning) {
+                            logAction('warning', '⏸️ Envio de DMs pausado');
+                            break;
+                        }
+
+                        const target = targets[i];
+                        logAction('info', `📩 Enviando DM ${i + 1}/${targets.length} para @${target}...`);
+
+                        // Navegar e enviar
+                        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                        if (tabs[0]) {
+                            await chrome.tabs.update(tabs[0].id, {
+                                url: `https://www.instagram.com/direct/t/${target}/`
+                            });
+                            await sleep(3000);
+
+                            await chrome.tabs.sendMessage(tabs[0].id, {
+                                action: 'execute',
+                                payload: {
+                                    type: 'dm',
+                                    target: target,
+                                    message: template
+                                }
+                            });
+
+                            updateStats('dm', target);
+                        }
+
+                        // Delay entre mensagens
+                        const delay = calculateHumanDelay(delayMin, delayMax);
+                        logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+                        await sleep(delay);
+                    }
+
+                    logAction('success', `✅ Envio de DMs concluído!`);
+                    sendResponse({ success: true, sent: targets.length });
+                } catch (error) {
+                    logAction('error', `❌ Erro no envio de DMs: ${error.message}`);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
             break;
         default:
             sendResponse({ error: 'Unknown action' });
@@ -397,19 +503,92 @@ function updateStats(type, target = 'Automação') {
 }
 
 /**
- * Adicionar ao histórico global (Persistente)
+ * Adicionar ao histórico global (Persistente para Analytics)
  */
-function addToHistory(type, target) {
+async function addToHistory(type, target, success = true) {
     if (!extensionState.actionHistory) extensionState.actionHistory = [];
 
-    extensionState.actionHistory.unshift({
+    const historyEntry = {
         type: type,
         target: target,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    });
+        username: target?.replace('@', '') || '',
+        timestamp: new Date().toISOString(),
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toLocaleDateString('pt-BR'),
+        success: success
+    };
 
+    // Histórico local da extensão (últimos 20)
+    extensionState.actionHistory.unshift(historyEntry);
     if (extensionState.actionHistory.length > 20) {
         extensionState.actionHistory.pop();
+    }
+
+    // Salvar histórico completo para Analytics do Dashboard
+    saveToAnalyticsHistory(historyEntry);
+}
+
+/**
+ * Salvar no histórico de Analytics (persistente e sem limite)
+ */
+async function saveToAnalyticsHistory(entry) {
+    try {
+        // Carregar histórico existente
+        const result = await chrome.storage.local.get(['eio_analytics_history']);
+        let history = result.eio_analytics_history || [];
+
+        // Adicionar nova entrada
+        history.push(entry);
+
+        // Limitar a 1000 entradas para não sobrecarregar
+        if (history.length > 1000) {
+            history = history.slice(-1000);
+        }
+
+        // Salvar
+        await chrome.storage.local.set({ eio_analytics_history: history });
+
+        // Também salvar estatísticas agregadas
+        await updateAnalyticsStats();
+    } catch (error) {
+        console.error('Erro ao salvar no histórico de Analytics:', error);
+    }
+}
+
+/**
+ * Atualizar estatísticas agregadas para Analytics
+ */
+async function updateAnalyticsStats() {
+    try {
+        const result = await chrome.storage.local.get(['eio_analytics_history']);
+        const history = result.eio_analytics_history || [];
+
+        // Calcular totais
+        const stats = {
+            totalFollows: 0,
+            totalLikes: 0,
+            totalComments: 0,
+            totalDMs: 0,
+            totalUnfollows: 0,
+            totalStories: 0,
+            totalActions: history.length,
+            lastUpdated: new Date().toISOString()
+        };
+
+        history.forEach(entry => {
+            switch (entry.type) {
+                case 'follow': stats.totalFollows++; break;
+                case 'like': stats.totalLikes++; break;
+                case 'comment': stats.totalComments++; break;
+                case 'dm': stats.totalDMs++; break;
+                case 'unfollow': stats.totalUnfollows++; break;
+                case 'likeStory': case 'story': stats.totalStories++; break;
+            }
+        });
+
+        await chrome.storage.local.set({ eio_analytics_stats: stats });
+    } catch (error) {
+        console.error('Erro ao atualizar stats de Analytics:', error);
     }
 }
 
@@ -591,6 +770,107 @@ async function processQueue() {
         }
 
         const tabId = tabs[0].id;
+        const actionType = item.actionType || extensionState.currentActionType;
+
+        // Verificar se temos múltiplas ações selecionadas
+        const hasMultipleActions = actions.length > 1 ||
+            (actions.length === 1 && !['follow', 'unfollow'].includes(actions[0]));
+
+        // Log das ações que serão executadas
+        logAction('info', `🎯 Ações: ${actions.join(' + ')}`);
+
+        // ═══════════════════════════════════════════════════════════
+        // UNFOLLOW OTIMIZADO: Executar diretamente na lista (sem navegar)
+        // Apenas se for SOMENTE unfollow
+        // ═══════════════════════════════════════════════════════════
+        if (actions.length === 1 && actions[0] === 'unfollow') {
+            logAction('info', `➖ Unfollow @${item.username.replace('@', '')}...`);
+
+            try {
+                // Executar unfollow diretamente na lista (content.js modificado)
+                const result = await chrome.tabs.sendMessage(tabId, {
+                    action: 'execute',
+                    payload: {
+                        type: 'unfollow',
+                        target: item.username
+                    }
+                });
+
+                if (result?.success || result?.action === 'unfollowed') {
+                    updateStats('unfollow', item.username);
+                    extensionState.actionsInCurrentBatch++;
+                    logAction('success', `✅ Deixou de seguir @${item.username.replace('@', '')}`);
+                } else {
+                    logAction('warning', `⚠️ Falha unfollow @${item.username.replace('@', '')}: ${result?.action || 'erro'}`);
+                }
+
+                // Delay de segurança entre unfollows (30-60 segundos)
+                const delay = calculateHumanDelay(30000, 60000);
+                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+                await sleep(delay);
+
+            } catch (unfollowError) {
+                logAction('warning', `⚠️ Erro unfollow: ${unfollowError.message}`);
+            }
+
+            saveState();
+
+            // Continuar processando
+            if (extensionState.isRunning) {
+                processQueue();
+            }
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // FOLLOW SIMPLES: Executar diretamente na lista (sem navegar)
+        // Apenas se for SOMENTE follow
+        // ═══════════════════════════════════════════════════════════
+        if (actions.length === 1 && actions[0] === 'follow') {
+            logAction('info', `➕ Follow @${item.username.replace('@', '')}...`);
+
+            try {
+                // Executar follow diretamente na lista
+                const result = await chrome.tabs.sendMessage(tabId, {
+                    action: 'execute',
+                    payload: {
+                        type: 'follow',
+                        target: item.username
+                    }
+                });
+
+                if (result?.success || result?.action === 'followed') {
+                    updateStats('follow', item.username);
+                    extensionState.actionsInCurrentBatch++;
+                    logAction('success', `✅ Seguiu @${item.username.replace('@', '')}`);
+                } else if (result?.action === 'already_following') {
+                    logAction('info', `ℹ️ Já segue @${item.username.replace('@', '')}`);
+                } else {
+                    logAction('warning', `⚠️ Falha follow @${item.username.replace('@', '')}: ${result?.action || 'erro'}`);
+                }
+
+                // Delay de segurança entre follows (30-60 segundos)
+                const delay = calculateHumanDelay(30000, 60000);
+                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+                await sleep(delay);
+
+            } catch (followError) {
+                logAction('warning', `⚠️ Erro follow: ${followError.message}`);
+            }
+
+            saveState();
+
+            // Continuar processando
+            if (extensionState.isRunning) {
+                processQueue();
+            }
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // MÚLTIPLAS AÇÕES: Navegar para o perfil e executar cada ação
+        // (follow + like + story + comment + dm)
+        // ═══════════════════════════════════════════════════════════
 
         // Navigate to profile
         const profileUrl = `https://www.instagram.com/${item.username.replace('@', '')}/`;

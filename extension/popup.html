@@ -90,10 +90,6 @@
                 </svg>
                 <span>Logs</span>
             </button>
-            <button class="eio-tab" data-tab="guia">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Tutorial</span>
-            </button>
         </nav>
 
         <main class="eio-main-scroll">
@@ -172,7 +168,10 @@
                         <span class="eio-queue-count" id="queueCount">0 contas</span>
                     </div>
                     <div class="eio-queue-limits">
-                        <span title="Limite de segurança">🛡️ Limite: <strong id="dailyLimit">200/dia</strong></span>
+                        <span title="Limite de seguidores por dia">➕ Follow: <strong
+                                id="dailyLimit">200/dia</strong></span>
+                        <span title="Limite de deixar de seguir por dia">➖ Unfollow: <strong
+                                id="dailyUnfollowLimit">500/dia</strong></span>
                         <span title="Intervalo entre ações">⏱️ Delay: <strong id="actionDelay">60s</strong></span>
                     </div>
                 </div>
@@ -758,49 +757,6 @@
                             </label>
                         </div>
                     </div>
-
-                    <!-- Colunas para Exibir -->
-                    <div class="eio-config-section">
-                        <button class="eio-config-header" data-collapse="columns">
-                            <span>▶ Columns to Show in Queue and CSV Export *BETA*</span>
-                        </button>
-                        <div class="eio-config-content collapsed" id="columns">
-                            <div class="eio-columns-grid">
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="pic" checked>
-                                    Pic</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="username" checked>
-                                    @username</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="fullName" checked>
-                                    Full Name</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="bio" checked>
-                                    Bio</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="posts" checked>
-                                    Posts</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followers"
-                                        checked> Followers</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="following"
-                                        checked> Following</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="ratio" checked>
-                                    Ratio</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="mutual" checked>
-                                    Mutual</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followedByMe"
-                                        checked> Followed By Me</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="followsMe"
-                                        checked> Follows Me</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="private" checked>
-                                    Private</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="verified" checked>
-                                    Verified</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="businessCategory">
-                                    Business Category</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="lastPosted"> Last
-                                    Posted</label>
-                                <label class="eio-checkbox-label"><input type="checkbox" data-column="pronouns">
-                                    Pronouns</label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -823,69 +779,7 @@
             </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- ABA AJUDA - Instruções e Guias                              -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    
-            <!-- ABA GUIA -->
-            <div class="eio-tab-content" id="guiaTab">
-                <div class="eio-section">
-                    <div class="eio-section-header">
-                        <h3 class="eio-section-title">🎓 Manual de Uso Passo a Passo</h3>
-                    </div>
-                    <div class="eio-guide-container" style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px;">
-                        
-                        <div class="eio-card" style="border-left: 4px solid var(--eio-primary);">
-                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:1.2em">👥</span> 1. Extração de Contas (Seguidores)
-                            </h4>
-                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
-                                <li>Acesse o perfil alvo no Instagram (ex: concorrente).</li>
-                                <li><strong>Clique no número de "Seguidores" ou "Seguindo"</strong> no Instagram para abrir a lista na tela.</li>
-                                <li>Abra esta extensão e vá na aba <strong>Contas</strong>.</li>
-                                <li>Clique em <strong>Carregar Contas</strong> e escolha a opção correspondente.</li>
-                                <li>Aguarde a extração terminar (não feche a lista do Instagram).</li>
-                            </ol>
-                        </div>
-
-                        <div class="eio-card" style="border-left: 4px solid var(--eio-purple-400);">
-                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:1.2em">📸</span> 2. Extração de Mídias (Posts/Reels)
-                            </h4>
-                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
-                                <li>Na aba <strong>Mídias</strong>, cole o link do Post/Reel e clique em Adicionar.</li>
-                                <li><strong>Clique no link azul</strong> do item na fila para abrir o post em uma nova aba.</li>
-                                <li>Lá no post, <strong>clique em "curtidas"</strong> para abrir a lista de pessoas.</li>
-                                <li>Com a lista aberta, abra a extensão e clique no botão <strong>Play (▶️)</strong> ao lado do link.</li>
-                            </ol>
-                        </div>
-
-                        <div class="eio-card" style="border-left: 4px solid var(--eio-green-400);">
-                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:1.2em">🎯</span> 3. Usando Filtros
-                            </h4>
-                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
-                                <li>Com as contas carregadas, vá na aba <strong>Filtros</strong>.</li>
-                                <li>Ajuste os critérios (ex: mínimo de seguidores, não privado).</li>
-                                <li>Clique no botão verde <strong>✅ Aplicar Filtros à Fila Atual</strong>.</li>
-                                <li>A aba Contas mostrará apenas os resultados filtrados.</li>
-                            </ol>
-                        </div>
-
-                        <div class="eio-card" style="border-left: 4px solid var(--eio-red-400);">
-                            <h4 style="color: #fff; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:1.2em">⚡</span> 4. Executando Ações (Seguir)
-                            </h4>
-                            <ol style="margin-left: 20px; line-height: 1.6; color: var(--eio-text-secondary); font-size: 0.9rem;">
-                                <li>Na aba <strong>Contas</strong>, marque os perfis desejados (ou 'Selecionar Todos').</li>
-                                <li>No menu de ações inferior, escolha <strong>Seguir</strong>.</li>
-                                <li>Deixe a extensão aberta enquanto ela trabalha. O sistema fará pausas para evitar bloqueios.</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            </div>
-</main>
+    </main>
 
     <footer class="eio-popup-footer">
         <div class="eio-footer-actions">
@@ -952,6 +846,74 @@
                 </p>
             </div>
         </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- MODAL DE LOADING PROFISSIONAL - UX COMPLETA                 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div id="loadingModal" class="eio-loading-modal" style="display: none;">
+        <div class="eio-loading-modal-backdrop"></div>
+        <div class="eio-loading-modal-content">
+            <!-- Ícone animado -->
+            <div class="eio-loading-icon-wrapper">
+                <div class="eio-loading-rocket">🚀</div>
+                <div class="eio-loading-spinner-ring"></div>
+            </div>
+
+            <!-- Título dinâmico -->
+            <h2 class="eio-loading-title" id="loadingTitle">🚀 Preparando sua lista…</h2>
+
+            <!-- Mensagem contextual -->
+            <p class="eio-loading-message" id="loadingMessage">
+                Estamos buscando e organizando os perfis selecionados.<br>
+                Isso pode levar até <strong id="loadingTimeEstimate">30</strong> segundos.<br>
+                Você não precisa sair desta tela.
+            </p>
+
+            <!-- Progress Bar -->
+            <div class="eio-loading-progress-container">
+                <div class="eio-loading-progress-bar">
+                    <div class="eio-loading-progress-fill" id="loadingProgressFill" style="width: 0%;"></div>
+                </div>
+                <div class="eio-loading-progress-info">
+                    <span id="loadingProgressText">Perfis carregados: <strong id="loadingCount">0</strong> / <strong
+                            id="loadingTotal">--</strong></span>
+                    <span id="loadingPercentage">0%</span>
+                </div>
+            </div>
+
+            <!-- Status dinâmico -->
+            <div class="eio-loading-status" id="loadingStatus">
+                <span class="eio-loading-status-dot"></span>
+                <span id="loadingStatusText">Iniciando extração...</span>
+            </div>
+
+            <!-- Mensagem de segurança -->
+            <div class="eio-loading-security">
+                🔐 Este processo acontece em segundo plano e respeita os limites de segurança do Instagram.
+            </div>
+
+            <!-- Timeout Action (hidden by default) -->
+            <div class="eio-loading-timeout" id="loadingTimeout" style="display: none;">
+                <div class="eio-loading-timeout-message">
+                    ⚠️ O carregamento está demorando mais que o esperado.<br>
+                    A lista continuará sendo preparada em segundo plano.
+                </div>
+                <button class="eio-btn eio-btn-primary" id="btnRefreshList">
+                    🔄 Atualizar lista
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST DE SUCESSO -->
+    <div id="successToast" class="eio-success-toast" style="display: none;">
+        <div class="eio-toast-icon">✅</div>
+        <div class="eio-toast-content">
+            <strong>Lista carregada com sucesso!</strong>
+            <span id="successToastCount">0 perfis prontos para processamento.</span>
+        </div>
+        <button class="eio-toast-close" id="closeSuccessToast">×</button>
     </div>
 
     <!-- Scripts -->

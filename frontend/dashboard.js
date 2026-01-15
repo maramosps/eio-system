@@ -465,76 +465,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '4.8 MB (Nova)';
-    if (extensionVersion) extensionVersion.textContent = '2.1.0';
+    if (extensionVersion) extensionVersion.textContent = '3.0.1';
 
-    // Download button - Direct download approach (works on all browsers)
+    // Download button - Simple direct download
     if (btnDownload) {
-        btnDownload.addEventListener('click', async () => {
-            try {
-                btnDownload.disabled = true;
-                btnDownload.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px; animation: spin 1s linear infinite;">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 6v6l4 2"></path>
-                    </svg>
-                    Preparando download...
-                `;
-
-                // Direct download using anchor tag - works on all browsers
-                const downloadUrl = '/downloads/eio-extension.zip';
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = 'eio-extension.zip';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-
-                // Success feedback
-                btnDownload.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    Download Iniciado!
-                `;
-
-                setTimeout(() => {
-                    btnDownload.disabled = false;
-                    btnDownload.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Baixar Extensão (.zip)
-                    `;
-                }, 3000);
-
-            } catch (error) {
-                console.error('Download error:', error);
-                btnDownload.disabled = false;
-                btnDownload.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                    Erro no Download
-                `;
-                alert('Erro ao baixar extensão. Tente novamente.');
-
-                setTimeout(() => {
-                    btnDownload.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Baixar Extensão (.zip)
-                    `;
-                }, 3000);
-            }
+        btnDownload.addEventListener('click', () => {
+            // Direct navigation to download file
+            window.location.href = '/downloads/eio-extension.zip';
         });
     }
 
@@ -2264,19 +2201,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 3. Lógica do Explorador de Leads (Simulação Inteligente) ---
+    // --- 3. Lógica do Explorador de Leads (REAL - Conecta com a Extensão) ---
     const btnStartExploration = document.getElementById('btnStartExploration');
     const explorerResults = document.getElementById('explorerResults');
     const explorerSearch = document.getElementById('explorerSearch');
 
+    // Estado global dos leads encontrados
+    window.exploredLeads = [];
+
     if (btnStartExploration) {
-        btnStartExploration.addEventListener('click', () => {
-            const query = explorerSearch.value.trim();
-            const brazilOnly = document.getElementById('filterBrazil').checked;
-            const contactOnly = document.getElementById('filterContact').checked;
+        btnStartExploration.addEventListener('click', async () => {
+            const query = explorerSearch?.value?.trim();
+            const brazilOnly = document.getElementById('filterBrazil')?.checked;
+            const contactOnly = document.getElementById('filterContact')?.checked;
 
             if (!query) {
-                alert('⚠️ Digite um termo para buscar (ex: Nutricionista, Loja de Roupas)');
+                alert('⚠️ Digite um termo para buscar (ex: @perfil_referencia, hashtag, ou nicho)');
                 return;
             }
 
@@ -2288,82 +2228,609 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 40px; color: #aaa;">
                         <div style="margin-bottom: 20px; font-size: 2rem;">🛰️</div>
-                        <div>Conectando ao Instagram... Explorando perfis para "<b>${query}</b>"</div>
-                        <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">Isso pode levar alguns segundos. Respeitando limites de segurança.</div>
+                        <div>Conectando à extensão E.I.O...</div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+                            Abrindo Instagram e buscando perfis para "<b>${query}</b>"
+                        </div>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(255,200,0,0.1); border-radius: 8px; color: #ffd54f; font-size: 0.85rem;">
+                            💡 Certifique-se de que o Instagram está aberto em outra aba e a extensão E.I.O está ativa
+                        </div>
                     </td>
                 </tr>
             `;
 
-            // Simulação de busca (API Mockada para demonstração sem custo)
-            // Em produção real, isso enviaria uma mensagem para a extensão fazer o scraping
-            setTimeout(() => {
-                const mockResults = [
-                    { user: 'dra.anasilva', name: 'Dra. Ana Silva', bio: 'Nutricionista Funcional | Emagrecimento Saudável 🥗 Agende sua consulta 👇', contact: 'ana.nutri@email.com | (11) 99999-8888', status: 'Novo' },
-                    { user: 'loja.modafit', name: 'Moda Fit Store', bio: 'Roupas para treino com estilo 💪 Enviamos para todo Brasil 🇧🇷', contact: 'vendas@modafit.com.br', status: 'Novo' },
-                    { user: 'consultoria.tech', name: 'Tech Solutions', bio: 'Consultoria de TI para empresas. Transformação Digital. 💻', contact: 'contato@techsol.com', status: 'Novo' },
-                    { user: 'joao.personal', name: 'João Trainer', bio: 'Personal Trainer | Consultoria Online. Mude seu corpo em 30 dias. 🔥', contact: '(21) 98888-7777', status: 'Novo' },
-                    { user: 'cafe.gourmet_sp', name: 'Café & Aroma', bio: 'O melhor café do centro de SP. Venha nos visitar! ☕', contact: 'Sem contato visível', status: 'Baixa Intenção' }
-                ];
+            try {
+                // Tenta comunicar com a extensão
+                const extensionId = await getExtensionId();
 
-                // Filtro "Possui Contato"
-                const filtered = contactOnly
-                    ? mockResults.filter(r => r.contact !== 'Sem contato visível')
-                    : mockResults;
+                if (!extensionId) {
+                    throw new Error('Extensão E.I.O não detectada. Instale a extensão e recarregue a página.');
+                }
 
-                // Renderizar
-                let html = '';
-                filtered.forEach(lead => {
-                    const hasContact = lead.contact !== 'Sem contato visível';
-                    const intentionBadge = hasContact
-                        ? '<span style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Alta Intenção</span>'
-                        : '<span style="background: rgba(255, 255, 255, 0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Baixa</span>';
-
-                    html += `
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <td style="padding: 15px;"><input type="checkbox" class="lead-checkbox"></td>
-                            <td style="padding: 15px;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-radius: 50%;"></div>
-                                    <div>
-                                        <div style="font-weight: bold; color: #fff;">${lead.name}</div>
-                                        <div style="font-size: 0.85rem; color: #aaa;">@${lead.user}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="padding: 15px; max-width: 200px; color: #ccc; font-size: 0.9rem;">${lead.bio}</td>
-                            <td style="padding: 15px; font-size: 0.9rem; color: #fff;">${lead.contact}</td>
-                            <td style="padding: 15px;">${intentionBadge}</td>
-                        </tr>
-                    `;
+                // Envia comando para a extensão explorar leads
+                const response = await sendMessageToExtension({
+                    action: 'exploreLeads',
+                    payload: {
+                        query: query,
+                        filters: {
+                            brazilOnly: brazilOnly,
+                            contactOnly: contactOnly,
+                            limit: 50
+                        }
+                    }
                 });
 
-                explorerResults.innerHTML = html;
+                if (response?.success && response?.leads?.length > 0) {
+                    window.exploredLeads = response.leads;
+                    renderExplorerResults(response.leads, contactOnly);
+                    alert(`✅ Varredura Concluída! ${response.leads.length} leads encontrados.`);
+                } else {
+                    // Fallback: Instruções para uso manual via extensão
+                    explorerResults.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #aaa;">
+                                <div style="margin-bottom: 15px; font-size: 2rem;">📋</div>
+                                <div style="font-size: 1.1rem; color: #fff; margin-bottom: 15px;">Use a Extensão para Explorar Leads</div>
+                                <div style="text-align: left; max-width: 500px; margin: 0 auto; color: #ccc; line-height: 1.8;">
+                                    <p><b>Passo a Passo:</b></p>
+                                    <p>1️⃣ Vá para o perfil de um <b>concorrente</b> ou <b>influenciador</b> do nicho</p>
+                                    <p>2️⃣ Clique na lista de <b>"Seguidores"</b></p>
+                                    <p>3️⃣ Abra a <b>extensão E.I.O</b> e clique em <b>"Carregar Contas"</b></p>
+                                    <p>4️⃣ A extensão vai extrair os dados dos seguidores</p>
+                                    <p>5️⃣ Os leads aparecerão aqui automaticamente! 🚀</p>
+                                </div>
+                                <div style="margin-top: 20px;">
+                                    <a href="https://instagram.com/explore/search/keyword/?q=${encodeURIComponent(query)}" 
+                                       target="_blank"
+                                       style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #7F5AF0, #2CB67D); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                                        🔍 Buscar "${query}" no Instagram
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.log('Explorer error:', error.message);
+                // Mostra instruções para uso manual
+                explorerResults.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #aaa;">
+                            <div style="margin-bottom: 15px; font-size: 2rem;">🔌</div>
+                            <div style="font-size: 1.1rem; color: #fff; margin-bottom: 15px;">Conecte a Extensão E.I.O</div>
+                            <div style="background: rgba(255,100,100,0.1); padding: 15px; border-radius: 8px; color: #ff6b6b; margin-bottom: 20px;">
+                                ${error.message}
+                            </div>
+                            <div style="text-align: left; max-width: 500px; margin: 0 auto; color: #ccc; line-height: 1.8;">
+                                <p><b>Para explorar leads reais:</b></p>
+                                <p>1️⃣ Instale a extensão E.I.O no Chrome</p>
+                                <p>2️⃣ Vá para o Instagram e abra a lista de seguidores de um perfil</p>
+                                <p>3️⃣ Use a extensão para carregar e filtrar as contas</p>
+                                <p>4️⃣ Selecione os leads e processe as ações desejadas</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
 
-                // Reset botão
-                btnStartExploration.disabled = false;
-                btnStartExploration.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Explorar Agora`;
-
-                // Alert Toast
-                alert(`✅ Varredura Concluída! ${filtered.length} leads encontrados.`);
-
-            }, 3000); // 3 sec delay simulation
+            // Reset botão
+            btnStartExploration.disabled = false;
+            btnStartExploration.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Explorar Agora`;
         });
     }
 
-    // Botão Exportar Excel (Simulação)
+    // Função para renderizar resultados do explorador
+    function renderExplorerResults(leads, contactOnly) {
+        let filtered = leads;
+        if (contactOnly) {
+            filtered = leads.filter(l => l.contact && l.contact !== 'Sem contato visível');
+        }
+
+        if (filtered.length === 0) {
+            explorerResults.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #aaa;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">📭</div>
+                        <div>Nenhum lead encontrado com os filtros selecionados</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(lead => {
+            const hasContact = lead.contact && lead.contact !== 'Sem contato visível';
+            const intentionBadge = hasContact
+                ? '<span style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Alta Intenção</span>'
+                : '<span style="background: rgba(255, 255, 255, 0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Baixa</span>';
+
+            html += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" data-username="${lead.username || lead.user}">
+                    <td style="padding: 15px;"><input type="checkbox" class="lead-checkbox"></td>
+                    <td style="padding: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${lead.profilePic || ''}" 
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
+                                 style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <div style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-radius: 50%; display: none;"></div>
+                            <div>
+                                <div style="font-weight: bold; color: #fff;">${lead.fullName || lead.name || 'Sem nome'}</div>
+                                <div style="font-size: 0.85rem; color: #aaa;">@${lead.username || lead.user}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 15px; max-width: 200px; color: #ccc; font-size: 0.9rem;">${lead.bio || '-'}</td>
+                    <td style="padding: 15px; font-size: 0.9rem; color: #fff;">${lead.contact || 'Sem contato visível'}</td>
+                    <td style="padding: 15px;">${intentionBadge}</td>
+                </tr>
+            `;
+        });
+
+        explorerResults.innerHTML = html;
+    }
+
+    // Função auxiliar para detectar ID da extensão
+    async function getExtensionId() {
+        return new Promise((resolve) => {
+            // Tenta detectar a extensão via postMessage
+            window.postMessage({ type: 'EIO_PING' }, '*');
+
+            const timeout = setTimeout(() => {
+                window.removeEventListener('message', handler);
+                resolve(null);
+            }, 2000);
+
+            function handler(event) {
+                if (event.data?.type === 'EIO_PONG') {
+                    clearTimeout(timeout);
+                    window.removeEventListener('message', handler);
+                    resolve(event.data.extensionId || 'detected');
+                }
+            }
+            window.addEventListener('message', handler);
+        });
+    }
+
+    // Função para enviar mensagem para a extensão
+    async function sendMessageToExtension(message) {
+        return new Promise((resolve) => {
+            window.postMessage({ type: 'EIO_COMMAND', ...message }, '*');
+
+            const timeout = setTimeout(() => {
+                window.removeEventListener('message', handler);
+                resolve({ success: false, error: 'Timeout' });
+            }, 30000);
+
+            function handler(event) {
+                if (event.data?.type === 'EIO_RESPONSE') {
+                    clearTimeout(timeout);
+                    window.removeEventListener('message', handler);
+                    resolve(event.data);
+                }
+            }
+            window.addEventListener('message', handler);
+        });
+    }
+
+    // Botão Exportar Excel (REAL)
     const btnExportExcel = document.getElementById('btnExportExcel');
     if (btnExportExcel) {
         btnExportExcel.addEventListener('click', () => {
-            alert('📊 Exportando lista para .CSV...');
+            const leads = window.exploredLeads || [];
+            if (leads.length === 0) {
+                alert('⚠️ Nenhum lead para exportar. Faça uma busca primeiro.');
+                return;
+            }
+
+            // Criar CSV real
+            const headers = ['Username', 'Nome', 'Bio', 'Contato', 'Seguidores', 'Seguindo'];
+            const csvContent = [
+                headers.join(','),
+                ...leads.map(lead => [
+                    lead.username || lead.user || '',
+                    `"${(lead.fullName || lead.name || '').replace(/"/g, '""')}"`,
+                    `"${(lead.bio || '').replace(/"/g, '""')}"`,
+                    `"${(lead.contact || '').replace(/"/g, '""')}"`,
+                    lead.followers || '',
+                    lead.following || ''
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `eio_leads_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            alert(`📊 Exportado: ${leads.length} leads para CSV!`);
         });
     }
 
-    // Botão Enviar CRM (Simulação)
+    // Botão Enviar CRM (REAL)
     const btnSendToCRM = document.getElementById('btnSendToCRM');
     if (btnSendToCRM) {
-        btnSendToCRM.addEventListener('click', () => {
-            alert('📥 4 Leads enviados para a coluna "Prospecção" do CRM!');
+        btnSendToCRM.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('.lead-checkbox:checked');
+
+            if (selectedCheckboxes.length === 0) {
+                alert('⚠️ Selecione pelo menos um lead para enviar ao CRM');
+                return;
+            }
+
+            const selectedUsernames = [];
+            selectedCheckboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                const username = row?.dataset?.username;
+                if (username) selectedUsernames.push(username);
+            });
+
+            const leadsToSend = (window.exploredLeads || []).filter(l =>
+                selectedUsernames.includes(l.username || l.user)
+            );
+
+            if (leadsToSend.length === 0) {
+                alert('⚠️ Nenhum lead selecionado encontrado');
+                return;
+            }
+
+            // Aqui você pode integrar com seu backend real
+            // Por agora, salva no localStorage para o CRM usar
+            const existingLeads = JSON.parse(localStorage.getItem('eio_crm_leads') || '[]');
+            const newLeads = leadsToSend.map(lead => ({
+                ...lead,
+                stage: 'prospeccao',
+                addedAt: new Date().toISOString(),
+                source: 'explorer'
+            }));
+
+            localStorage.setItem('eio_crm_leads', JSON.stringify([...existingLeads, ...newLeads]));
+
+            alert(`📥 ${leadsToSend.length} Leads enviados para a coluna "Prospecção" do CRM!`);
         });
     }
 
 });
+
+// ═══════════════════════════════════════════════════════════
+// AGENTES IA - CONFIGURAÇÃO E INTEGRAÇÃO
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Navegação entre tabs dos Agentes IA ---
+    const agentTabs = document.querySelectorAll('.eio-agent-tab');
+    const agentContents = document.querySelectorAll('.eio-agent-content');
+
+    agentTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+
+            // Atualizar tabs
+            agentTabs.forEach(t => {
+                t.style.background = 'rgba(255,255,255,0.05)';
+                t.style.color = '#aaa';
+            });
+            tab.style.background = '#6246ea';
+            tab.style.color = '#fff';
+
+            // Atualizar conteúdo
+            agentContents.forEach(content => {
+                content.style.display = content.dataset.content === targetTab ? 'block' : 'none';
+            });
+        });
+    });
+
+    // --- Toggle de Agentes ---
+    const toggles = ['toggleAssistant', 'toggleQualifier'];
+    toggles.forEach(id => {
+        const toggle = document.getElementById(id);
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                const ball = toggle.querySelector('div');
+                const isActive = ball.style.right === '2px';
+
+                if (isActive) {
+                    ball.style.right = 'auto';
+                    ball.style.left = '2px';
+                    toggle.style.background = '#444';
+                } else {
+                    ball.style.left = 'auto';
+                    ball.style.right = '2px';
+                    toggle.style.background = '#6246ea';
+                }
+
+                // Salvar estado
+                const agentStates = JSON.parse(localStorage.getItem('eio_agent_states') || '{}');
+                agentStates[id] = !isActive;
+                localStorage.setItem('eio_agent_states', JSON.stringify(agentStates));
+            });
+        }
+    });
+
+    // --- Salvar Configurações do Assistente ---
+    const btnSaveAssistant = document.getElementById('btnSaveAssistant');
+    if (btnSaveAssistant) {
+        btnSaveAssistant.addEventListener('click', () => {
+            const config = {
+                keywords: {
+                    interest: document.getElementById('keywordsInterest')?.value || '',
+                    question: document.getElementById('keywordsQuestion')?.value || '',
+                    complaint: document.getElementById('keywordsComplaint')?.value || '',
+                    spam: document.getElementById('keywordsSpam')?.value || ''
+                },
+                replies: {
+                    interest: document.getElementById('replyInterest')?.value || '',
+                    question: document.getElementById('replyQuestion')?.value || '',
+                    complaint: document.getElementById('replyComplaint')?.value || ''
+                },
+                enabled: true,
+                updatedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('eio_assistant_config', JSON.stringify(config));
+            alert('✅ Configurações do Assistente salvas com sucesso!');
+        });
+    }
+
+    // --- Carregar configurações salvas ---
+    const loadAssistantConfig = () => {
+        const saved = localStorage.getItem('eio_assistant_config');
+        if (saved) {
+            try {
+                const config = JSON.parse(saved);
+
+                if (config.keywords) {
+                    if (document.getElementById('keywordsInterest'))
+                        document.getElementById('keywordsInterest').value = config.keywords.interest;
+                    if (document.getElementById('keywordsQuestion'))
+                        document.getElementById('keywordsQuestion').value = config.keywords.question;
+                    if (document.getElementById('keywordsComplaint'))
+                        document.getElementById('keywordsComplaint').value = config.keywords.complaint;
+                    if (document.getElementById('keywordsSpam'))
+                        document.getElementById('keywordsSpam').value = config.keywords.spam;
+                }
+
+                if (config.replies) {
+                    if (document.getElementById('replyInterest'))
+                        document.getElementById('replyInterest').value = config.replies.interest;
+                    if (document.getElementById('replyQuestion'))
+                        document.getElementById('replyQuestion').value = config.replies.question;
+                    if (document.getElementById('replyComplaint'))
+                        document.getElementById('replyComplaint').value = config.replies.complaint;
+                }
+            } catch (e) {
+                console.log('Erro ao carregar config:', e);
+            }
+        }
+    };
+
+    loadAssistantConfig();
+
+    // --- Envio de DMs em Massa via Agentes IA ---
+    window.sendBulkDM = async function (targets, template) {
+        if (!targets || targets.length === 0) {
+            alert('⚠️ Nenhum destinatário selecionado');
+            return;
+        }
+
+        if (!template) {
+            alert('⚠️ Nenhum template de mensagem definido');
+            return;
+        }
+
+        const confirmSend = confirm(
+            `📨 Enviar DM para ${targets.length} usuários?\n\n` +
+            `Mensagem:\n"${template.substring(0, 100)}${template.length > 100 ? '...' : ''}"\n\n` +
+            `⚠️ Delay de 60-120 segundos entre cada mensagem para segurança.`
+        );
+
+        if (!confirmSend) return;
+
+        // Tentar comunicar com a extensão
+        window.postMessage({
+            type: 'EIO_COMMAND',
+            action: 'sendBulkDM',
+            targets: targets,
+            template: template,
+            delayMin: 60000,
+            delayMax: 120000
+        }, '*');
+
+        alert(`📩 Processo de envio iniciado!\n\nAcompanhe o progresso no console da extensão.`);
+    };
+
+    // --- Botão de enviar DM para leads selecionados ---
+    const btnSendDMToLeads = document.getElementById('btnSendDMToLeads');
+    if (btnSendDMToLeads) {
+        btnSendDMToLeads.addEventListener('click', () => {
+            const selectedCheckboxes = document.querySelectorAll('.lead-checkbox:checked');
+
+            if (selectedCheckboxes.length === 0) {
+                alert('⚠️ Selecione pelo menos um lead para enviar DM');
+                return;
+            }
+
+            const template = prompt(
+                '📝 Digite a mensagem que será enviada:\n\n' +
+                'Variáveis disponíveis:\n' +
+                '{{nome}} - Nome do usuário\n' +
+                '{{@}} - Menção (@usuario)\n' +
+                '{{data}} - Data atual\n' +
+                '{{hora}} - Hora atual',
+                'Olá {{nome}}! 👋\n\nVi que você se interessa pelo nosso conteúdo. Gostaria de saber mais sobre nossos produtos?\n\nAbraço!'
+            );
+
+            if (!template) return;
+
+            const targets = [];
+            selectedCheckboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                const username = row?.dataset?.username;
+                if (username) targets.push(username);
+            });
+
+            window.sendBulkDM(targets, template);
+        });
+    }
+
+    // --- Templates Dinâmicos ---
+    const templatesList = document.getElementById('templatesList');
+    const btnAddTemplate = document.getElementById('btnAddTemplate');
+
+    const loadTemplates = () => {
+        const templates = JSON.parse(localStorage.getItem('eio_dm_templates') || '[]');
+        if (templatesList) {
+            if (templates.length === 0) {
+                templatesList.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 30px;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">📝</div>
+                        <div>Nenhum template salvo</div>
+                        <div style="font-size: 0.85rem; margin-top: 5px;">Clique em "Novo Template" para criar</div>
+                    </div>
+                `;
+            } else {
+                templatesList.innerHTML = templates.map((t, i) => `
+                    <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong style="color: #fff;">${t.name}</strong>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="useTemplate(${i})" style="background: #6246ea; border: none; color: #fff; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Usar</button>
+                                <button onclick="deleteTemplate(${i})" style="background: #e74c3c; border: none; color: #fff; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">🗑️</button>
+                            </div>
+                        </div>
+                        <div style="color: #aaa; font-size: 0.9rem; white-space: pre-wrap;">${t.content.substring(0, 150)}${t.content.length > 150 ? '...' : ''}</div>
+                    </div>
+                `).join('');
+            }
+        }
+    };
+
+    window.useTemplate = function (index) {
+        const templates = JSON.parse(localStorage.getItem('eio_dm_templates') || '[]');
+        const template = templates[index];
+        if (template) {
+            const targets = [];
+            document.querySelectorAll('.lead-checkbox:checked').forEach(cb => {
+                const row = cb.closest('tr');
+                const username = row?.dataset?.username;
+                if (username) targets.push(username);
+            });
+
+            if (targets.length === 0) {
+                alert('⚠️ Selecione leads na tabela antes de usar o template');
+                return;
+            }
+
+            window.sendBulkDM(targets, template.content);
+        }
+    };
+
+    window.deleteTemplate = function (index) {
+        if (!confirm('Excluir este template?')) return;
+        const templates = JSON.parse(localStorage.getItem('eio_dm_templates') || '[]');
+        templates.splice(index, 1);
+        localStorage.setItem('eio_dm_templates', JSON.stringify(templates));
+        loadTemplates();
+    };
+
+    if (btnAddTemplate) {
+        btnAddTemplate.addEventListener('click', () => {
+            const name = prompt('Nome do template:');
+            if (!name) return;
+
+            const content = prompt(
+                'Conteúdo da mensagem:\n\n' +
+                'Variáveis: {{nome}}, {{@}}, {{data}}, {{hora}}'
+            );
+            if (!content) return;
+
+            const templates = JSON.parse(localStorage.getItem('eio_dm_templates') || '[]');
+            templates.push({ name, content, createdAt: new Date().toISOString() });
+            localStorage.setItem('eio_dm_templates', JSON.stringify(templates));
+            loadTemplates();
+            alert('✅ Template salvo!');
+        });
+    }
+
+    loadTemplates();
+
+});
+
+// ═══════════════════════════════════════════════════════════
+// QUALIFICADOR DE LEADS
+// ═══════════════════════════════════════════════════════════
+
+window.qualifyLead = function (lead) {
+    let score = 0;
+    const reasons = [];
+
+    // Seguidores (500-5000 = perfil real)
+    if (lead.followers >= 500 && lead.followers <= 5000) {
+        score += 2;
+        reasons.push('Seguidores ideais');
+    }
+
+    // Email na bio
+    if (lead.bio && /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(lead.bio)) {
+        score += 3;
+        reasons.push('Email na bio');
+        lead.contact = lead.bio.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)[0];
+    }
+
+    // Telefone na bio
+    if (lead.bio && /\(?\d{2}\)?\s*\d{4,5}[-.\s]?\d{4}/.test(lead.bio)) {
+        score += 2;
+        reasons.push('Telefone na bio');
+        if (!lead.contact) {
+            lead.contact = lead.bio.match(/\(?\d{2}\)?\s*\d{4,5}[-.\s]?\d{4}/)[0];
+        }
+    }
+
+    // Não é privado
+    if (!lead.isPrivate) {
+        score += 1;
+        reasons.push('Perfil público');
+    }
+
+    // Verificado
+    if (lead.isVerified) {
+        score += 2;
+        reasons.push('Verificado');
+    }
+
+    // Ratio bom (seguidores > seguindo)
+    if (lead.followers > lead.following * 1.5) {
+        score += 1;
+        reasons.push('Bom ratio');
+    }
+
+    // Calcular nível
+    let level = 'Frio';
+    if (score >= 7) level = 'Quente';
+    else if (score >= 4) level = 'Morno';
+
+    return {
+        ...lead,
+        qualificationScore: score,
+        qualificationLevel: level,
+        qualificationReasons: reasons
+    };
+};
+
+// Aplicar qualificação a todos os leads
+window.qualifyAllLeads = function () {
+    const leads = window.exploredLeads || [];
+    window.exploredLeads = leads.map(lead => window.qualifyLead(lead));
+
+    // Reordenar por score
+    window.exploredLeads.sort((a, b) => (b.qualificationScore || 0) - (a.qualificationScore || 0));
+
+    alert(`✅ ${leads.length} leads qualificados!\n\n` +
+        `🔥 Quentes: ${leads.filter(l => l.qualificationLevel === 'Quente').length}\n` +
+        `🟡 Mornos: ${leads.filter(l => l.qualificationLevel === 'Morno').length}\n` +
+        `❄️ Frios: ${leads.filter(l => l.qualificationLevel === 'Frio').length}`
+    );
+};
