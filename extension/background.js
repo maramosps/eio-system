@@ -42,6 +42,20 @@ let extensionState = {
 // Constantes
 const API_BASE_URL = 'https://eio-system.vercel.app/api/v1';
 const WS_URL = 'https://eio-system.vercel.app';
+const SUPABASE_URL = 'https://zupnyvnrmwoyqajecxmm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY';
+
+// Configuração de delays humanizados (em milissegundos)
+const DELAY_CONFIG = {
+    MIN_BETWEEN_PROFILES: 30000,   // 30 segundos mínimo
+    MAX_BETWEEN_PROFILES: 120000,  // 120 segundos máximo
+    MIN_BETWEEN_ACTIONS: 5000,     // 5 segundos entre ações no mesmo perfil
+    MAX_BETWEEN_ACTIONS: 15000,    // 15 segundos entre ações no mesmo perfil
+    MIN_UNFOLLOW: 30000,           // 30 segundos para unfollow
+    MAX_UNFOLLOW: 90000,           // 90 segundos para unfollow
+    MIN_FOLLOW: 30000,             // 30 segundos para follow
+    MAX_FOLLOW: 90000              // 90 segundos para follow
+};
 
 /**
  * Inicialização da extensão
@@ -606,6 +620,126 @@ async function sendActionToBackend(action, result) {
     } catch (e) { }
 }
 
+/**
+ * Salvar ação no Supabase para aparecer no Dashboard
+ * Esta função envia as ações para o banco de dados em tempo real
+ */
+async function saveActionToSupabase(actionType, target, success = true) {
+    try {
+        // Obter dados do usuário do storage
+        const storage = await chrome.storage.local.get(['eio_user', 'eio_user_id']);
+        const userId = storage.eio_user_id || storage.eio_user?.id;
+
+        if (!userId) {
+            console.log('[SUPABASE] Usuário não encontrado no storage');
+            return;
+        }
+
+        const actionData = {
+            user_id: userId,
+            action_type: actionType,
+            target_username: target?.replace('@', '') || '',
+            success: success,
+            timestamp: new Date().toISOString(),
+            date: new Date().toISOString().split('T')[0],
+            session_id: extensionState.stats.sessionStartTime || Date.now().toString()
+        };
+
+        console.log('[SUPABASE] Salvando ação:', actionData);
+
+        // Enviar para a API do Supabase
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/logs`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                level: success ? 'info' : 'warning',
+                action: actionType,
+                message: `${actionType} ${success ? 'OK' : 'FALHA'}: @${target?.replace('@', '')}`,
+                meta: actionData
+            })
+        });
+
+        if (response.ok) {
+            console.log('[SUPABASE] Ação salva com sucesso!');
+        } else {
+            console.error('[SUPABASE] Erro ao salvar:', response.status);
+        }
+
+        // Também atualizar contadores do dia no instagram_accounts
+        await updateAccountStats(userId, actionType, success);
+
+    } catch (error) {
+        console.error('[SUPABASE] Erro ao salvar ação:', error);
+    }
+}
+
+/**
+ * Atualizar estatísticas da conta no Supabase
+ */
+async function updateAccountStats(userId, actionType, success) {
+    try {
+        const storage = await chrome.storage.local.get(['eio_instagram_handle']);
+        const instagramHandle = storage.eio_instagram_handle;
+
+        if (!instagramHandle) return;
+
+        // Atualizar today_stats no instagram_accounts
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/instagram_accounts?instagram_handle=eq.${instagramHandle}`, {
+            method: 'GET',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const accounts = await response.json();
+            if (accounts.length > 0) {
+                const account = accounts[0];
+                const todayStats = account.today_stats || { follows: 0, likes: 0, comments: 0, unfollows: 0 };
+
+                // Incrementar o contador correspondente
+                if (success) {
+                    switch (actionType) {
+                        case 'follow': todayStats.follows = (todayStats.follows || 0) + 1; break;
+                        case 'like': todayStats.likes = (todayStats.likes || 0) + 1; break;
+                        case 'comment': todayStats.comments = (todayStats.comments || 0) + 1; break;
+                        case 'unfollow': todayStats.unfollows = (todayStats.unfollows || 0) + 1; break;
+                    }
+                }
+
+                todayStats.last_activity = new Date().toISOString();
+
+                // Atualizar no banco
+                await fetch(`${SUPABASE_URL}/rest/v1/instagram_accounts?id=eq.${account.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        today_stats: todayStats,
+                        last_activity: new Date().toISOString()
+                    })
+                });
+
+                console.log('[SUPABASE] Stats atualizados:', todayStats);
+            }
+        }
+    } catch (error) {
+        console.error('[SUPABASE] Erro ao atualizar stats:', error);
+    }
+}
+
 async function logAction(level, message, meta = {}) {
     const entry = { level, message, meta, timestamp: new Date().toISOString() };
     console.log(`[LOG] ${message}`);
@@ -634,8 +768,12 @@ function resetDailyStats() {
     saveState();
 }
 
-function calculateHumanDelay(min = 30000, max = 120000) {
-    return Math.floor(Math.random() * (max - min) + min);
+function calculateHumanDelay(min = DELAY_CONFIG.MIN_BETWEEN_PROFILES, max = DELAY_CONFIG.MAX_BETWEEN_PROFILES) {
+    // Calcular delay aleatório dentro do range especificado
+    // NÃO forçar mínimo - respeitar os valores passados
+    const delay = Math.floor(Math.random() * (max - min) + min);
+    console.log(`[DELAY] Calculado: ${Math.round(delay / 1000)}s (range: ${Math.round(min / 1000)}s - ${Math.round(max / 1000)}s)`);
+    return delay;
 }
 
 async function saveState() {
@@ -804,10 +942,13 @@ async function processQueue() {
                     logAction('warning', `⚠️ Falha unfollow @${item.username.replace('@', '')}: ${result?.action || 'erro'}`);
                 }
 
-                // Delay de segurança entre unfollows (30-60 segundos)
-                const delay = calculateHumanDelay(30000, 60000);
-                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+                // Delay de segurança entre unfollows (30-90 segundos)
+                const delay = calculateHumanDelay(DELAY_CONFIG.MIN_UNFOLLOW, DELAY_CONFIG.MAX_UNFOLLOW);
+                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s antes do próximo...`);
                 await sleep(delay);
+
+                // Salvar ação no Supabase/Dashboard
+                await saveActionToSupabase('unfollow', item.username, true);
 
             } catch (unfollowError) {
                 logAction('warning', `⚠️ Erro unfollow: ${unfollowError.message}`);
@@ -849,10 +990,13 @@ async function processQueue() {
                     logAction('warning', `⚠️ Falha follow @${item.username.replace('@', '')}: ${result?.action || 'erro'}`);
                 }
 
-                // Delay de segurança entre follows (30-60 segundos)
-                const delay = calculateHumanDelay(30000, 60000);
-                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+                // Delay de segurança entre follows (30-90 segundos)
+                const delay = calculateHumanDelay(DELAY_CONFIG.MIN_FOLLOW, DELAY_CONFIG.MAX_FOLLOW);
+                logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s antes do próximo...`);
                 await sleep(delay);
+
+                // Salvar ação no Supabase/Dashboard
+                await saveActionToSupabase('follow', item.username, true);
 
             } catch (followError) {
                 logAction('warning', `⚠️ Erro follow: ${followError.message}`);
@@ -905,8 +1049,13 @@ async function processQueue() {
                     logAction('warning', `⚠️ Falha ${actionType}: ${result?.error || 'erro'}`);
                 }
 
-                // Small delay between actions on same profile
-                await sleep(calculateHumanDelay(3000, 6000));
+                // Delay humanizado entre ações no mesmo perfil (5-15 segundos)
+                const actionDelay = calculateHumanDelay(DELAY_CONFIG.MIN_BETWEEN_ACTIONS, DELAY_CONFIG.MAX_BETWEEN_ACTIONS);
+                logAction('info', `⏱️ Aguardando ${Math.round(actionDelay / 1000)}s entre ações...`);
+                await sleep(actionDelay);
+
+                // Salvar ação no Supabase/Dashboard
+                await saveActionToSupabase(actionType, item.username, result?.success || false);
 
             } catch (actionError) {
                 logAction('warning', `⚠️ Erro em ${actionType}: ${actionError.message}`);
@@ -937,9 +1086,9 @@ async function processQueue() {
 
         saveState();
 
-        // Calculate human-like delay before next profile
-        const delay = calculateHumanDelay(45000, 90000); // 45-90 seconds
-        logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s...`);
+        // Delay humanizado antes do próximo perfil (30-120 segundos)
+        const delay = calculateHumanDelay(DELAY_CONFIG.MIN_BETWEEN_PROFILES, DELAY_CONFIG.MAX_BETWEEN_PROFILES);
+        logAction('info', `⏱️ Aguardando ${Math.round(delay / 1000)}s antes do próximo perfil...`);
 
         await sleep(delay);
 
