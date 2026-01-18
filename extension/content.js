@@ -152,9 +152,23 @@ async function loadFollowersViaAPI(username, limit = 200) {
         }
     }
 
-    addConsoleLog('success', `✅ Total: ${allFollowers.length} seguidores carregados!`);
-    loadedAccounts = allFollowers;
-    return allFollowers;
+    // ═══════════════════════════════════════════════════════════
+    // FILTRO AUTOMÁTICO: Remover perfis que você já segue
+    // ═══════════════════════════════════════════════════════════
+    const totalBeforeFilter = allFollowers.length;
+    const filteredFollowers = allFollowers.filter(user => {
+        // Manter apenas quem você NÃO segue e NÃO solicitou
+        return !user.followed_by_viewer && !user.requested_by_viewer;
+    });
+
+    const removedCount = totalBeforeFilter - filteredFollowers.length;
+    if (removedCount > 0) {
+        addConsoleLog('info', `🔍 Auto-filtro: ${removedCount} perfis que você já segue foram removidos`);
+    }
+
+    addConsoleLog('success', `✅ Total: ${filteredFollowers.length} perfis novos prontos! (${removedCount} já seguidos removidos)`);
+    loadedAccounts = filteredFollowers;
+    return filteredFollowers;
 }
 
 /**
@@ -851,8 +865,22 @@ async function runExtractionFlow(payload) {
         }
     }
 
-    addConsoleLog('success', `✅ Finalizado! ${leads.length} leads extraídos.`);
-    return { success: true, data: leads };
+    // ═══════════════════════════════════════════════════════════
+    // FILTRO AUTOMÁTICO: Remover perfis que você já segue
+    // ═══════════════════════════════════════════════════════════
+    const totalBeforeFilter = leads.length;
+    const filteredLeads = leads.filter(lead => {
+        // Manter apenas quem você NÃO segue
+        return !lead.followedByMe;
+    });
+
+    const removedCount = totalBeforeFilter - filteredLeads.length;
+    if (removedCount > 0) {
+        addConsoleLog('info', `🔍 Auto-filtro: ${removedCount} perfis que você já segue foram removidos`);
+    }
+
+    addConsoleLog('success', `✅ Finalizado! ${filteredLeads.length} leads novos prontos! (${removedCount} já seguidos removidos)`);
+    return { success: true, data: filteredLeads };
 }
 
 /**
