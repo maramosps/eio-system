@@ -596,6 +596,8 @@ body {
 }
 
 .eio-account-card {
+    position: relative;
+    /* Importante para o stamp absoluto */
     display: flex;
     align-items: center;
     gap: 10px;
@@ -605,6 +607,56 @@ body {
     border-radius: var(--eio-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
+    overflow: hidden;
+    /* Cortar o stamp se sair das bordas */
+}
+
+/* Carimbo Visual de Ação Concluída */
+.card-stamp {
+    position: absolute;
+    top: 50%;
+    left: 22px;
+    /* Centro da área da foto */
+    transform: translate(-50%, -50%) rotate(-15deg);
+    border: 2px solid #4CAF50;
+    color: #4CAF50;
+    font-weight: 900;
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: rgba(15, 21, 30, 0.85);
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+    font-family: 'Arial Black', sans-serif;
+}
+
+.card-stamp.stamp-red {
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+}
+
+.card-stamp.stamp-green {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+.card-stamp.stamp-blue {
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.card-stamp.stamp-pink {
+    border-color: #E91E63;
+    color: #E91E63;
+}
+
+.card-stamp.stamp-orange {
+    border-color: #FF9800;
+    color: #FF9800;
 }
 
 .eio-account-card:hover {

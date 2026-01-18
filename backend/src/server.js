@@ -35,6 +35,9 @@ const paymentRoutes = require('./routes/payment.routes'); // ✅ NOVO - Pagament
 const { errorHandler } = require('./middlewares/errorHandler');
 const { authenticate, checkSubscription } = require('./middlewares/auth');
 
+// Import models (CRUCIAL: Carrega os relacionamentos antes de conectar o DB)
+require('./models');
+
 // Import services
 const { initializeDatabase } = require('./database/connection');
 const { initializeRedis } = require('./services/redis.service');

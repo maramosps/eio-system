@@ -424,8 +424,8 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    version: '3.0.1',
-                    size: '4.7 MB',
+                    version: '3.1.0',
+                    size: '4.8 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
                     downloadUrl: '/downloads/eio-extension.zip'
@@ -608,6 +608,43 @@ module.exports = async (req, res) => {
             } catch (err) {
                 console.error('Lead sync error:', err);
                 return res.status(401).json({ success: false, message: 'Token inválido ou erro no banco' });
+            }
+        }
+
+        // Analytics Dashboard
+        if ((path === '/api/v1/analytics/dashboard' || pathFromQuery === 'v1/analytics/dashboard') && method === 'GET') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) return res.status(401).json({ success: false });
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+
+                // Buscar logs do usuário
+                const { data: logs, error } = await supabase
+                    .from('logs')
+                    .select('*')
+                    .eq('user_id', decoded.userId)
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) throw error;
+
+                // Calcular estatísticas básicas para o dashboard
+                const stats = {
+                    follows: logs.filter(l => l.action === 'follow' || (l.message && l.message.includes('FOLLOW'))).length,
+                    likes: logs.filter(l => l.action === 'like' || (l.message && l.message.includes('LIKE'))).length,
+                    comments: logs.filter(l => l.action === 'comment').length,
+                    unfollows: logs.filter(l => l.action === 'unfollow').length
+                };
+
+                return res.json({
+                    success: true,
+                    stats,
+                    recent_activity: logs
+                });
+            } catch (err) {
+                return res.status(401).json({ success: false });
             }
         }
 

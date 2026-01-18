@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeConfigSections();
     initializeTableHandlers();
     initializeActionButtons();
-    initializeMediaHandlers();
 
     // Render initial data
     renderAccountsTable();
@@ -81,6 +80,88 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Detect current Instagram profile
     detectCurrentProfile();
+
+    // Listen for messages from background
+    chrome.runtime.onMessage.addListener((message) => {
+        // Extraction progress
+        if (message.action === 'extraction_progress') {
+            const limit = parseInt(document.getElementById('queueLimit')?.value) || 100;
+            LoadingManager.updateProgress(message.count, limit, `Capturando ${message.type}...`);
+        }
+
+        // Stats update
+        if (message.type === 'statsUpdate') {
+            if (message.stats) {
+                document.getElementById('actionsToday').textContent = message.stats.totalActionsToday || 0;
+            }
+        }
+
+        // Console message / log
+        if (message.type === 'consoleMessage') {
+            addLog(message.level, message.message);
+        }
+
+        // Action completed - update stamp on account card
+        if (message.type === 'actionCompleted') {
+            // Normalizar username (remover @ se existir)
+            const rawUsername = message.username || '';
+            const cleanUsername = rawUsername.replace(/^@+/, '').toLowerCase();
+            const action = message.action; // 'followed', 'unfollowed', 'liked', 'requested', 'error'
+
+            console.log(`[STAMP] Atualizando stamp para @${cleanUsername}: ${action}`);
+
+            // Update account status
+            const account = AppState.accounts.find(a => {
+                const accUsername = (a.username || '').replace(/^@+/, '').toLowerCase();
+                return accUsername === cleanUsername;
+            });
+
+            if (account) {
+                account.status = action;
+                console.log(`[STAMP] Status atualizado para @${cleanUsername}: ${action}`);
+
+                // Atualizar o card diretamente no DOM (mais rápido que re-render total)
+                const card = document.querySelector(`.eio-account-card[data-username="${account.username}"]`);
+                if (card) {
+                    // Remover stamp antigo
+                    const oldStamp = card.querySelector('.card-stamp');
+                    if (oldStamp) oldStamp.remove();
+
+                    // Adicionar novo stamp
+                    const stampDiv = card.querySelector('div[style*="position: relative"]') || card.querySelector('.card-info')?.previousElementSibling;
+                    if (stampDiv) {
+                        let stampClass = 'stamp-green';
+                        let stampText = 'FOLLOWED';
+
+                        if (action === 'requested') { stampClass = 'stamp-blue'; stampText = 'REQUESTED'; }
+                        else if (action === 'unfollowed') { stampClass = 'stamp-red'; stampText = 'UNFOLLOWED'; }
+                        else if (action === 'liked') { stampClass = 'stamp-pink'; stampText = 'LIKED'; }
+                        else if (action === 'error') { stampClass = 'stamp-orange'; stampText = 'ERROR'; }
+
+                        const newStamp = document.createElement('div');
+                        newStamp.className = `card-stamp ${stampClass}`;
+                        newStamp.textContent = stampText;
+                        stampDiv.appendChild(newStamp);
+                    }
+                }
+            }
+        }
+
+        // Automation status updates
+        if (message.type === 'automationStarted') {
+            document.getElementById('automationStatusText').textContent = 'Rodando';
+            document.getElementById('automationStatusDot').classList.add('running');
+        }
+        if (message.type === 'automationPaused') {
+            document.getElementById('automationStatusText').textContent = 'Pausado';
+            document.getElementById('automationStatusDot').classList.remove('running');
+            document.getElementById('automationStatusDot').classList.add('paused');
+        }
+        if (message.type === 'automationStopped') {
+            document.getElementById('automationStatusText').textContent = 'Parado';
+            document.getElementById('automationStatusDot').classList.remove('running', 'paused');
+        }
+    });
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -467,10 +548,27 @@ function renderAccountsTable() {
                 avatarHtml = `<div class="card-placeholder">${initial}</div>`;
             }
 
+            // Carimbo de Ação (Stamp) conforme imagem de referência
+            let stampHtml = '';
+            if (acc.status === 'followed' || acc.followedByViewer || acc.followedByMe) {
+                stampHtml = `<div class="card-stamp stamp-green">FOLLOWED</div>`;
+            } else if (acc.status === 'requested' || acc.requestedByViewer) {
+                stampHtml = `<div class="card-stamp stamp-blue">REQUESTED</div>`;
+            } else if (acc.status === 'unfollowed') {
+                stampHtml = `<div class="card-stamp stamp-red">UNFOLLOWED</div>`;
+            } else if (acc.status === 'liked') {
+                stampHtml = `<div class="card-stamp stamp-pink">LIKED</div>`;
+            } else if (acc.status === 'error') {
+                stampHtml = `<div class="card-stamp stamp-orange">ERROR</div>`;
+            }
+
             return `
                 <div class="eio-account-card ${isSelected ? 'selected' : ''}" data-username="${acc.username}">
                     <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
-                    ${avatarHtml}
+                    <div style="position: relative;">
+                        ${avatarHtml}
+                        ${stampHtml}
+                    </div>
                     <div class="card-info">
                         <div class="card-username">
                             <a href="https://instagram.com/${cleanUsername}" target="_blank">@${cleanUsername}</a>
@@ -607,6 +705,137 @@ function formatNumber(num) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// LOAD FROM INSTAGRAM VIA API
+// ═══════════════════════════════════════════════════════════
+
+async function loadFromInstagram(type, limit = 200) {
+    addLog('info', `📥 Carregando ${type} do perfil...`);
+
+    // Mostrar loading
+    LoadingManager.show(type);
+
+    try {
+        // Obter aba ativa do Instagram
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const instagramTab = tabs.find(t => t.url?.includes('instagram.com'));
+
+        if (!instagramTab) {
+            throw new Error('Abra um perfil do Instagram primeiro');
+        }
+
+        // Detectar o perfil atual
+        const profileResult = await chrome.tabs.sendMessage(instagramTab.id, { action: 'get_current_profile' });
+
+        if (!profileResult?.success || !profileResult?.username) {
+            throw new Error('Navegue até um perfil do Instagram primeiro');
+        }
+
+        const username = profileResult.username;
+        AppState.targetProfile = username;
+        document.getElementById('targetProfileName').textContent = '@' + username;
+
+        addLog('info', `📍 Perfil detectado: @${username}`);
+        LoadingManager.updateProgress(0, limit, `Carregando ${type} de @${username}...`);
+
+        // Chamar a API de carregamento
+        const actionMap = {
+            'followers': 'load_followers',
+            'following': 'load_following',
+            'likers': 'load_likers',
+            'commenters': 'load_commenters'
+        };
+
+        const action = actionMap[type] || 'load_followers';
+
+        const result = await chrome.tabs.sendMessage(instagramTab.id, {
+            action: action,
+            username: username,
+            limit: limit
+        });
+
+        if (!result?.success) {
+            throw new Error(result?.error || 'Falha ao carregar contas');
+        }
+
+        // Processar os resultados
+        const accounts = result.accounts || [];
+
+        addLog('success', `✅ ${accounts.length} contas carregadas do Instagram!`);
+
+        // Atualizar estado
+        AppState.accounts = accounts.map(acc => ({
+            username: acc.username,
+            fullName: acc.full_name || '',
+            profilePic: acc.profile_pic_url || '',
+            followers: acc.followers || 0,
+            following: acc.following || 0,
+            posts: acc.posts || 0,
+            isPrivate: acc.is_private || false,
+            isVerified: acc.is_verified || false,
+            followedByViewer: acc.followed_by_viewer || false,
+            followsViewer: acc.follows_viewer || false,
+            requestedByViewer: acc.requested_by_viewer || false,
+            status: acc.followed_by_viewer ? 'following' : (acc.requested_by_viewer ? 'requested' : 'none')
+        }));
+
+        // FILTRAR: remover quem você já segue (não faz sentido seguir novamente)
+        const beforeFilter = AppState.accounts.length;
+        AppState.accounts = AppState.accounts.filter(acc => !acc.followedByViewer && !acc.requestedByViewer);
+        const afterFilter = AppState.accounts.length;
+
+        if (beforeFilter !== afterFilter) {
+            addLog('info', `🔍 Filtrados ${beforeFilter - afterFilter} perfis que você já segue`);
+        }
+
+        // Selecionar todas automaticamente (só as que NÃO segue)
+        AppState.selectedAccounts.clear();
+        AppState.accounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
+
+        // Atualizar filtros e UI
+        applyFilters();
+        renderAccountsTable();
+        updateSelectedCount();
+        updateQueueStatus();
+        saveState();
+
+        // Mostrar sucesso
+        addLog('success', `✅ ${AppState.accounts.length} leads novos prontos! (${beforeFilter - afterFilter} já seguidos removidos)`);
+        LoadingManager.showSuccess(AppState.accounts.length);
+
+    } catch (error) {
+        console.error('Erro ao carregar do Instagram:', error);
+        addLog('error', `❌ Erro: ${error.message}`);
+        LoadingManager.hide();
+        alert('Erro ao carregar: ' + error.message);
+    }
+}
+
+// Funções auxiliares para carregamento (placeholders)
+function loadWhitelist() {
+    addLog('info', '📋 Carregando whitelist...');
+    // TODO: Implementar
+}
+
+function loadPendingRequests() {
+    addLog('info', '📋 Carregando pedidos pendentes...');
+    // TODO: Implementar
+}
+
+function loadSavedQueue() {
+    addLog('info', '📋 Carregando fila salva...');
+    chrome.storage.local.get(['savedQueue'], (result) => {
+        if (result.savedQueue && result.savedQueue.length > 0) {
+            AppState.accounts = result.savedQueue;
+            applyFilters();
+            renderAccountsTable();
+            addLog('success', `✅ ${result.savedQueue.length} contas carregadas da fila salva`);
+        } else {
+            addLog('warning', '⚠️ Nenhuma fila salva encontrada');
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
 // SISTEMA DE LOADING PROFISSIONAL - UX PREMIUM
 // ═══════════════════════════════════════════════════════════
 
@@ -639,13 +868,9 @@ const LoadingManager = {
         this.startTime = Date.now();
 
         // Definir conteúdo baseado no tipo
-        const timeLimit = this.isUnfollow ? 60 : 30;
-        const title = this.isUnfollow
-            ? '🔍 Carregando perfis para deixar de seguir…'
-            : '🚀 Preparando sua lista…';
-        const message = this.isUnfollow
-            ? `Estamos analisando sua conta e preparando a lista.<br>Esse processo pode levar até <strong>${timeLimit}</strong> segundos.<br>Não feche ou atualize a página.`
-            : `Estamos buscando e organizando os perfis selecionados.<br>Isso pode levar até <strong>${timeLimit}</strong> segundos.<br>Você não precisa sair desta tela.`;
+        const timeLimit = parseInt(document.getElementById('extractionTimeout')?.value) || 30;
+        const title = '🚀 Carregando Perfis…';
+        const message = `Estamos sincronizando os perfis do Instagram para você.<br>Esse processo leva cerca de <strong>${timeLimit}</strong> segundos.<br>Aguarde a finalização automática.`;
 
         document.getElementById('loadingTitle').innerHTML = title;
         document.getElementById('loadingMessage').innerHTML = message;
@@ -728,6 +953,9 @@ async function loadFromInstagram(type, limit) {
     console.log('🔄 loadFromInstagram chamado:', type, limit);
     addLog('info', `🔄 Iniciando extração de ${type}...`);
 
+    // Alerta informativo rápido
+    alert('🔍 Iniciando busca de perfis...\n\nPor favor, mantenha a aba do Instagram aberta durante a extração.\nO processo levará cerca de 30 segundos.');
+
     // FEEDBACK IMEDIATO (0-300ms) - Mostrar modal ANTES de qualquer operação assíncrona
     // Tentar mostrar o modal de forma síncrona
     const modal = document.getElementById('loadingModal');
@@ -738,11 +966,11 @@ async function loadFromInstagram(type, limit) {
         const isUnfollow = type === 'unfollow' || type === 'following';
         const timeLimit = isUnfollow ? 60 : 30;
         const title = isUnfollow
-            ? '🔍 Carregando perfis para deixar de seguir…'
-            : '🚀 Preparando sua lista…';
+            ? '🔍 Buscando perfis para deixar de seguir…'
+            : '🚀 Carregando Nova Lista de Perfis…';
         const message = isUnfollow
-            ? `Estamos analisando sua conta e preparando a lista.<br>Esse processo pode levar até <strong>${timeLimit}</strong> segundos.<br>Não feche ou atualize a página.`
-            : `Estamos buscando e organizando os perfis selecionados.<br>Isso pode levar até <strong>${timeLimit}</strong> segundos.<br>Você não precisa sair desta tela.`;
+            ? `Analisando sua conta para preparar a lista.<br><br><strong>⚠️ IMPORTANTE:</strong> Mantenha a aba do Instagram aberta para que o processo não seja interrompido pelo navegador.`
+            : `Sincronizando os perfis encontrados com sua fila.<br><br><strong>⚠️ IMPORTANTE:</strong> Não feche ou mude a aba do Instagram durante este carregamento. O sistema precisa dela para extrair os dados.`;
 
         const titleEl = document.getElementById('loadingTitle');
         const messageEl = document.getElementById('loadingMessage');
@@ -1138,103 +1366,73 @@ function initializeConfigSections() {
 // ACTION BUTTONS
 // ═══════════════════════════════════════════════════════════
 function initializeActionButtons() {
-    // Save Queue
+    // Buttons in 'Ações' tab
+    const btnStartAcc = document.getElementById('btnStartAutomation');
+    const btnPauseAcc = document.getElementById('btnPauseAutomation');
+    const btnStopAcc = document.getElementById('btnStopAutomation');
+
+    // Buttons in 'Contas' tab (Mini bar)
+    const btnStartMini = document.getElementById('btnStartAuto');
+    const btnPauseMini = document.getElementById('btnPauseAuto');
+    const btnStopMini = document.getElementById('btnStopAuto');
+
+    if (btnStartAcc) btnStartAcc.onclick = () => startAutomation();
+    if (btnStartMini) btnStartMini.onclick = () => {
+        const selectedActions = getSelectedActions();
+        if (selectedActions.length === 0) {
+            alert('Escolha pelo menos uma ação (Seguir, Curtir, etc.) nos botões acima.');
+            return;
+        }
+        prepareAndStartAutomation(selectedActions);
+    };
+
+    // Quick actions - action cards (old tab)
+    document.querySelectorAll('.eio-action-card').forEach(card => {
+        card.onclick = () => handleQuickAction(card.id);
+    });
+
+    const handlePause = () => {
+        chrome.runtime.sendMessage({ action: 'pauseAutomation' });
+        updateAutomationUI('paused');
+    };
+    const handleStop = () => {
+        chrome.runtime.sendMessage({ action: 'stopAutomation' });
+        updateAutomationUI('idle');
+    };
+
+    if (btnPauseAcc) btnPauseAcc.onclick = handlePause;
+    if (btnPauseMini) btnPauseMini.onclick = handlePause;
+    if (btnStopAcc) btnStopAcc.onclick = handleStop;
+    if (btnStopMini) btnStopMini.onclick = handleStop;
+
+    // Toggle buttons in 'Contas' tab
+    document.querySelectorAll('.eio-action-toggle').forEach(btn => {
+        btn.onclick = () => {
+            btn.classList.toggle('active');
+            if (btn.dataset.action === 'unfollow' && btn.classList.contains('active')) {
+                document.querySelectorAll('.eio-action-toggle:not([data-action="unfollow"])').forEach(b => b.classList.remove('active'));
+            } else if (btn.dataset.action !== 'unfollow') {
+                document.querySelector('.eio-action-toggle[data-action="unfollow"]')?.classList.remove('active');
+            }
+            updateSelectedActions();
+        };
+    });
+
+    // Other global buttons
     document.getElementById('btnSaveQueue')?.addEventListener('click', () => {
         chrome.storage.local.set({ eioSavedQueue: AppState.accounts });
         addLog('success', `💾 Fila salva: ${AppState.accounts.length} contas`);
     });
 
-    // Export CSV
-    document.getElementById('btnExportCSV')?.addEventListener('click', () => {
-        exportToCSV();
-    });
+    document.getElementById('btnExportCSV')?.addEventListener('click', () => exportToCSV());
 
-    // Start automation
-    document.getElementById('btnStartAutomation')?.addEventListener('click', () => {
-        startAutomation();
-    });
-
-    // Pause automation
-    document.getElementById('btnPauseAutomation')?.addEventListener('click', () => {
-        pauseAutomation();
-    });
-
-    // Stop automation
-    document.getElementById('btnStopAutomation')?.addEventListener('click', () => {
-        stopAutomation();
-    });
-
-    // Mini automation controls - pause and stop only (start is handled separately)
-    document.getElementById('btnPauseAuto')?.addEventListener('click', () => {
-        pauseAutomation();
-    });
-    document.getElementById('btnStopAuto')?.addEventListener('click', () => {
-        stopAutomation();
-    });
-
-    // Clear logs
     document.getElementById('clearLogBtn')?.addEventListener('click', () => {
         AppState.logs = [];
         renderLogs();
     });
 
-    // Trim logs
-    document.getElementById('trimLogBtn')?.addEventListener('click', () => {
-        AppState.logs = AppState.logs.slice(0, 50);
-        renderLogs();
-    });
-
-    // Quick actions - old tab cards
-    document.querySelectorAll('.eio-action-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const actionId = card.id;
-            handleQuickAction(actionId);
-        });
-    });
-
-    // NEW: Toggle action buttons (combinable)
-    document.querySelectorAll('.eio-action-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Toggle active state
-            btn.classList.toggle('active');
-
-            // If unfollow is selected, deselect all others
-            if (btn.dataset.action === 'unfollow' && btn.classList.contains('active')) {
-                document.querySelectorAll('.eio-action-toggle:not([data-action="unfollow"])').forEach(b => {
-                    b.classList.remove('active');
-                });
-            } else if (btn.dataset.action !== 'unfollow') {
-                // If any other action is selected, deselect unfollow
-                document.querySelector('.eio-action-toggle[data-action="unfollow"]')?.classList.remove('active');
-            }
-
-            // Update queue status display
-            updateSelectedActions();
-        });
-    });
-
-    // Start automation with selected actions
-    document.getElementById('btnStartAuto')?.addEventListener('click', () => {
-        const selectedActions = getSelectedActions();
-        if (selectedActions.length === 0) {
-            alert('Selecione pelo menos uma ação (Seguir, Curtir, etc.)');
-            return;
-        }
-        if (AppState.selectedAccounts.size === 0) {
-            alert('Selecione pelo menos uma conta na lista');
-            return;
-        }
-        prepareAndStartAutomation(selectedActions);
-    });
-
-    // Popout button
     document.getElementById('popoutBtn')?.addEventListener('click', () => {
-        chrome.windows.create({
-            url: 'popup.html',
-            type: 'popup',
-            width: 800,
-            height: 900
-        });
+        chrome.windows.create({ url: 'popup.html', type: 'popup', width: 800, height: 900 });
     });
 }
 
@@ -1247,11 +1445,12 @@ function getSelectedActions() {
 }
 
 function getQueueOptions() {
+    // Tentar pegar das configurações globais ou usar valores seguros (Modo Ultra-Rápido por padrão)
     return {
-        likePosts: document.getElementById('optLikePosts')?.checked ?? true,
-        likeCount: parseInt(document.getElementById('optLikeCount')?.value) || 3,
-        viewStory: document.getElementById('optViewStory')?.checked ?? true,
-        useDashboardMsg: document.getElementById('optUseDashboardMsg')?.checked ?? false
+        likePosts: document.getElementById('configShowLikes')?.checked ?? false,
+        likeCount: 1, // Padrão simples
+        viewStory: false, // DESATIVADO por padrão para não forçar navegação
+        useDashboardMsg: false
     };
 }
 
@@ -1271,7 +1470,10 @@ function updateSelectedActions() {
 }
 
 async function prepareAndStartAutomation(selectedActions) {
-    const options = getQueueOptions();
+    const queueOptions = getQueueOptions();
+    const globalConfig = collectConfig();
+    const options = { ...queueOptions, ...globalConfig };
+
     const selectedUsernames = Array.from(AppState.selectedAccounts);
     const accounts = AppState.accounts.filter(a => selectedUsernames.includes(a.username));
 
@@ -1334,60 +1536,95 @@ function exportToCSV() {
     addLog('success', `📄 Exportado: ${accounts.length} contas`);
 }
 
-async function startAutomation() {
-    const selectedAction = document.querySelector('input[name="processAction"]:checked')?.value || 'follow';
+// ═══════════════════════════════════════════════════════════
+// AUTOMATION CONTROL (Unified)
+// ═══════════════════════════════════════════════════════════
+
+async function startAutomation(actionOverride = null) {
+    const selectedAction = actionOverride || 'follow';
+    const globalConfig = collectConfig();
+
     const accountsToProcess = AppState.selectedAccounts.size > 0
-        ? AppState.filteredAccounts.filter(a => AppState.selectedAccounts.has(a.username))
+        ? AppState.accounts.filter(a => AppState.selectedAccounts.has(a.username))
         : AppState.filteredAccounts;
 
     if (accountsToProcess.length === 0) {
-        addLog('warning', '⚠️ Nenhuma conta selecionada para processar');
+        alert('Selecione pelo menos uma conta na lista (aba Contas).');
         return;
     }
 
-    addLog('info', `🚀 Iniciando ${selectedAction} em ${accountsToProcess.length} contas...`);
+    addLog('info', `🚀 Preparando ${selectedAction} para ${accountsToProcess.length} contas...`);
 
-    AppState.automationRunning = true;
-    updateAutomationUI('running');
+    const queue = accountsToProcess.map(acc => ({
+        username: acc.username,
+        actions: [selectedAction],
+        options: globalConfig
+    }));
 
-    // Send to background script
     chrome.runtime.sendMessage({
-        action: 'loadQueue',
-        payload: {
-            actions: accountsToProcess.map(acc => ({
-                type: selectedAction,
-                target: acc.username
-            }))
+        action: 'setQueue',
+        queue: queue,
+        actionType: selectedAction,
+        options: globalConfig
+    }, (response) => {
+        if (response?.success) {
+            chrome.runtime.sendMessage({ action: 'startAutomation' }, (resp) => {
+                if (resp?.success) {
+                    addLog('success', `▶️ Automação (${selectedAction}) iniciada!`);
+                    updateAutomationUI('running');
+                    alert('⚡ Automação Iniciada!\n\nImportante: Mantenha a aba do Instagram aberta.');
+                } else {
+                    alert('Erro: ' + (resp?.message || 'Falha ao iniciar motor'));
+                }
+            });
         }
     });
-
-    chrome.runtime.sendMessage({ action: 'startAutomation' });
 }
 
 function pauseAutomation() {
-    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
-    AppState.automationRunning = false;
-    updateAutomationUI('paused');
-    addLog('warning', '⏸️ Automação pausada');
+    chrome.runtime.sendMessage({ action: 'pauseAutomation' }, () => {
+        updateAutomationUI('paused');
+        addLog('warning', '⏸️ Automação pausada');
+    });
 }
 
 function stopAutomation() {
-    chrome.runtime.sendMessage({ action: 'pauseAutomation' });
-    AppState.automationRunning = false;
-    updateAutomationUI('idle');
-    addLog('info', '⏹️ Automação parada');
+    chrome.runtime.sendMessage({ action: 'stopAutomation' }, () => {
+        updateAutomationUI('idle');
+        addLog('info', '⏹️ Automação parada');
+    });
 }
 
 function updateAutomationUI(status) {
+    // Update main status indicator (Ações Tab)
     const statusEl = document.querySelector('.eio-status-indicator');
     if (statusEl) {
-        statusEl.className = `eio-status-indicator eio-status-${status}`;
-        statusEl.querySelector('span').textContent = {
-            'running': 'Executando',
-            'paused': 'Pausado',
-            'idle': 'Parado'
-        }[status] || 'Parado';
+        statusEl.className = `eio-status-indicator eio-status-${status === 'running' ? 'active' : 'idle'}`;
+        const span = statusEl.querySelector('span');
+        if (span) span.textContent = status === 'running' ? 'Executando' : (status === 'paused' ? 'Pausado' : 'Parado');
     }
+
+    // Update mini status (Contas Tab)
+    const miniDot = document.getElementById('automationStatusDot');
+    const miniText = document.getElementById('automationStatusText');
+    if (miniDot) {
+        miniDot.className = `eio-status-dot-mini eio-status-${status}`;
+    }
+    if (miniText) {
+        miniText.textContent = status === 'running' ? 'Executando' : (status === 'paused' ? 'Pausado' : 'Parado');
+    }
+}
+
+function collectConfig() {
+    return {
+        delayAfterAction: parseInt(document.getElementById('delayAfterAction')?.value) || 60,
+        delayAfterSkip: parseInt(document.getElementById('delayAfterSkip')?.value) || 1,
+        randomDelay: document.getElementById('configRandomDelay')?.checked ?? true,
+        randomDelayPercent: parseInt(document.getElementById('randomDelayPercent')?.value) || 50,
+        showBadges: document.getElementById('configShowBadges')?.checked ?? true,
+        showLikes: document.getElementById('configShowLikes')?.checked ?? true,
+        showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true
+    };
 }
 
 function handleQuickAction(actionId) {
@@ -1403,12 +1640,19 @@ function handleQuickAction(actionId) {
     const action = actions[actionId];
     if (action) {
         addLog('info', `⚡ Ação rápida: ${action}`);
-        // Execute on current profile
+        const config = collectConfig();
+
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]?.url?.includes('instagram.com')) {
                 chrome.tabs.sendMessage(tabs[0].id, {
                     action: 'execute',
-                    payload: { type: action }
+                    payload: {
+                        type: action,
+                        options: {
+                            ...config,
+                            likeCount: 1
+                        }
+                    }
                 });
             }
         });
@@ -1564,67 +1808,44 @@ function updateQueueStatus(actionLabel, count) {
 // ═══════════════════════════════════════════════════════════
 // AUTOMATION CONTROL
 // ═══════════════════════════════════════════════════════════
-function startAutomation() {
-    chrome.runtime.sendMessage({ action: 'startAutomation' }, (response) => {
-        if (response?.success) {
-            addLog('success', '▶️ Automação iniciada!');
-            updateAutomationUI('running');
-        } else {
-            addLog('error', response?.message || 'Erro ao iniciar automação');
-        }
-    });
-}
-
-function pauseAutomation() {
-    chrome.runtime.sendMessage({ action: 'pauseAutomation' }, (response) => {
-        addLog('warning', '⏸️ Automação pausada');
-        updateAutomationUI('paused');
-    });
-}
-
-function stopAutomation() {
-    chrome.runtime.sendMessage({ action: 'stopAutomation' }, (response) => {
-        addLog('info', '⏹️ Automação parada');
-        updateAutomationUI('stopped');
-    });
-}
-
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS (Consolidated)
+// ═══════════════════════════════════════════════════════════
 function updateAutomationUI(status) {
+    // Update main indicator if exists
+    const statusEl = document.querySelector('.eio-status-indicator');
+    if (statusEl) {
+        statusEl.className = `eio-status-indicator eio-status-${status === 'running' ? 'active' : (status === 'paused' ? 'paused' : 'idle')}`;
+        const label = statusEl.querySelector('span');
+        if (label) {
+            label.textContent = {
+                'running': 'Executando',
+                'paused': 'Pausado',
+                'idle': 'Parado',
+                'stopped': 'Parado',
+                'ready': 'Pronto'
+            }[status] || 'Parado';
+        }
+    }
+
     // Update mini status in Contas tab
     const dot = document.getElementById('automationStatusDot');
     const text = document.getElementById('automationStatusText');
 
     if (dot) {
-        dot.classList.remove('running', 'paused');
-        if (status === 'running') {
-            dot.classList.add('running');
-        } else if (status === 'paused') {
-            dot.classList.add('paused');
-        }
+        dot.className = `eio-status-dot-mini status-${status}`;
     }
-
     if (text) {
-        const statusLabels = {
-            'running': 'Executando...',
+        text.textContent = {
+            'running': 'Em execução',
             'paused': 'Pausado',
+            'idle': 'Parado',
             'stopped': 'Parado',
-            'ready': 'Pronto'
-        };
-        text.textContent = statusLabels[status] || 'Parado';
+            'ready': 'Aguardando início'
+        }[status] || 'Parado';
     }
 
-    // Update status in Ações tab
-    const statusIndicator = document.querySelector('.eio-status-indicator');
-    if (statusIndicator) {
-        statusIndicator.className = `eio-status-indicator eio-status-${status === 'running' ? 'active' : 'idle'}`;
-        const statusSpan = statusIndicator.querySelector('span');
-        if (statusSpan) {
-            statusSpan.textContent = status === 'running' ? 'Executando' :
-                status === 'paused' ? 'Pausado' : 'Parado';
-        }
-    }
-
-    AppState.automationRunning = status === 'running';
+    AppState.automationRunning = (status === 'running');
 }
 
 // ═══════════════════════════════════════════════════════════

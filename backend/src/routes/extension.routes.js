@@ -9,14 +9,14 @@ const fs = require('fs');
 const supabase = require('../config/supabase');
 
 // Middleware de autenticação
-const authMiddleware = require('../middlewares/auth');
+const { authenticate } = require('../middlewares/auth');
 
 // ═══════════════════════════════════════════════════════════
 // GET /api/v1/extension/download
 // Baixar extensão Chrome (apenas usuários autenticados)
 // ═══════════════════════════════════════════════════════════
 
-router.get('/download', authMiddleware, async (req, res) => {
+router.get('/download', authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const userEmail = req.user.email;
@@ -107,7 +107,7 @@ router.get('/download', authMiddleware, async (req, res) => {
 // Informações sobre a extensão (versão, tamanho, etc)
 // ═══════════════════════════════════════════════════════════
 
-router.get('/info', authMiddleware, async (req, res) => {
+router.get('/info', authenticate, async (req, res) => {
     try {
         const extensionPath = path.join(__dirname, '../../public/downloads/eio-extension.zip');
         const manifestPath = path.join(__dirname, '../../extension/manifest.json');

@@ -621,9 +621,17 @@
                                 Instagram solicitar notificações
                             </label>
                             <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configLoadLastQueue"> Carregar a última fila conhecida na
-                                inicialização
+                                <input type="checkbox" id="configLoadLastQueue" checked> Carregar a última fila
+                                conhecida na inicialização
                             </label>
+                            <div class="eio-config-row"
+                                style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                                <label title="Tempo máximo para busca de perfis na lista aberta">⏱️ Tempo
+                                    Extração:</label>
+                                <input type="number" class="eio-input-mini" id="extractionTimeout" value="30" min="5"
+                                    max="300">
+                                <span>s (Alvo: 30s)</span>
+                            </div>
                         </div>
                     </div>
 
@@ -682,81 +690,6 @@
                         </div>
                     </div>
 
-                    <!-- Opções de Processamento da Fila -->
-                    <div class="eio-config-section">
-                        <button class="eio-config-header" data-collapse="queueProcessing">
-                            <span>▶ Opções de Processamento da Fila</span>
-                        </button>
-                        <div class="eio-config-content collapsed" id="queueProcessing">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configAutoSaveQueue" checked> Salvar automaticamente a fila
-                                após cada conta processada
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Opções de Seguimento -->
-                    <div class="eio-config-section">
-                        <button class="eio-config-header" data-collapse="followOptions">
-                            <span>▶ Opções de Seguimento</span>
-                        </button>
-                        <div class="eio-config-content collapsed" id="followOptions">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configFollowPreviouslyTried"> Seguir pessoas que já tentei
-                                anteriormente
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configAutoApplyFiltersFollow"> Aplicar Filtros
-                                Automaticamente ao Seguir
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Opções de Deixar de Seguir -->
-                    <div class="eio-config-section">
-                        <button class="eio-config-header" data-collapse="unfollowOptions">
-                            <span>▶ Opções de Deixar de Seguir</span>
-                        </button>
-                        <div class="eio-config-content collapsed" id="unfollowOptions">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDontUnfollowFollowers" checked> Não deixar de seguir
-                                pessoas que me seguem
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configUnfollowAfterDays"> Deixar de seguir pessoas que
-                                comecei a seguir há mais de
-                                <input type="number" class="eio-input-mini" id="unfollowAfterDays" value="30">
-                                dias
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDontUnfollowRecent" checked> Não deixar de seguir
-                                pessoas que comecei a seguir há menos de
-                                <input type="number" class="eio-input-mini" id="dontUnfollowRecentDays" value="3">
-                                dias
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDontUnfollowExternal"> Não deixar de seguir pessoas
-                                seguidas fora da ferramenta
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDontUnfollowMatchingFilters" checked> Não deixar de
-                                seguir pessoas que correspondem aos meus filtros
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Opções de Remoção e Bloqueio -->
-                    <div class="eio-config-section">
-                        <button class="eio-config-header" data-collapse="blockOptions">
-                            <span>▶ Opções de Remoção e Bloqueio</span>
-                        </button>
-                        <div class="eio-config-content collapsed" id="blockOptions">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDontBlockMatchingFilters" checked> Não remover ou
-                                bloquear pessoas que correspondem aos meus filtros
-                            </label>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -788,6 +721,13 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
                 Suporte
+            </a>
+            <a href="https://eio-system.vercel.app/analytics.html" target="_blank" class="eio-footer-link"
+                title="Ver Análises no Dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                </svg>
+                Análises
             </a>
             <a href="https://eio-system.vercel.app/guia" target="_blank" class="eio-footer-link" id="userGuideLink"
                 title="Ver Guia Completo">
@@ -919,8 +859,6 @@
     <!-- Scripts -->
     <script src="license-manager.js"></script>
     <script src="settings-handler.js"></script>
-    <script src="flow-management.js"></script>
-    <script src="flow-builder-integration.js"></script>
     <script src="popup.js"></script>
 </body>
 

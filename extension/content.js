@@ -3,10 +3,11 @@
   E.I.O - CONTENT SCRIPT (ADVANCED VERSION)
   Interação direta com a página do Instagram
   Suporta: Extração de Leads, Automação, Obtenção de Dados
+  VERSÃO 3.2.0 - API DIRETA COM CARREGAMENTO VIA GRAPHQL
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v2.0 Initializing...');
+console.log('E.I.O Content Script v3.2.0 Initializing - FULL API MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -23,8 +24,240 @@ const config = {
         profileBio: 'header section > div > span',
         followButton: 'header section button',
         verifiedBadge: 'svg[aria-label="Verified"]'
+    },
+    // API Headers para Instagram
+    api: {
+        xIgAppId: '936619743392459',
+        xAsbdId: '129477',
+        // Query hashes para GraphQL
+        followersQueryHash: '37479f2b8209594dde7facb0d904896a',
+        followingQueryHash: '58712303d941c6855d4e888c5f0cd22f'
     }
 };
+
+// Cache de IDs de usuários
+const userIdCache = new Map();
+
+// Estado de carregamento
+let loadedAccounts = [];
+let currentProfileUsername = null;
+let currentProfileId = null;
+
+/**
+ * Obter username do perfil atual da URL
+ */
+function getCurrentProfileUsername() {
+    const path = window.location.pathname;
+    const match = path.match(/^\/([^\/]+)\/?$/);
+    if (match && match[1] && !['explore', 'direct', 'accounts', 'p', 'reel', 'stories'].includes(match[1])) {
+        return match[1];
+    }
+    return null;
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * CARREGAR SEGUIDORES VIA API - SEM ABRIR MODAL!
+ * Usa o endpoint correto: i.instagram.com/api/v1/friendships
+ * ═══════════════════════════════════════════════════════════
+ */
+async function loadFollowersViaAPI(username, limit = 200) {
+    addConsoleLog('info', `📥 Carregando seguidores de @${username} via API...`);
+
+    const userId = await getUserId(username);
+    if (!userId) {
+        addConsoleLog('error', `❌ Não foi possível obter ID de @${username}`);
+        return [];
+    }
+
+    let allFollowers = [];
+    let maxId = '';
+    let hasNext = true;
+
+    while (hasNext && allFollowers.length < limit) {
+        try {
+            // Endpoint da Private API do Instagram - mais estável que GraphQL
+            let url = `https://i.instagram.com/api/v1/friendships/${userId}/followers/?count=50`;
+            if (maxId) url += `&max_id=${maxId}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'X-IG-App-ID': config.api.xIgAppId,
+                    'X-ASBD-ID': config.api.xAsbdId,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    addConsoleLog('warning', '⚠️ Rate limit atingido. Aguardando 30s...');
+                    await randomDelay(30000, 60000);
+                    continue;
+                }
+                addConsoleLog('error', `❌ API retornou status ${response.status}`);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.users && data.users.length > 0) {
+                // Log de debug para ver a estrutura (apenas no primeiro usuário)
+                if (allFollowers.length === 0 && data.users[0]) {
+                    console.log('[E.I.O DEBUG] Estrutura do primeiro usuário:', JSON.stringify(data.users[0], null, 2));
+                }
+
+                for (const user of data.users) {
+                    // Verificar múltiplos campos possíveis para "já segue"
+                    const isFollowing =
+                        user.friendship_status?.following === true ||
+                        user.friendship_status?.is_following === true ||
+                        user.following === true ||
+                        user.is_following === true ||
+                        user.followed_by_viewer === true;
+
+                    const hasOutgoingRequest =
+                        user.friendship_status?.outgoing_request === true ||
+                        user.outgoing_request === true ||
+                        user.requested_by_viewer === true;
+
+                    allFollowers.push({
+                        id: user.pk || user.id,
+                        username: user.username,
+                        full_name: user.full_name || '',
+                        profile_pic_url: user.profile_pic_url || '',
+                        is_private: user.is_private || false,
+                        is_verified: user.is_verified || false,
+                        followed_by_viewer: isFollowing,
+                        follows_viewer: user.friendship_status?.followed_by || user.follows_viewer || false,
+                        requested_by_viewer: hasOutgoingRequest
+                    });
+                }
+
+                maxId = data.next_max_id || '';
+                hasNext = !!data.next_max_id && allFollowers.length < limit;
+
+                addConsoleLog('info', `📊 Carregados ${allFollowers.length} seguidores...`);
+            } else {
+                hasNext = false;
+            }
+
+            // Delay entre requisições para evitar rate limit
+            if (hasNext) await randomDelay(1000, 2000);
+
+        } catch (error) {
+            addConsoleLog('error', `❌ Erro ao carregar seguidores: ${error.message}`);
+            hasNext = false;
+        }
+    }
+
+    addConsoleLog('success', `✅ Total: ${allFollowers.length} seguidores carregados!`);
+    loadedAccounts = allFollowers;
+    return allFollowers;
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * CARREGAR SEGUINDO VIA API - SEM ABRIR MODAL!
+ * ═══════════════════════════════════════════════════════════
+ */
+async function loadFollowingViaAPI(username, limit = 200) {
+    addConsoleLog('info', `📥 Carregando seguindo de @${username} via API...`);
+
+    const userId = await getUserId(username);
+    if (!userId) {
+        addConsoleLog('error', `❌ Não foi possível obter ID de @${username}`);
+        return [];
+    }
+
+    let allFollowing = [];
+    let maxId = '';
+    let hasNext = true;
+
+    while (hasNext && allFollowing.length < limit) {
+        try {
+            // Endpoint da Private API do Instagram
+            let url = `https://i.instagram.com/api/v1/friendships/${userId}/following/?count=50`;
+            if (maxId) url += `&max_id=${maxId}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'X-IG-App-ID': config.api.xIgAppId,
+                    'X-ASBD-ID': config.api.xAsbdId,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    addConsoleLog('warning', '⚠️ Rate limit atingido. Aguardando 30s...');
+                    await randomDelay(30000, 60000);
+                    continue;
+                }
+                addConsoleLog('error', `❌ API retornou status ${response.status}`);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.users && data.users.length > 0) {
+                // Log de debug para ver a estrutura (apenas no primeiro usuário)
+                if (allFollowing.length === 0 && data.users[0]) {
+                    console.log('[E.I.O DEBUG] Estrutura seguindo - primeiro usuário:', JSON.stringify(data.users[0], null, 2));
+                }
+
+                for (const user of data.users) {
+                    // Verificar se VOCÊ (viewer) segue esta pessoa
+                    const isFollowing =
+                        user.friendship_status?.following === true ||
+                        user.friendship_status?.is_following === true ||
+                        user.following === true ||
+                        user.is_following === true ||
+                        user.followed_by_viewer === true;
+
+                    const hasOutgoingRequest =
+                        user.friendship_status?.outgoing_request === true ||
+                        user.outgoing_request === true ||
+                        user.requested_by_viewer === true;
+
+                    allFollowing.push({
+                        id: user.pk || user.id,
+                        username: user.username,
+                        full_name: user.full_name || '',
+                        profile_pic_url: user.profile_pic_url || '',
+                        is_private: user.is_private || false,
+                        is_verified: user.is_verified || false,
+                        followed_by_viewer: isFollowing,
+                        follows_viewer: user.friendship_status?.followed_by || user.follows_viewer || false,
+                        requested_by_viewer: hasOutgoingRequest
+                    });
+                }
+
+                maxId = data.next_max_id || '';
+                hasNext = !!data.next_max_id && allFollowing.length < limit;
+
+                addConsoleLog('info', `📊 Carregados ${allFollowing.length} seguindo...`);
+            } else {
+                hasNext = false;
+            }
+
+            // Delay entre requisições para evitar rate limit
+            if (hasNext) await randomDelay(1000, 2000);
+
+        } catch (error) {
+            addConsoleLog('error', `❌ Erro ao carregar seguindo: ${error.message}`);
+            hasNext = false;
+        }
+    }
+
+    addConsoleLog('success', `✅ Total: ${allFollowing.length} seguindo carregados!`);
+    loadedAccounts = allFollowing;
+    return allFollowing;
+}
+
 
 /**
  * Utilitário para delay aleatório (mais humano)
@@ -48,6 +281,202 @@ function addConsoleLog(level, message) {
         }).catch(() => { });
     } catch (e) { }
 }
+
+/**
+ * Obter CSRF Token dos cookies
+ */
+function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return '';
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * API DIRETA DO INSTAGRAM - FOLLOW SEM ABRIR PÁGINA
+ * ═══════════════════════════════════════════════════════════
+ */
+async function apiFollow(userId) {
+    try {
+        const csrfToken = getCsrfToken();
+        const response = await fetch(`https://www.instagram.com/api/v1/friendships/create/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-IG-WWW-Claim': '0',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `user_id=${userId}&container_module=profile&nav_chain=`,
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        if (response.ok && (data.status === 'ok' || data.friendship_status)) {
+            return { success: true, data };
+        } else {
+            return { success: false, status: response.status, message: data.message || 'Error' };
+        }
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * API DIRETA DO INSTAGRAM - UNFOLLOW SEM ABRIR PÁGINA
+ */
+async function apiUnfollow(userId) {
+    try {
+        const csrfToken = getCsrfToken();
+        const response = await fetch(`https://www.instagram.com/api/v1/friendships/destroy/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-IG-WWW-Claim': '0',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `user_id=${userId}&container_module=profile`,
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        if (response.ok && data.status === 'ok') {
+            return { success: true, data };
+        } else {
+            return { success: false, status: response.status, message: data.message || 'Error' };
+        }
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * API DIRETA DO INSTAGRAM - LIKE SEM CLICAR
+ */
+async function apiLike(mediaId) {
+    try {
+        const csrfToken = getCsrfToken();
+        const response = await fetch(`https://www.instagram.com/api/v1/web/likes/${mediaId}/like/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `media_id=${mediaId}`,
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: data.status === 'ok', data };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Obter ID do usuário a partir do username - SOMENTE VIA API
+ */
+async function getUserId(username) {
+    const cleanUsername = username.replace('@', '').toLowerCase();
+
+    // Verificar cache primeiro
+    if (userIdCache.has(cleanUsername)) {
+        addConsoleLog('info', `📋 ID de @${cleanUsername} encontrado no cache`);
+        return userIdCache.get(cleanUsername);
+    }
+
+    addConsoleLog('info', `🔍 Buscando ID de @${cleanUsername} via API...`);
+
+    try {
+        const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
+            headers: {
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const userId = data?.data?.user?.id;
+            if (userId) {
+                userIdCache.set(cleanUsername, userId);
+                addConsoleLog('success', `✅ ID obtido: ${userId}`);
+                return userId;
+            }
+        } else if (response.status === 404) {
+            addConsoleLog('warning', `⚠️ Usuário @${cleanUsername} não encontrado`);
+        } else {
+            addConsoleLog('warning', `⚠️ API retornou status ${response.status}`);
+        }
+    } catch (error) {
+        addConsoleLog('error', `❌ Erro ao obter ID: ${error.message}`);
+    }
+
+    return null;
+}
+
+/**
+ * Obter informações do perfil via API (não DOM)
+ */
+async function getProfileInfoViaAPI(username) {
+    const cleanUsername = username.replace('@', '').toLowerCase();
+
+    try {
+        const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
+            headers: {
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const user = data?.data?.user;
+
+            if (user) {
+                return {
+                    id: user.id,
+                    username: user.username,
+                    fullName: user.full_name || '',
+                    bio: user.biography || '',
+                    avatar: user.profile_pic_url || '',
+                    posts: user.edge_owner_to_timeline_media?.count || 0,
+                    followers: user.edge_followed_by?.count || 0,
+                    following: user.edge_follow?.count || 0,
+                    isPrivate: user.is_private || false,
+                    isVerified: user.is_verified || false,
+                    businessCategory: user.business_category_name || '',
+                    externalUrl: user.external_url || '',
+                    followedByViewer: user.followed_by_viewer || false,
+                    followsViewer: user.follows_viewer || false,
+                    requestedByViewer: user.requested_by_viewer || false
+                };
+            }
+        }
+    } catch (error) {
+        console.error('[E.I.O API] Erro ao obter perfil:', error);
+    }
+
+    return null;
+}
+
 
 /**
  * Extrair número de uma string (ex: "1.2M" -> 1200000)
@@ -258,6 +687,15 @@ async function runExtractionFlow(payload) {
             const cleanUsername = `@${username}`;
             if (leads.find(l => l.username === cleanUsername)) continue;
 
+            // Enviar progresso a cada 10 novos perfis para não sobrecarregar
+            if (leads.length % 10 === 0) {
+                chrome.runtime.sendMessage({
+                    action: 'extraction_progress',
+                    count: leads.length,
+                    type: extractType
+                }).catch(() => { }); // Ignorar se o popup estiver fechado
+            }
+
             // Extrair nome - geralmente está em spans dentro do link
             const nameSpans = item.querySelectorAll('span');
             let name = '';
@@ -397,16 +835,16 @@ async function runExtractionFlow(payload) {
 
         if (leads.length >= limit) break;
 
-        // Scroll
-        scrollContainer.scrollTop += 600;
-        await randomDelay(1500, 2500);
+        // Scroll mais agressivo para atingir os 30s
+        scrollContainer.scrollTop += 800; // Passo maior
+        await randomDelay(300, 700); // Delay muito menor
 
         if (leads.length === lastLeadCount) {
             idleCount++;
-            if (idleCount > 5) break;
-            scrollContainer.scrollTop -= 100;
-            await randomDelay(800, 1200);
-            scrollContainer.scrollTop += 200;
+            if (idleCount > 3) break; // Desistir mais rápido se travar
+            scrollContainer.scrollTop -= 200;
+            await randomDelay(200, 400);
+            scrollContainer.scrollTop += 400;
         } else {
             idleCount = 0;
             lastLeadCount = leads.length;
@@ -448,10 +886,49 @@ async function executeInstagramAction(payload) {
 }
 
 /**
- * Executar follow DIRETAMENTE NA LISTA (sem navegar para cada perfil)
- * Muito mais rápido e eficiente!
+ * ═══════════════════════════════════════════════════════════
+ * FOLLOW VIA API DIRETA - NÃO PRECISA ABRIR PÁGINA!
+ * Usa a API privada do Instagram para seguir sem navegar
+ * ═══════════════════════════════════════════════════════════
  */
 async function executeFollow(target) {
+    const cleanTarget = target?.replace('@', '').toLowerCase();
+    addConsoleLog('info', `🔄 Seguindo @${cleanTarget} via API...`);
+
+    try {
+        // Obter ID do usuário via API
+        const userId = await getUserId(cleanTarget);
+
+        if (!userId) {
+            addConsoleLog('warning', `⚠️ Não foi possível obter ID de @${cleanTarget}`);
+            return { success: false, error: 'user_id_not_found', username: cleanTarget };
+        }
+
+        addConsoleLog('info', `📡 ID obtido: ${userId}. Executando follow...`);
+
+        // Executar follow via API
+        const result = await apiFollow(userId);
+
+        if (result.success) {
+            addConsoleLog('success', `✅ Seguiu @${cleanTarget} via API!`);
+            return { success: true, action: 'followed', username: cleanTarget, method: 'api' };
+        } else if (result.status === 400 || result.message?.includes('following')) {
+            addConsoleLog('info', `ℹ️ Já segue @${cleanTarget}`);
+            return { success: true, action: 'already_following', username: cleanTarget };
+        } else {
+            addConsoleLog('warning', `⚠️ API retornou erro (${result.status}): ${result.message || 'desconhecido'}`);
+            return { success: false, error: result.message || 'api_error', username: cleanTarget };
+        }
+    } catch (error) {
+        addConsoleLog('error', `❌ Erro ao seguir @${cleanTarget}: ${error.message}`);
+        return { success: false, error: error.message, username: cleanTarget };
+    }
+}
+
+/**
+ * Fallback: Follow via DOM (método antigo, só se API falhar)
+ */
+async function executeFollowViaDOM(target) {
     const cleanTarget = target?.replace('@', '').toLowerCase();
 
     // Verificar se estamos em uma lista (modal de seguidores)
@@ -479,15 +956,15 @@ async function executeFollow(target) {
                     if (btnText.includes('seguir') && !btnText.includes('seguindo') && !btnText.includes('solicitado')) {
                         btn.click();
                         await randomDelay(500, 800);
-                        addConsoleLog('success', `✅ Seguiu @${cleanTarget}`);
-                        return { success: true, action: 'followed', username: cleanTarget };
+                        addConsoleLog('success', `✅ Seguiu @${cleanTarget} via DOM`);
+                        return { success: true, action: 'followed', username: cleanTarget, method: 'dom' };
                     }
                     // Verificar em inglês também
                     if (btnText === 'follow') {
                         btn.click();
                         await randomDelay(500, 800);
-                        addConsoleLog('success', `✅ Seguiu @${cleanTarget}`);
-                        return { success: true, action: 'followed', username: cleanTarget };
+                        addConsoleLog('success', `✅ Seguiu @${cleanTarget} via DOM`);
+                        return { success: true, action: 'followed', username: cleanTarget, method: 'dom' };
                     }
                 }
 
@@ -514,17 +991,53 @@ async function executeFollow(target) {
     if (followBtn && !followBtn.textContent.toLowerCase().includes('seguindo')) {
         followBtn.click();
         await randomDelay(500, 1000);
-        addConsoleLog('success', `✅ Seguiu ${target || 'perfil atual'}`);
-        return { success: true, action: 'followed' };
+        addConsoleLog('success', `✅ Seguiu ${target || 'perfil atual'} via header`);
+        return { success: true, action: 'followed', method: 'header' };
     }
     return { success: true, action: 'already_following' };
 }
 
 /**
- * Executar unfollow DIRETAMENTE NA LISTA (sem navegar para cada perfil)
- * Muito mais rápido e eficiente!
+ * ═══════════════════════════════════════════════════════════
+ * UNFOLLOW VIA API DIRETA - NÃO PRECISA ABRIR PÁGINA!
+ * Usa a API privada do Instagram para deixar de seguir sem navegar
+ * ═══════════════════════════════════════════════════════════
  */
 async function executeUnfollow(target) {
+    const cleanTarget = target?.replace('@', '').toLowerCase();
+    addConsoleLog('info', `🔄 Deixando de seguir @${cleanTarget} via API...`);
+
+    try {
+        // Obter ID do usuário via API
+        const userId = await getUserId(cleanTarget);
+
+        if (!userId) {
+            addConsoleLog('warning', `⚠️ Não foi possível obter ID de @${cleanTarget}`);
+            return { success: false, error: 'user_id_not_found', username: cleanTarget };
+        }
+
+        addConsoleLog('info', `📡 ID obtido: ${userId}. Executando unfollow...`);
+
+        // Executar unfollow via API
+        const result = await apiUnfollow(userId);
+
+        if (result.success) {
+            addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget} via API!`);
+            return { success: true, action: 'unfollowed', username: cleanTarget, method: 'api' };
+        } else {
+            addConsoleLog('warning', `⚠️ API retornou erro (${result.status}): ${result.message || 'desconhecido'}`);
+            return { success: false, error: result.message || 'api_error', username: cleanTarget };
+        }
+    } catch (error) {
+        addConsoleLog('error', `❌ Erro ao deixar de seguir @${cleanTarget}: ${error.message}`);
+        return { success: false, error: error.message, username: cleanTarget };
+    }
+}
+
+/**
+ * Fallback: Unfollow via DOM (método antigo)
+ */
+async function executeUnfollowViaDOM(target) {
     const cleanTarget = target?.replace('@', '').toLowerCase();
 
     // Primeiro, verificar se estamos na lista de "Seguindo"
@@ -532,7 +1045,6 @@ async function executeUnfollow(target) {
 
     if (dialog) {
         // Estamos em uma lista (modal de seguindo/seguidores)
-        // Procurar o usuário específico na lista
         const allItems = dialog.querySelectorAll('div[role="button"], li, div._aacl');
 
         for (const item of allItems) {
@@ -542,34 +1054,26 @@ async function executeUnfollow(target) {
             const href = link.getAttribute('href');
             const username = href?.replace(/\//g, '').toLowerCase();
 
-            // Encontrou o usuário alvo?
             if (username === cleanTarget) {
-                // Procurar o botão "Seguindo" ao lado deste usuário
                 const buttons = item.querySelectorAll('button');
 
                 for (const btn of buttons) {
                     const btnText = btn.textContent.toLowerCase();
                     if (btnText.includes('seguindo') || btnText.includes('following') || btnText.includes('requested')) {
-                        // Clicar no botão "Seguindo"
                         btn.click();
                         await randomDelay(500, 800);
 
-                        // Aguardar e clicar no botão de confirmação "Deixar de seguir"
-                        await randomDelay(300, 500);
-
-                        // O Instagram abre um menu/modal de confirmação
                         const confirmButtons = document.querySelectorAll('button');
                         for (const confirmBtn of confirmButtons) {
                             const text = confirmBtn.textContent.toLowerCase();
                             if (text.includes('deixar de seguir') || text.includes('unfollow')) {
                                 confirmBtn.click();
                                 await randomDelay(300, 500);
-                                addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget}`);
-                                return { action: 'unfollowed', username: cleanTarget };
+                                addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget} via DOM`);
+                                return { success: true, action: 'unfollowed', username: cleanTarget, method: 'dom' };
                             }
                         }
 
-                        // Fallback: procurar no dialog que aparece
                         const dialogs = document.querySelectorAll('div[role="dialog"]');
                         for (const dlg of dialogs) {
                             const dlgButtons = dlg.querySelectorAll('button');
@@ -578,51 +1082,77 @@ async function executeUnfollow(target) {
                                 if (text.includes('deixar de seguir') || text.includes('unfollow')) {
                                     dlgBtn.click();
                                     await randomDelay(300, 500);
-                                    addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget}`);
-                                    return { action: 'unfollowed', username: cleanTarget };
+                                    addConsoleLog('success', `✅ Deixou de seguir @${cleanTarget} via DOM`);
+                                    return { success: true, action: 'unfollowed', username: cleanTarget, method: 'dom' };
                                 }
                             }
                         }
-
-                        addConsoleLog('warning', `⚠️ Clicou em Seguindo mas não encontrou confirmação para @${cleanTarget}`);
-                        return { action: 'confirm_not_found' };
                     }
                 }
-
-                addConsoleLog('warning', `⚠️ Botão "Seguindo" não encontrado para @${cleanTarget}`);
-                return { action: 'button_not_found' };
             }
         }
-
-        addConsoleLog('warning', `⚠️ Usuário @${cleanTarget} não encontrado na lista visível`);
-        return { action: 'user_not_in_list' };
     }
 
-    // Fallback: se não estamos em uma lista, tentar o método antigo (página do perfil)
     const followBtn = document.querySelector('header button');
     if (followBtn && followBtn.textContent.toLowerCase().includes('seguindo')) {
         followBtn.click();
         await randomDelay(500, 1000);
-        // Click confirm on dialog
         const confirmBtn = document.querySelector('button[tabindex="0"]');
         if (confirmBtn && confirmBtn.textContent.toLowerCase().includes('deixar')) {
             confirmBtn.click();
             await randomDelay(300, 500);
         }
-        addConsoleLog('success', `✅ Deixou de seguir ${target || 'perfil atual'}`);
-        return { action: 'unfollowed' };
+        addConsoleLog('success', `✅ Deixou de seguir ${target || 'perfil atual'} via header`);
+        return { success: true, action: 'unfollowed', method: 'header' };
     }
-    return { action: 'not_following' };
+    return { success: true, action: 'not_following' };
 }
 
+/**
+ * Curte um post - Tenta via API primeiro, depois via DOM
+ */
 async function executeLike(target) {
-    const likeBtn = document.querySelector('svg[aria-label="Curtir"]')?.closest('button');
+    // Tentar encontrar mediaId no meta tag (se estivermos na página do post)
+    let mediaId = null;
+    const metaId = document.querySelector('meta[property="al:ios:url"]');
+    if (metaId) {
+        const content = metaId.getAttribute('content');
+        const match = content.match(/id=(\d+)/);
+        if (match) mediaId = match[1];
+    }
+
+    // Se não encontrou no meta, tentar em scripts do IG
+    if (!mediaId) {
+        const scripts = document.querySelectorAll('script');
+        for (const s of scripts) {
+            if (s.textContent.includes('media_id')) {
+                const match = s.textContent.match(/"media_id":"(\d+)"/);
+                if (match) {
+                    mediaId = match[1];
+                    break;
+                }
+            }
+        }
+    }
+
+    if (mediaId) {
+        addConsoleLog('info', `📡 Curtindo via API (MediaID: ${mediaId})...`);
+        const result = await apiLike(mediaId);
+        if (result.success) {
+            addConsoleLog('success', `❤️ Curtiu via API!`);
+            return { success: true, action: 'liked', method: 'api', mediaId };
+        }
+    }
+
+    // Fallback: Clique no botão do DOM
+    const likeBtn = document.querySelector('svg[aria-label="Curtir"], svg[aria-label="Like"]')?.closest('button');
     if (likeBtn) {
         likeBtn.click();
-        addConsoleLog('success', `❤️ Curtiu post`);
-        return { action: 'liked' };
+        addConsoleLog('success', `❤️ Curtiu via DOM (clique)`);
+        return { success: true, action: 'liked', method: 'dom' };
     }
-    return { action: 'like_not_found' };
+
+    return { success: false, action: 'like_not_found' };
 }
 
 async function executeComment(target, payload) {
@@ -860,6 +1390,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'get_detailed_profile':
             sendResponse(getDetailedProfileInfo());
+            return true;
+
+        case 'get_current_profile':
+            const username = getCurrentProfileUsername();
+            sendResponse({ success: !!username, username });
+            return true;
+
+        case 'load_followers':
+            (async () => {
+                const username = message.username || getCurrentProfileUsername();
+                const limit = message.limit || 200;
+                if (!username) {
+                    sendResponse({ success: false, error: 'Acesse um perfil primeiro' });
+                    return;
+                }
+                const accounts = await loadFollowersViaAPI(username, limit);
+                sendResponse({ success: true, accounts, count: accounts.length });
+            })();
+            return true;
+
+        case 'load_following':
+            (async () => {
+                const username = message.username || getCurrentProfileUsername();
+                const limit = message.limit || 200;
+                if (!username) {
+                    sendResponse({ success: false, error: 'Acesse um perfil primeiro' });
+                    return;
+                }
+                const accounts = await loadFollowingViaAPI(username, limit);
+                sendResponse({ success: true, accounts, count: accounts.length });
+            })();
+            return true;
+
+        case 'get_loaded_accounts':
+            sendResponse({ success: true, accounts: loadedAccounts, count: loadedAccounts.length });
             return true;
 
         default:

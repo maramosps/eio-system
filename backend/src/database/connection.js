@@ -7,20 +7,20 @@
 
 const { Sequelize } = require('sequelize');
 
-// Configuração SSL para Supabase (obrigatório)
-const sslConfig = process.env.DB_SSL === 'true' ? {
+// Configuração SSL para Supabase (obrigatório para conexões remotas)
+const sslConfig = {
     require: true,
     rejectUnauthorized: false
-} : false;
+};
 
 // Se tiver DATABASE_URL, usa connection string completa (recomendado para Supabase)
 // Caso contrário, monta conexão manualmente
-const sequelize = process.env.DATABASE_URL 
+const sequelize = process.env.DATABASE_URL
     ? new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres',
         logging: process.env.NODE_ENV === 'development' ? console.log : false,
         dialectOptions: {
-            ssl: sslConfig || undefined
+            ssl: sslConfig
         },
         pool: {
             max: 10,
