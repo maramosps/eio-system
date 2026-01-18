@@ -1672,4 +1672,135 @@ async function extractAccountsFromList() {
     return accounts;
 }
 
-console.log('E.I.O Content Script v2.3.0 - Dashboard communication enabled!');
+// ═══════════════════════════════════════════════════════════
+// FECHAR POPUPS AUTOMÁTICOS DO INSTAGRAM
+// Detecta e fecha popups de notificações, cookies, login, etc.
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Verificar se a opção está habilitada no storage
+ */
+async function isAutoClosePopupsEnabled() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['eioAppState'], (result) => {
+            const config = result.eioAppState?.config || {};
+            resolve(config.dismissNotifications !== false); // ativo por padrão
+        });
+    });
+}
+
+/**
+ * Fechar popups automáticos do Instagram
+ */
+async function dismissInstagramPopups() {
+    const enabled = await isAutoClosePopupsEnabled();
+    if (!enabled) return;
+
+    // Seletores para diferentes tipos de popups
+    const popupSelectors = [
+        // Popup de notificações "Ativar notificações?"
+        'button:contains("Agora não")',
+        'button:contains("Not Now")',
+        'button[tabindex="0"]:contains("Agora")',
+
+        // Botões de fechar padrão
+        'div[role="dialog"] button[aria-label="Fechar"]',
+        'div[role="dialog"] button[aria-label="Close"]',
+
+        // Popup de cookies
+        'button:contains("Aceitar")',
+        'button:contains("Accept")',
+
+        // Popup de login
+        'button:contains("Agora não")',
+
+        // Botão X genérico em dialogs
+        'div[role="dialog"] svg[aria-label="Fechar"]',
+        'div[role="dialog"] svg[aria-label="Close"]'
+    ];
+
+    // Função auxiliar para encontrar botão por texto
+    function findButtonByText(texts) {
+        const allButtons = document.querySelectorAll('button');
+        for (const btn of allButtons) {
+            const btnText = btn.textContent?.toLowerCase().trim();
+            for (const text of texts) {
+                if (btnText === text.toLowerCase()) {
+                    return btn;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Tentar fechar popup de notificações
+    const notificationTexts = ['agora não', 'not now', 'ahora no'];
+    const dismissBtn = findButtonByText(notificationTexts);
+
+    if (dismissBtn) {
+        console.log('[E.I.O] 🔕 Fechando popup de notificações automaticamente...');
+        dismissBtn.click();
+        addConsoleLog('info', '🔕 Popup de notificações fechado automaticamente');
+        return true;
+    }
+
+    // Tentar fechar dialogs genéricos
+    const dialogs = document.querySelectorAll('div[role="dialog"]');
+    for (const dialog of dialogs) {
+        // Verificar se é um popup de notificação/promoção (não modal de seguidores)
+        const isNotificationPopup =
+            dialog.textContent?.includes('notificações') ||
+            dialog.textContent?.includes('notifications') ||
+            dialog.textContent?.includes('Ativar') ||
+            dialog.textContent?.includes('Turn on');
+
+        if (isNotificationPopup) {
+            const closeBtn = dialog.querySelector('button[aria-label="Fechar"], button[aria-label="Close"]');
+            if (closeBtn) {
+                console.log('[E.I.O] 🔕 Fechando dialog de promoção...');
+                closeBtn.click();
+                addConsoleLog('info', '🔕 Dialog promocional fechado automaticamente');
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Observador de mutações para detectar novos popups
+ */
+let popupObserver = null;
+
+function startPopupObserver() {
+    if (popupObserver) return; // Já está rodando
+
+    popupObserver = new MutationObserver(async (mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.addedNodes.length > 0) {
+                // Aguardar um pouco para o popup renderizar completamente
+                await new Promise(r => setTimeout(r, 500));
+                await dismissInstagramPopups();
+            }
+        }
+    });
+
+    popupObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    console.log('[E.I.O] 👁️ Observador de popups iniciado');
+}
+
+// Iniciar observador de popups
+startPopupObserver();
+
+// Executar verificação inicial após carregamento
+setTimeout(async () => {
+    await dismissInstagramPopups();
+}, 2000);
+
+console.log('E.I.O Content Script v3.4.0 - Auto popup dismiss enabled!');
+

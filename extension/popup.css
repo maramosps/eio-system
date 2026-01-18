@@ -659,6 +659,11 @@ body {
     color: #FF9800;
 }
 
+.card-stamp.stamp-cyan {
+    border-color: #00BCD4;
+    color: #00BCD4;
+}
+
 .eio-account-card:hover {
     background: var(--eio-dark-500);
     border-color: var(--eio-blue-500);

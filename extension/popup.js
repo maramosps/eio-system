@@ -548,18 +548,25 @@ function renderAccountsTable() {
                 avatarHtml = `<div class="card-placeholder">${initial}</div>`;
             }
 
-            // Carimbo de Ação (Stamp) conforme imagem de referência
+            // Carimbo de Ação (Stamp) - Verificar se opção está ativa
             let stampHtml = '';
-            if (acc.status === 'followed' || acc.followedByViewer || acc.followedByMe) {
-                stampHtml = `<div class="card-stamp stamp-green">FOLLOWED</div>`;
-            } else if (acc.status === 'requested' || acc.requestedByViewer) {
-                stampHtml = `<div class="card-stamp stamp-blue">REQUESTED</div>`;
-            } else if (acc.status === 'unfollowed') {
-                stampHtml = `<div class="card-stamp stamp-red">UNFOLLOWED</div>`;
-            } else if (acc.status === 'liked') {
-                stampHtml = `<div class="card-stamp stamp-pink">LIKED</div>`;
-            } else if (acc.status === 'error') {
-                stampHtml = `<div class="card-stamp stamp-orange">ERROR</div>`;
+            const showBadges = document.getElementById('configShowBadges')?.checked ?? true;
+
+            if (showBadges) {
+                // Determinar o status baseado em múltiplas propriedades
+                if (acc.status === 'followed' || acc.followedByViewer || acc.followedByMe || acc.status === 'following') {
+                    stampHtml = `<div class="card-stamp stamp-green">FOLLOWED</div>`;
+                } else if (acc.status === 'requested' || acc.requestedByViewer) {
+                    stampHtml = `<div class="card-stamp stamp-blue">REQUESTED</div>`;
+                } else if (acc.status === 'unfollowed') {
+                    stampHtml = `<div class="card-stamp stamp-red">UNFOLLOWED</div>`;
+                } else if (acc.status === 'liked') {
+                    stampHtml = `<div class="card-stamp stamp-pink">LIKED</div>`;
+                } else if (acc.status === 'error') {
+                    stampHtml = `<div class="card-stamp stamp-orange">ERROR</div>`;
+                } else if (acc.followsViewer) {
+                    stampHtml = `<div class="card-stamp stamp-cyan">FOLLOWS YOU</div>`;
+                }
             }
 
             return `
@@ -1623,7 +1630,9 @@ function collectConfig() {
         randomDelayPercent: parseInt(document.getElementById('randomDelayPercent')?.value) || 50,
         showBadges: document.getElementById('configShowBadges')?.checked ?? true,
         showLikes: document.getElementById('configShowLikes')?.checked ?? true,
-        showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true
+        showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true,
+        dismissNotifications: document.getElementById('configDismissNotifications')?.checked ?? true,
+        loadLastQueue: document.getElementById('configLoadLastQueue')?.checked ?? true
     };
 }
 
