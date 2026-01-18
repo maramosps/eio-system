@@ -58,11 +58,11 @@ function getCurrentProfileUsername() {
 /**
  * ═══════════════════════════════════════════════════════════
  * CARREGAR SEGUIDORES VIA API - SEM ABRIR MODAL!
- * Usa o endpoint correto: i.instagram.com/api/v1/friendships
+ * Carrega ATÉ O LIMITE de perfis NOVOS (que você ainda não segue)
  * ═══════════════════════════════════════════════════════════
  */
 async function loadFollowersViaAPI(username, limit = 200) {
-    addConsoleLog('info', `📥 Carregando seguidores de @${username} via API...`);
+    addConsoleLog('info', `📥 Carregando ${limit} seguidores novos de @${username} via API...`);
 
     const userId = await getUserId(username);
     if (!userId) {
@@ -70,17 +70,17 @@ async function loadFollowersViaAPI(username, limit = 200) {
         return [];
     }
 
-    let allFollowers = [];
+    let newFollowers = [];      // Apenas perfis que você NÃO segue
+    let totalLoaded = 0;        // Total de perfis carregados (incluindo filtrados)
     let maxId = '';
     let hasNext = true;
-
     let retryCount = 0;
     const maxRetries = 3;
+    const maxTotalToLoad = limit * 3; // Carregar até 3x o limite para compensar filtro
 
-    while (hasNext && allFollowers.length < limit) {
+    // Continuar até ter 'limit' perfis NOVOS ou esgotar a lista
+    while (hasNext && newFollowers.length < limit && totalLoaded < maxTotalToLoad) {
         try {
-            // Endpoint da Private API do Instagram - mais estável que GraphQL
-            // Usando count=100 para carregar mais rápido
             let url = `https://i.instagram.com/api/v1/friendships/${userId}/followers/?count=100`;
             if (maxId) url += `&max_id=${maxId}`;
 
@@ -96,85 +96,78 @@ async function loadFollowersViaAPI(username, limit = 200) {
 
             if (!response.ok) {
                 if (response.status === 429) {
-                    addConsoleLog('warning', '⚠️ Rate limit atingido. Aguardando 30s...');
+                    addConsoleLog('warning', '⚠️ Rate limit. Aguardando 30s...');
                     await randomDelay(30000, 60000);
                     retryCount++;
                     if (retryCount < maxRetries) continue;
                     break;
                 }
-                addConsoleLog('error', `❌ API retornou status ${response.status}`);
+                addConsoleLog('error', `❌ API status ${response.status}`);
                 throw new Error(`HTTP ${response.status}`);
             }
 
             const data = await response.json();
 
             if (data.users && data.users.length > 0) {
-                // Log de debug para ver a estrutura (apenas no primeiro usuário)
-                if (allFollowers.length === 0 && data.users[0]) {
-                    console.log('[E.I.O DEBUG] Estrutura do primeiro usuário:', JSON.stringify(data.users[0], null, 2));
-                }
-
                 for (const user of data.users) {
-                    // Verificar múltiplos campos possíveis para "já segue"
+                    totalLoaded++;
+
+                    // Verificar se você JÁ SEGUE este perfil
                     const isFollowing =
                         user.friendship_status?.following === true ||
                         user.friendship_status?.is_following === true ||
                         user.following === true ||
-                        user.is_following === true ||
-                        user.followed_by_viewer === true;
+                        user.is_following === true;
 
                     const hasOutgoingRequest =
                         user.friendship_status?.outgoing_request === true ||
-                        user.outgoing_request === true ||
-                        user.requested_by_viewer === true;
+                        user.outgoing_request === true;
 
-                    allFollowers.push({
-                        id: user.pk || user.id,
-                        username: user.username,
-                        full_name: user.full_name || '',
-                        profile_pic_url: user.profile_pic_url || '',
-                        is_private: user.is_private || false,
-                        is_verified: user.is_verified || false,
-                        followed_by_viewer: isFollowing,
-                        follows_viewer: user.friendship_status?.followed_by || user.follows_viewer || false,
-                        requested_by_viewer: hasOutgoingRequest
-                    });
+                    // FILTRAR EM TEMPO REAL: só adiciona se NÃO segue
+                    if (!isFollowing && !hasOutgoingRequest) {
+                        newFollowers.push({
+                            id: user.pk || user.id,
+                            username: user.username,
+                            full_name: user.full_name || '',
+                            profile_pic_url: user.profile_pic_url || '',
+                            is_private: user.is_private || false,
+                            is_verified: user.is_verified || false,
+                            followed_by_viewer: false,
+                            follows_viewer: user.friendship_status?.followed_by || false,
+                            requested_by_viewer: false
+                        });
+
+                        // Parar se atingiu o limite
+                        if (newFollowers.length >= limit) break;
+                    }
                 }
 
                 maxId = data.next_max_id || '';
-                hasNext = !!data.next_max_id && allFollowers.length < limit;
+                hasNext = !!data.next_max_id;
 
-                addConsoleLog('info', `📊 Carregados ${allFollowers.length} seguidores...`);
+                const skipped = totalLoaded - newFollowers.length;
+                addConsoleLog('info', `📊 ${newFollowers.length}/${limit} novos (${skipped} já seguidos pulados)...`);
+
             } else {
                 hasNext = false;
             }
 
-            // Delay entre requisições para evitar rate limit
-            if (hasNext) await randomDelay(1000, 2000);
+            // Delay entre requisições
+            if (hasNext && newFollowers.length < limit) {
+                await randomDelay(1000, 2000);
+            }
 
         } catch (error) {
-            addConsoleLog('error', `❌ Erro ao carregar seguidores: ${error.message}`);
+            addConsoleLog('error', `❌ Erro: ${error.message}`);
             hasNext = false;
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // FILTRO AUTOMÁTICO: Remover perfis que você já segue
-    // ═══════════════════════════════════════════════════════════
-    const totalBeforeFilter = allFollowers.length;
-    const filteredFollowers = allFollowers.filter(user => {
-        // Manter apenas quem você NÃO segue e NÃO solicitou
-        return !user.followed_by_viewer && !user.requested_by_viewer;
-    });
+    const skippedTotal = totalLoaded - newFollowers.length;
+    addConsoleLog('success', `✅ Carregados ${newFollowers.length} perfis novos! (${skippedTotal} já seguidos ignorados)`);
 
-    const removedCount = totalBeforeFilter - filteredFollowers.length;
-    if (removedCount > 0) {
-        addConsoleLog('info', `🔍 Auto-filtro: ${removedCount} perfis que você já segue foram removidos`);
-    }
-
-    addConsoleLog('success', `✅ Total: ${filteredFollowers.length} perfis novos prontos! (${removedCount} já seguidos removidos)`);
-    loadedAccounts = filteredFollowers;
-    return filteredFollowers;
+    loadedAccounts = newFollowers;
+    return newFollowers;
 }
 
 /**

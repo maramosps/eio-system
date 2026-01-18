@@ -802,16 +802,7 @@ async function loadFromInstagram(type, limit = 200) {
             status: acc.followed_by_viewer ? 'following' : (acc.requested_by_viewer ? 'requested' : 'none')
         }));
 
-        // FILTRAR: remover quem você já segue (não faz sentido seguir novamente)
-        const beforeFilter = AppState.accounts.length;
-        AppState.accounts = AppState.accounts.filter(acc => !acc.followedByViewer && !acc.requestedByViewer);
-        const afterFilter = AppState.accounts.length;
-
-        if (beforeFilter !== afterFilter) {
-            addLog('info', `🔍 Filtrados ${beforeFilter - afterFilter} perfis que você já segue`);
-        }
-
-        // Selecionar todas automaticamente (só as que NÃO segue)
+        // Selecionar todas automaticamente
         AppState.selectedAccounts.clear();
         AppState.accounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
 
@@ -837,7 +828,7 @@ async function loadFromInstagram(type, limit = 200) {
         }
 
         // Mostrar sucesso
-        addLog('success', `✅ ${AppState.accounts.length} leads novos prontos! (${beforeFilter - afterFilter} já seguidos removidos)`);
+        addLog('success', `✅ ${AppState.accounts.length} leads carregados e prontos!`);
         LoadingManager.showSuccess(AppState.accounts.length);
 
     } catch (error) {
