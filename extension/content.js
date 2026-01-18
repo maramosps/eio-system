@@ -1428,6 +1428,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ success: !!username, username });
             return true;
 
+        case 'check_modal_open':
+            // Verificar se há um modal de seguidores/seguindo aberto
+            const dialog = document.querySelector('div[role="dialog"]');
+            let hasModal = false;
+            let modalType = null;
+
+            if (dialog) {
+                // Verificar se é um modal de lista (seguidores/seguindo)
+                const scrollContainer = dialog.querySelector('div[style*="overflow"]') ||
+                    dialog.querySelector('div._aano');
+
+                if (scrollContainer) {
+                    hasModal = true;
+                    // Tentar detectar o tipo
+                    if (window.location.href.includes('/followers')) {
+                        modalType = 'followers';
+                    } else if (window.location.href.includes('/following')) {
+                        modalType = 'following';
+                    }
+                }
+            }
+
+            sendResponse({ hasModal, modalType });
+            return true;
+
         case 'load_followers':
             (async () => {
                 const username = message.username || getCurrentProfileUsername();

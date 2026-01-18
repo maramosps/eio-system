@@ -729,11 +729,13 @@ function formatNumber(num) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// LOAD FROM INSTAGRAM VIA API
+// LOAD FROM INSTAGRAM - HÍBRIDO (MODAL + API)
+// Prioriza extração via modal aberto (mais perfis)
+// Se não houver modal, usa API direta
 // ═══════════════════════════════════════════════════════════
 
 async function loadFromInstagram(type, limit = 200) {
-    addLog('info', `📥 Carregando ${type} do perfil...`);
+    addLog('info', `📥 Carregando ${type} (limite: ${limit})...`);
 
     // Mostrar loading
     LoadingManager.show(type);
@@ -744,8 +746,63 @@ async function loadFromInstagram(type, limit = 200) {
         const instagramTab = tabs.find(t => t.url?.includes('instagram.com'));
 
         if (!instagramTab) {
-            throw new Error('Abra um perfil do Instagram primeiro');
+            throw new Error('Abra o Instagram primeiro');
         }
+
+        // Verificar se há um modal de seguidores/seguindo aberto
+        const checkModalResult = await chrome.tabs.sendMessage(instagramTab.id, {
+            action: 'check_modal_open'
+        }).catch(() => ({ hasModal: false }));
+
+        // ═══════════════════════════════════════════════════════════
+        // MÉTODO 1: EXTRAÇÃO VIA MODAL (SCROLL AUTOMÁTICO)
+        // Se o modal estiver aberto, usar extração por scroll
+        // ═══════════════════════════════════════════════════════════
+        if (checkModalResult?.hasModal) {
+            addLog('info', '📋 Modal detectado! Usando extração por scroll...');
+            LoadingManager.updateProgress(0, limit, 'Extraindo do modal aberto...');
+
+            const extractionResult = await chrome.tabs.sendMessage(instagramTab.id, {
+                action: 'execute_extraction',
+                payload: {
+                    type: type,
+                    limit: limit,
+                    filters: AppState.filters
+                }
+            });
+
+            if (extractionResult?.success && extractionResult.data) {
+                const accounts = extractionResult.data;
+                addLog('success', `✅ ${accounts.length} perfis extraídos do modal!`);
+
+                // Processar resultados do modal
+                AppState.accounts = accounts.map(acc => ({
+                    username: (acc.username || '').replace('@', ''),
+                    fullName: acc.fullName || acc.name || '',
+                    profilePic: acc.avatar || '',
+                    followers: acc.followers || 0,
+                    following: acc.following || 0,
+                    posts: acc.posts || 0,
+                    isPrivate: acc.isPrivate || false,
+                    isVerified: acc.isVerified || false,
+                    followedByViewer: acc.followedByMe || false,
+                    followsViewer: acc.followsMe || false,
+                    requestedByViewer: false,
+                    status: acc.followedByMe ? 'following' : 'none'
+                }));
+
+                finishLoadingAccounts(type);
+                return;
+            } else {
+                addLog('warning', '⚠️ Extração do modal falhou, tentando via API...');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // MÉTODO 2: API DIRETA (MAIS RÁPIDO, MENOS PERFIS POR VEZ)
+        // Se não há modal ou extração falhou
+        // ═══════════════════════════════════════════════════════════
+        addLog('info', '🔌 Usando API direta para carregar perfis...');
 
         // Detectar o perfil atual
         const profileResult = await chrome.tabs.sendMessage(instagramTab.id, { action: 'get_current_profile' });
@@ -758,8 +815,8 @@ async function loadFromInstagram(type, limit = 200) {
         AppState.targetProfile = username;
         document.getElementById('targetProfileName').textContent = '@' + username;
 
-        addLog('info', `📍 Perfil detectado: @${username}`);
-        LoadingManager.updateProgress(0, limit, `Carregando ${type} de @${username}...`);
+        addLog('info', `📍 Perfil: @${username}`);
+        LoadingManager.updateProgress(0, limit, `Carregando ${type} via API...`);
 
         // Chamar a API de carregamento
         const actionMap = {
@@ -837,6 +894,39 @@ async function loadFromInstagram(type, limit = 200) {
         LoadingManager.hide();
         alert('Erro ao carregar: ' + error.message);
     }
+}
+
+/**
+ * Função auxiliar para finalizar o carregamento de contas
+ * Usada tanto pelo método de modal quanto pela API
+ */
+function finishLoadingAccounts(type) {
+    // Selecionar todas automaticamente
+    AppState.selectedAccounts.clear();
+    AppState.accounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
+
+    // Atualizar filtros e UI
+    applyFilters();
+    renderAccountsTable();
+    updateSelectedCount();
+    updateQueueStatus();
+    saveState();
+
+    // Sincronizar com dashboard
+    if (window.EIO_BACKEND && AppState.accounts.length > 0) {
+        addLog('info', '📤 Sincronizando leads com o dashboard...');
+        EIO_BACKEND.syncLeads(AppState.accounts, type === 'followers' ? 'seguidores' : 'seguindo')
+            .then(result => {
+                if (result.success) {
+                    addLog('success', `☁️ ${result.synced} leads sincronizados com o CRM!`);
+                }
+            })
+            .catch(err => console.log('Sync error:', err));
+    }
+
+    // Mostrar sucesso
+    addLog('success', `✅ ${AppState.accounts.length} leads carregados e prontos!`);
+    LoadingManager.showSuccess(AppState.accounts.length);
 }
 
 // Funções auxiliares para carregamento (placeholders)
@@ -975,141 +1065,8 @@ const LoadingManager = {
 // Inicializar LoadingManager quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => LoadingManager.init());
 
-// ═══════════════════════════════════════════════════════════
-// LOAD ACCOUNTS FROM INSTAGRAM - COM UX PROFISSIONAL
-// ═══════════════════════════════════════════════════════════
-async function loadFromInstagram(type, limit) {
-    console.log('🔄 loadFromInstagram chamado:', type, limit);
-    addLog('info', `🔄 Iniciando extração de ${type}...`);
+// NOTA: A função loadFromInstagram principal está definida acima (híbrida: modal + API)
 
-    // Alerta informativo rápido
-    alert('🔍 Iniciando busca de perfis...\n\nPor favor, mantenha a aba do Instagram aberta durante a extração.\nO processo levará cerca de 30 segundos.');
-
-    // FEEDBACK IMEDIATO (0-300ms) - Mostrar modal ANTES de qualquer operação assíncrona
-    // Tentar mostrar o modal de forma síncrona
-    const modal = document.getElementById('loadingModal');
-    if (modal) {
-        console.log('✅ Modal encontrado, exibindo...');
-
-        // Configurar conteúdo
-        const isUnfollow = type === 'unfollow' || type === 'following';
-        const timeLimit = isUnfollow ? 60 : 30;
-        const title = isUnfollow
-            ? '🔍 Buscando perfis para deixar de seguir…'
-            : '🚀 Carregando Nova Lista de Perfis…';
-        const message = isUnfollow
-            ? `Analisando sua conta para preparar a lista.<br><br><strong>⚠️ IMPORTANTE:</strong> Mantenha a aba do Instagram aberta para que o processo não seja interrompido pelo navegador.`
-            : `Sincronizando os perfis encontrados com sua fila.<br><br><strong>⚠️ IMPORTANTE:</strong> Não feche ou mude a aba do Instagram durante este carregamento. O sistema precisa dela para extrair os dados.`;
-
-        const titleEl = document.getElementById('loadingTitle');
-        const messageEl = document.getElementById('loadingMessage');
-        const progressFill = document.getElementById('loadingProgressFill');
-        const statusText = document.getElementById('loadingStatusText');
-        const timeoutDiv = document.getElementById('loadingTimeout');
-
-        if (titleEl) titleEl.innerHTML = title;
-        if (messageEl) messageEl.innerHTML = message;
-        if (progressFill) progressFill.style.width = '0%';
-        if (statusText) statusText.textContent = 'Iniciando extração...';
-        if (timeoutDiv) timeoutDiv.style.display = 'none';
-
-        // MOSTRAR MODAL IMEDIATAMENTE
-        modal.style.display = 'flex';
-        console.log('✅ Modal exibido com display: flex');
-
-        // Desabilitar botões
-        ['btnLoadAccounts', 'btnProcessQueue', 'btnSelect'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.disabled = true;
-        });
-    } else {
-        console.error('❌ Modal não encontrado!');
-    }
-
-    // Forçar repaint do DOM
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    try {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        const activeTab = tabs[0];
-
-        if (!activeTab?.url?.includes('instagram.com')) {
-            hideLoadingModal();
-            addLog('error', '❌ Por favor, navegue para o Instagram primeiro');
-            alert('Por favor, navegue para o Instagram e abra a lista de seguidores/seguindo antes de clicar aqui.');
-            renderAccountsTable();
-            return;
-        }
-
-        // Atualizar status
-        const statusText = document.getElementById('loadingStatusText');
-        if (statusText) statusText.textContent = 'Conectando ao Instagram...';
-        addLog('info', '📋 Extraindo dados da lista aberta... Por favor aguarde.');
-
-        const response = await chrome.tabs.sendMessage(activeTab.id, {
-            action: 'execute_extraction',
-            payload: {
-                type: type,
-                limit: limit,
-                filters: AppState.filters
-            }
-        });
-
-        if (response?.success && response.data) {
-            const newAccounts = response.data.map(lead => ({
-                username: lead.username || '',
-                fullName: lead.fullName || lead.name || '',
-                avatar: lead.avatar || null,
-                bio: lead.bio || '',
-                posts: lead.posts || null,
-                followers: lead.followers || null,
-                following: lead.following || null,
-                ratio: lead.ratio || null,
-                mutual: lead.mutual || false,
-                followedByMe: lead.followedByMe || false,
-                followsMe: lead.followsMe || false,
-                isPrivate: lead.isPrivate || false,
-                isVerified: lead.isVerified || false,
-                hasStory: lead.hasStory || false,
-                source: type
-            }));
-
-            // Atualizar progresso
-            const progressFill = document.getElementById('loadingProgressFill');
-            const statusTextEl = document.getElementById('loadingStatusText');
-            if (progressFill) progressFill.style.width = '100%';
-            if (statusTextEl) statusTextEl.textContent = 'Processando perfis...';
-
-            const existingUsernames = new Set(AppState.accounts.map(a => a.username));
-            const uniqueNew = newAccounts.filter(a => !existingUsernames.has(a.username));
-
-            AppState.accounts = [...AppState.accounts, ...uniqueNew];
-            applyFilters();
-            renderAccountsTable();
-            saveState();
-
-            // Mostrar sucesso
-            hideLoadingModal();
-            showSuccessToast(uniqueNew.length);
-            addLog('success', `✅ ${uniqueNew.length} novas contas carregadas!`);
-
-            if (uniqueNew.length === 0 && newAccounts.length > 0) {
-                addLog('warning', '⚠️ Todas as contas já estavam na lista');
-            }
-        } else {
-            hideLoadingModal();
-            addLog('error', '❌ Falha na extração. A janela de seguidores está aberta?');
-            alert('Por favor, clique em "Seguidores" ou "Seguindo" no perfil do Instagram para abrir a lista antes de extrair.');
-            renderAccountsTable();
-        }
-    } catch (error) {
-        console.error('Load error:', error);
-        hideLoadingModal();
-        addLog('error', `❌ Erro: ${error.message}`);
-        alert('Erro ao carregar contas. Certifique-se de que:\n1. Você está em instagram.com\n2. A janela de seguidores/seguindo está aberta\n3. Recarregue a página do Instagram e tente novamente');
-        renderAccountsTable();
-    }
-}
 
 // Helper functions para modal de loading
 function hideLoadingModal() {
