@@ -773,9 +773,11 @@ async function loadFromInstagram(type, limit = 200) {
 
             if (extractionResult?.success && extractionResult.data) {
                 const accounts = extractionResult.data;
-                addLog('success', `✅ ${accounts.length} perfis extraídos do modal!`);
+                addLog('success', `✅ ${accounts.length} perfis NOVOS extraídos do modal!`);
 
                 // Processar resultados do modal
+                // NOTA: Os perfis que chegam aqui JÁ FORAM FILTRADOS
+                // Ou seja, são apenas perfis que você NÃO segue ainda
                 AppState.accounts = accounts.map(acc => ({
                     username: (acc.username || '').replace('@', ''),
                     fullName: acc.fullName || acc.name || '',
@@ -785,10 +787,10 @@ async function loadFromInstagram(type, limit = 200) {
                     posts: acc.posts || 0,
                     isPrivate: acc.isPrivate || false,
                     isVerified: acc.isVerified || false,
-                    followedByViewer: acc.followedByMe || false,
+                    followedByViewer: false,  // São perfis novos, você NÃO segue
                     followsViewer: acc.followsMe || false,
                     requestedByViewer: false,
-                    status: acc.followedByMe ? 'following' : 'none'
+                    status: 'none'  // Sem stamp - são perfis novos para seguir
                 }));
 
                 finishLoadingAccounts(type);

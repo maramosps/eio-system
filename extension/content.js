@@ -794,19 +794,66 @@ async function runExtractionFlow(payload) {
             const isPrivate = item.innerText.includes('Solicitado') || item.innerText.includes('Private');
             const isVerified = !!item.querySelector('svg[aria-label="Verified"]') || !!item.querySelector('svg[aria-label="Verificado"]');
 
-            // Check follow status
+            // ═══════════════════════════════════════════════════════════
+            // DETECÇÃO SE VOCÊ JÁ SEGUE ESTE PERFIL
+            // Múltiplos métodos para garantir precisão
+            // ═══════════════════════════════════════════════════════════
             const followBtn = item.querySelector('button');
             let followedByMe = false;
             let followsMe = false;
+            let requestedByMe = false;
 
             if (followBtn) {
-                const btnText = followBtn.textContent.toLowerCase();
-                followedByMe = btnText.includes('seguindo') || btnText.includes('following');
+                const btnText = (followBtn.textContent || '').toLowerCase().trim();
+                const btnInnerHTML = (followBtn.innerHTML || '').toLowerCase();
+
+                // Método 1: Texto do botão
+                // "Seguindo" = você segue
+                // "Seguir" = você NÃO segue
+                // "Solicitado" = você enviou solicitação
+                if (btnText === 'seguindo' || btnText === 'following' ||
+                    btnText.includes('seguindo') || btnText.includes('following')) {
+                    followedByMe = true;
+                }
+
+                if (btnText === 'solicitado' || btnText === 'requested' ||
+                    btnText.includes('solicitado') || btnText.includes('requested')) {
+                    requestedByMe = true;
+                }
+
+                // Método 2: Cor do botão (botão "Seguindo" geralmente é cinza/secundário)
+                const btnStyle = window.getComputedStyle(followBtn);
+                const bgColor = btnStyle.backgroundColor;
+                // Botões de "Seguir" geralmente são azuis (rgb(0, 149, 246))
+                // Botões de "Seguindo" geralmente são transparentes ou cinza
+
+                // Método 3: SVG de check dentro do botão
+                const hasSvgCheck = followBtn.querySelector('svg') !== null;
+                if (hasSvgCheck && !followedByMe) {
+                    // Se tem um ícone SVG e não detectamos "Seguindo", verificar mais
+                    const svgPath = followBtn.querySelector('svg path');
+                    if (svgPath) {
+                        // O ícone de "pessoa com check" indica que você segue
+                        followedByMe = true;
+                    }
+                }
             }
 
-            // Check "Follows you" text
-            if (item.innerText.includes('Segue você') || item.innerText.includes('Follows you')) {
+            // Método 4: Verificar texto "Segue você" no item completo
+            const itemText = item.innerText || '';
+            if (itemText.includes('Segue você') || itemText.includes('Follows you')) {
                 followsMe = true;
+            }
+
+            // Log de debug para o primeiro perfil
+            if (leads.length === 0) {
+                console.log('[E.I.O DEBUG] Primeiro perfil do modal:', {
+                    username,
+                    btnText: followBtn?.textContent,
+                    followedByMe,
+                    followsMe,
+                    requestedByMe
+                });
             }
 
             // Apply filters
@@ -831,6 +878,7 @@ async function runExtractionFlow(payload) {
                 mutual: followedByMe && followsMe,
                 followedByMe: followedByMe,
                 followsMe: followsMe,
+                requestedByMe: requestedByMe,
                 isPrivate: isPrivate,
                 isVerified: isVerified,
                 hasStory: hasStoryRing,
@@ -872,17 +920,24 @@ async function runExtractionFlow(payload) {
     // FILTRO AUTOMÁTICO: Remover perfis que você já segue
     // ═══════════════════════════════════════════════════════════
     const totalBeforeFilter = leads.length;
+
+    // Contar quantos você já segue
+    const alreadyFollowing = leads.filter(l => l.followedByMe).length;
+    const alreadyRequested = leads.filter(l => l.requestedByMe).length;
+
+    addConsoleLog('info', `📊 Análise: ${totalBeforeFilter} total | ${alreadyFollowing} já seguidos | ${alreadyRequested} solicitados`);
+
     const filteredLeads = leads.filter(lead => {
-        // Manter apenas quem você NÃO segue
-        return !lead.followedByMe;
+        // Manter apenas quem você NÃO segue e NÃO tem solicitação pendente
+        return !lead.followedByMe && !lead.requestedByMe;
     });
 
     const removedCount = totalBeforeFilter - filteredLeads.length;
     if (removedCount > 0) {
-        addConsoleLog('info', `🔍 Auto-filtro: ${removedCount} perfis que você já segue foram removidos`);
+        addConsoleLog('info', `🔍 Filtrados: ${alreadyFollowing} já seguidos + ${alreadyRequested} solicitados = ${removedCount} removidos`);
     }
 
-    addConsoleLog('success', `✅ Finalizado! ${filteredLeads.length} leads novos prontos! (${removedCount} já seguidos removidos)`);
+    addConsoleLog('success', `✅ Finalizado! ${filteredLeads.length} perfis NOVOS prontos para seguir!`);
     return { success: true, data: filteredLeads };
 }
 
