@@ -89,6 +89,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             LoadingManager.updateProgress(message.count, limit, `Capturando ${message.type}...`);
         }
 
+        // Progress update (X/Y em execução)
+        if (message.type === 'progressUpdate') {
+            const current = message.current || 0;
+            const total = message.total || 0;
+            const progressEl = document.getElementById('queueProgress');
+            if (progressEl) {
+                progressEl.textContent = `${current}/${total}`;
+            }
+            console.log(`[E.I.O] Progresso: ${current}/${total}`);
+        }
+
         // Stats update
         if (message.type === 'statsUpdate') {
             if (message.stats) {

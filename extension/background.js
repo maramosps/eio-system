@@ -29,15 +29,17 @@ let extensionState = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// DELAYS SEGUROS - CONFIGURAÇÃO DE INTERVALOS
-// Mínimo: 1 minuto e 20 segundos (80 segundos)
-// Máximo: 2 minutos e 30 segundos (150 segundos)
+// DELAYS FIXOS E SEGUROS - NÃO CONFIGURÁVEIS
+// Estes valores são FIXOS para proteger as contas dos usuários
 // ═══════════════════════════════════════════════════════════
 const DELAY_CONFIG = {
-    MIN_BETWEEN_PROFILES: 80000,   // 1 minuto e 20 segundos mínimo
-    MAX_BETWEEN_PROFILES: 150000,  // 2 minutos e 30 segundos máximo
-    MIN_BETWEEN_ACTIONS: 5000,     // 5 segundos entre ações do mesmo perfil
-    MAX_BETWEEN_ACTIONS: 15000     // 15 segundos entre ações do mesmo perfil
+    // Delay entre AÇÕES no MESMO perfil (seguir, curtir, stories)
+    // 1 minuto e 20 segundos = 80.000 milissegundos
+    BETWEEN_ACTIONS_SAME_PROFILE: 80000,
+
+    // Delay entre PERFIS DIFERENTES
+    // 1 minuto e 30 segundos = 90.000 milissegundos  
+    BETWEEN_PROFILES: 90000
 };
 
 let isProcessing = false;
@@ -101,6 +103,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             extensionState.queue = message.queue || [];
             extensionState.currentActionType = message.actionType;
             extensionState.currentOptions = message.options || {};
+            // Salvar tamanho inicial da fila para o contador de progresso
+            totalQueueSize = extensionState.queue.length;
+            processedCount = 0;
             console.log('[E.I.O] Fila configurada:', extensionState.queue.length, 'itens. Ação:', message.actionType);
             saveState();
             sendResponse({ success: true, count: extensionState.queue.length });
@@ -195,6 +200,9 @@ async function handleStartAutomation(sendResponse) {
 // MOTOR DE AUTOMAÇÃO
 // ═══════════════════════════════════════════════════════════
 
+let totalQueueSize = 0;  // Tamanho inicial da fila
+let processedCount = 0;  // Quantos foram processados
+
 async function processQueue() {
     console.log('[E.I.O Motor] processQueue chamado. isProcessing:', isProcessing, 'isRunning:', extensionState.isRunning, 'Queue:', extensionState.queue.length);
 
@@ -211,12 +219,19 @@ async function processQueue() {
         console.log('[E.I.O Motor] Fila vazia, finalizando...');
         extensionState.isRunning = false;
         notifyPopup('automationStopped', { message: 'Fila concluída!' });
+        notifyPopup('progressUpdate', { current: totalQueueSize, total: totalQueueSize });
         logAction('success', '✅ Fila concluída!');
+        processedCount = 0;
+        totalQueueSize = 0;
         saveState();
         return;
     }
 
     isProcessing = true;
+    processedCount++;
+
+    // Notificar popup sobre o progresso atual
+    notifyPopup('progressUpdate', { current: processedCount, total: totalQueueSize });
 
     try {
         // Garantir que temos uma aba válida
@@ -233,7 +248,7 @@ async function processQueue() {
         const options = item.options || extensionState.currentOptions;
 
         console.log(`[E.I.O Motor] Processando @${item.username} - Ações: ${actions.join(', ')}`);
-        logAction('info', `🎯 Processando @${item.username}...`);
+        logAction('info', `🎯 [${processedCount}/${totalQueueSize}] Processando @${item.username}...`);
 
         // Executar ações
         for (const actionType of actions) {
@@ -273,21 +288,28 @@ async function processQueue() {
                 notifyPopup('actionCompleted', { username: item.username, action: 'error' });
             }
 
-            // Delay entre ações
+            // ═══════════════════════════════════════════════════════════
+            // DELAY ENTRE AÇÕES NO MESMO PERFIL: 1min20s (80 segundos)
+            // ═══════════════════════════════════════════════════════════
             if (extensionState.isRunning && actions.indexOf(actionType) < actions.length - 1) {
-                const delay = calculateHumanDelay(DELAY_CONFIG.MIN_BETWEEN_ACTIONS, DELAY_CONFIG.MAX_BETWEEN_ACTIONS);
-                console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms`);
+                const delay = DELAY_CONFIG.BETWEEN_ACTIONS_SAME_PROFILE;
+                const delaySeconds = Math.round(delay / 1000);
+                logAction('info', `⏳ Aguardando ${delaySeconds}s para próxima ação...`);
+                console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms (${delaySeconds}s)`);
                 await sleep(delay);
             }
         }
 
         await saveState();
 
-        // Agendar próximo item
+        // ═══════════════════════════════════════════════════════════
+        // DELAY ENTRE PERFIS DIFERENTES: 1min30s (90 segundos)
+        // ═══════════════════════════════════════════════════════════
         if (extensionState.isRunning && extensionState.queue.length > 0) {
-            const delay = calculateHumanDelay(DELAY_CONFIG.MIN_BETWEEN_PROFILES, DELAY_CONFIG.MAX_BETWEEN_PROFILES);
-            logAction('info', `⏱️ Próximo em ${Math.round(delay / 1000)}s... (${extensionState.queue.length} restantes)`);
-            console.log(`[E.I.O Motor] Agendando próximo em ${delay}ms`);
+            const delay = DELAY_CONFIG.BETWEEN_PROFILES;
+            const delaySeconds = Math.round(delay / 1000);
+            logAction('info', `⏱️ Próximo perfil em ${delaySeconds}s... (${extensionState.queue.length} restantes)`);
+            console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
 
             isProcessing = false;
             processingTimeout = setTimeout(() => {

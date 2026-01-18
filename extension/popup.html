@@ -172,7 +172,8 @@
                                 id="dailyLimit">200/dia</strong></span>
                         <span title="Limite de deixar de seguir por dia">➖ Unfollow: <strong
                                 id="dailyUnfollowLimit">500/dia</strong></span>
-                        <span title="Intervalo entre ações">⏱️ Delay: <strong id="actionDelay">60s</strong></span>
+                        <span title="Intervalo de segurança entre ações">⏱️ Delay: <strong
+                                id="actionDelay">80-90s</strong></span>
                     </div>
                 </div>
 
@@ -631,20 +632,24 @@
                             <span>▶ Configurar Tempos de Espera</span>
                         </button>
                         <div class="eio-config-content collapsed" id="delays">
+                            <!-- INTERVALOS FIXOS DE SEGURANÇA -->
                             <div class="eio-config-row">
-                                <label>Aguardar</label>
-                                <input type="number" class="eio-input-mini" id="delayAfterAction" value="60">
-                                <span>segundos após seguir/deixar de seguir/curtir</span>
+                                <div
+                                    style="background: linear-gradient(135deg, rgba(0, 149, 246, 0.2), rgba(88, 101, 242, 0.2)); padding: 15px; border-radius: 8px; border: 1px solid rgba(0, 149, 246, 0.3);">
+                                    <p style="margin: 0 0 10px 0; color: #00bcd4; font-weight: 600;">🔒 Intervalos de
+                                        Segurança (Fixos)</p>
+                                    <p style="margin: 0; color: #a0a0a0; font-size: 12px; line-height: 1.5;">
+                                        Para proteger sua conta contra bloqueios do Instagram, os intervalos são fixos e
+                                        não podem ser alterados:
+                                    </p>
+                                    <ul
+                                        style="margin: 10px 0 0 0; padding-left: 20px; color: #e0e0e0; font-size: 12px; line-height: 1.8;">
+                                        <li><strong>80 segundos</strong> entre ações no mesmo perfil (seguir → curtir →
+                                            stories)</li>
+                                        <li><strong>90 segundos</strong> entre perfis diferentes</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="eio-config-row">
-                                <label>Aguardar</label>
-                                <input type="number" class="eio-input-mini" id="delayAfterSkip" value="1">
-                                <span>segundos após pular</span>
-                            </div>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configRandomDelay" checked> Tempo de espera aleatório de até
-                                <input type="number" class="eio-input-mini" id="randomDelayPercent" value="50">%
-                            </label>
                             <div class="eio-config-row">
                                 <label>Aguardar</label>
                                 <input type="number" class="eio-input-mini" id="delaySoftLimit" value="10">
@@ -660,11 +665,6 @@
                                 <input type="number" class="eio-input-mini" id="delay429" value="10">
                                 <span>minutos após erro 429</span>
                             </div>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDelayAdditionalInfo"> Aguardar
-                                <input type="number" class="eio-input-mini" id="delayAdditionalInfo" value="2">
-                                segundos após carregar info adicional
-                            </label>
                             <div class="eio-config-row">
                                 <label>Retry</label>
                                 <input type="number" class="eio-input-mini" id="retry404" value="10">
