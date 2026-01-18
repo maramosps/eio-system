@@ -110,6 +110,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             console.log(`[STAMP] Atualizando stamp para @${cleanUsername}: ${action}`);
 
+            // ═══════════════════════════════════════════════════════════
+            // REGISTRAR AÇÃO NO ANALYTICS/DASHBOARD
+            // ═══════════════════════════════════════════════════════════
+            if (window.EIO_BACKEND && action !== 'error') {
+                EIO_BACKEND.logAction(action, cleanUsername, 'success', {
+                    source: 'extension',
+                    timestamp: new Date().toISOString()
+                }).then(result => {
+                    if (result.success) {
+                        console.log(`[Analytics] ✅ Ação registrada: ${action} -> @${cleanUsername}`);
+                    }
+                }).catch(err => console.log('Analytics error:', err));
+
+                // Também atualizar status do lead no CRM
+                EIO_BACKEND.updateLeadStatus(cleanUsername, action, action);
+            }
+
             // Update account status
             const account = AppState.accounts.find(a => {
                 const accUsername = (a.username || '').replace(/^@+/, '').toLowerCase();
@@ -804,6 +821,20 @@ async function loadFromInstagram(type, limit = 200) {
         updateSelectedCount();
         updateQueueStatus();
         saveState();
+
+        // ═══════════════════════════════════════════════════════════
+        // SINCRONIZAR LEADS COM O DASHBOARD/CRM
+        // ═══════════════════════════════════════════════════════════
+        if (window.EIO_BACKEND && AppState.accounts.length > 0) {
+            addLog('info', '📤 Sincronizando leads com o dashboard...');
+            EIO_BACKEND.syncLeads(AppState.accounts, type === 'followers' ? 'seguidores' : 'seguindo')
+                .then(result => {
+                    if (result.success) {
+                        addLog('success', `☁️ ${result.synced} leads sincronizados com o CRM!`);
+                    }
+                })
+                .catch(err => console.log('Sync error:', err));
+        }
 
         // Mostrar sucesso
         addLog('success', `✅ ${AppState.accounts.length} leads novos prontos! (${beforeFilter - afterFilter} já seguidos removidos)`);

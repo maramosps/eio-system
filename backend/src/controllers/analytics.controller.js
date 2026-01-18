@@ -297,3 +297,102 @@ async function getPostsCount(userId, period) {
 
     return count;
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * REGISTRAR AÇÃO DA EXTENSÃO (follow, like, unfollow, etc)
+ * ═══════════════════════════════════════════════════════════
+ */
+exports.logAction = async (req, res, next) => {
+    try {
+        const userId = req.user?.id;
+        const { action, target, result, timestamp, metadata } = req.body;
+
+        if (!action || !target) {
+            return res.status(400).json({ success: false, message: 'Ação e target são obrigatórios' });
+        }
+
+        // Criar log no banco
+        const log = await Log.create({
+            user_id: userId,
+            action: action,
+            message: `${action} @${target}`,
+            level: result === 'success' ? 'info' : 'warning',
+            metadata: { target, ...metadata }
+        });
+
+        res.json({
+            success: true,
+            message: 'Ação registrada com sucesso',
+            log_id: log.id
+        });
+    } catch (error) {
+        console.error('Erro ao registrar ação:', error);
+        res.status(500).json({ success: false, message: 'Erro ao registrar ação' });
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * OBTER DASHBOARD COM ESTATÍSTICAS REAIS
+ * Usado pela página de Analytics do frontend
+ * ═══════════════════════════════════════════════════════════
+ */
+exports.getDashboard = async (req, res, next) => {
+    try {
+        const userId = req.user?.id;
+        const period = 30; // últimos 30 dias
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - period);
+
+        if (!(await isDbConnected())) {
+            return res.json({
+                success: true,
+                message: 'Banco offline - dados simulados',
+                stats: { follows: 0, likes: 0, comments: 0, unfollows: 0 },
+                recent_activity: []
+            });
+        }
+
+        // Contar ações por tipo
+        const follows = await Log.count({
+            where: { user_id: userId, action: 'followed', created_at: { [Op.gte]: startDate } }
+        });
+
+        const likes = await Log.count({
+            where: { user_id: userId, action: 'liked', created_at: { [Op.gte]: startDate } }
+        });
+
+        const comments = await Log.count({
+            where: { user_id: userId, action: 'comment', created_at: { [Op.gte]: startDate } }
+        });
+
+        const unfollows = await Log.count({
+            where: { user_id: userId, action: 'unfollowed', created_at: { [Op.gte]: startDate } }
+        });
+
+        // Buscar atividade recente
+        const recentActivity = await Log.findAll({
+            where: {
+                user_id: userId,
+                action: { [Op.in]: ['followed', 'liked', 'unfollowed', 'comment'] }
+            },
+            order: [['created_at', 'DESC']],
+            limit: 20
+        });
+
+        res.json({
+            success: true,
+            stats: { follows, likes, comments, unfollows },
+            recent_activity: recentActivity.map(log => ({
+                action: log.action,
+                message: log.message,
+                created_at: log.created_at
+            }))
+        });
+    } catch (error) {
+        console.error('Erro ao obter dashboard:', error);
+        res.status(500).json({ success: false, message: 'Erro ao carregar dashboard' });
+    }
+};
+

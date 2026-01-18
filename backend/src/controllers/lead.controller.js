@@ -39,29 +39,45 @@ const leadController = {
 
             const results = [];
             for (const leadData of leads) {
+                // Suportar tanto o formato antigo quanto o novo
+                const username = leadData.instagram_username || leadData.username || '';
+                const avatar = leadData.profile_pic || leadData.avatar || leadData.profilePic || '';
+                const name = leadData.full_name || leadData.fullName || leadData.name || username;
+
                 const [lead, created] = await Lead.findOrCreate({
                     where: {
                         user_id: userId,
-                        username: leadData.username
+                        username: username.replace('@', '')
                     },
                     defaults: {
                         user_id: userId,
-                        name: leadData.name,
-                        username: leadData.username,
-                        avatar: leadData.avatar,
-                        status: 'new',
+                        name: name,
+                        username: username.replace('@', ''),
+                        avatar: avatar,
+                        status: leadData.status || 'new',
+                        source: leadData.source || 'extension',
+                        followers: leadData.followers || 0,
+                        following: leadData.following || 0,
+                        posts: leadData.posts || 0,
+                        bio: leadData.bio || '',
+                        is_private: leadData.is_private || false,
+                        is_verified: leadData.is_verified || false,
                         timeline: [{
                             content: 'Lead capturado pela extensão E.I.O',
-                            date: new Date().toISOString()
+                            date: new Date().toISOString(),
+                            source: leadData.source || 'extension'
                         }]
                     }
                 });
 
                 if (!created) {
-                    // Se já existir, podemos atualizar o avatar se mudou
-                    if (leadData.avatar && lead.avatar !== leadData.avatar) {
-                        lead.avatar = leadData.avatar;
-                        await lead.save();
+                    // Se já existir, atualizar dados que mudaram
+                    const updates = {};
+                    if (avatar && lead.avatar !== avatar) updates.avatar = avatar;
+                    if (name && lead.name !== name) updates.name = name;
+
+                    if (Object.keys(updates).length > 0) {
+                        await lead.update(updates);
                     }
                 }
                 results.push(lead);
