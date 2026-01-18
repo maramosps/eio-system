@@ -74,10 +74,14 @@ async function loadFollowersViaAPI(username, limit = 200) {
     let maxId = '';
     let hasNext = true;
 
+    let retryCount = 0;
+    const maxRetries = 3;
+
     while (hasNext && allFollowers.length < limit) {
         try {
             // Endpoint da Private API do Instagram - mais estável que GraphQL
-            let url = `https://i.instagram.com/api/v1/friendships/${userId}/followers/?count=50`;
+            // Usando count=100 para carregar mais rápido
+            let url = `https://i.instagram.com/api/v1/friendships/${userId}/followers/?count=100`;
             if (maxId) url += `&max_id=${maxId}`;
 
             const response = await fetch(url, {
@@ -94,7 +98,9 @@ async function loadFollowersViaAPI(username, limit = 200) {
                 if (response.status === 429) {
                     addConsoleLog('warning', '⚠️ Rate limit atingido. Aguardando 30s...');
                     await randomDelay(30000, 60000);
-                    continue;
+                    retryCount++;
+                    if (retryCount < maxRetries) continue;
+                    break;
                 }
                 addConsoleLog('error', `❌ API retornou status ${response.status}`);
                 throw new Error(`HTTP ${response.status}`);
@@ -188,11 +194,13 @@ async function loadFollowingViaAPI(username, limit = 200) {
     let allFollowing = [];
     let maxId = '';
     let hasNext = true;
+    let retryCount = 0;
+    const maxRetries = 3;
 
     while (hasNext && allFollowing.length < limit) {
         try {
-            // Endpoint da Private API do Instagram
-            let url = `https://i.instagram.com/api/v1/friendships/${userId}/following/?count=50`;
+            // Endpoint da Private API do Instagram - usando count=100 para carregar mais rápido
+            let url = `https://i.instagram.com/api/v1/friendships/${userId}/following/?count=100`;
             if (maxId) url += `&max_id=${maxId}`;
 
             const response = await fetch(url, {
@@ -209,7 +217,9 @@ async function loadFollowingViaAPI(username, limit = 200) {
                 if (response.status === 429) {
                     addConsoleLog('warning', '⚠️ Rate limit atingido. Aguardando 30s...');
                     await randomDelay(30000, 60000);
-                    continue;
+                    retryCount++;
+                    if (retryCount < maxRetries) continue;
+                    break;
                 }
                 addConsoleLog('error', `❌ API retornou status ${response.status}`);
                 throw new Error(`HTTP ${response.status}`);

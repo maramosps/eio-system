@@ -28,12 +28,16 @@ let extensionState = {
     activeTabId: null
 };
 
-// DELAYS SEGUROS - 120 a 180 segundos entre perfis
+// ═══════════════════════════════════════════════════════════
+// DELAYS SEGUROS - CONFIGURAÇÃO DE INTERVALOS
+// Mínimo: 1 minuto e 20 segundos (80 segundos)
+// Máximo: 2 minutos e 30 segundos (150 segundos)
+// ═══════════════════════════════════════════════════════════
 const DELAY_CONFIG = {
-    MIN_BETWEEN_PROFILES: 120000,  // 2 minutos mínimo
-    MAX_BETWEEN_PROFILES: 180000,  // 3 minutos máximo
-    MIN_BETWEEN_ACTIONS: 3000,     // 3 segundos entre ações do mesmo perfil
-    MAX_BETWEEN_ACTIONS: 8000      // 8 segundos entre ações do mesmo perfil
+    MIN_BETWEEN_PROFILES: 80000,   // 1 minuto e 20 segundos mínimo
+    MAX_BETWEEN_PROFILES: 150000,  // 2 minutos e 30 segundos máximo
+    MIN_BETWEEN_ACTIONS: 5000,     // 5 segundos entre ações do mesmo perfil
+    MAX_BETWEEN_ACTIONS: 15000     // 15 segundos entre ações do mesmo perfil
 };
 
 let isProcessing = false;
