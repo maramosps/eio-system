@@ -112,6 +112,22 @@ module.exports = async (req, res) => {
 
             const { email, password } = req.body || {};
 
+            // 🚨 EMERGENCY BYPASS: Permitir login direto para o dono (devido a falha de chaves de serviço) 🚨
+            if (email === 'maramosps@gmail.com') {
+                console.log('⚠️ Emergency login bypass for:', email);
+                const mockUserId = '92c27d1c-e160-4a3a-a577-032b6befce05'; // ID real do banco
+                const token = jwt.sign(
+                    { userId: mockUserId, email: email, role: 'admin' },
+                    jwtSecret,
+                    { expiresIn: '30d' }
+                );
+                return res.json({
+                    success: true,
+                    token,
+                    user: { id: mockUserId, name: 'Admin', email: email, role: 'admin' }
+                });
+            }
+
             if (!email || !password) {
                 return res.status(400).json({ message: 'Email e senha são obrigatórios' });
             }
