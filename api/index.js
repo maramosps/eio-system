@@ -5,8 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 // Supabase Client
 let supabase = null;
 try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://zupnyvnrmwoyqajecxmm.supabase.co';
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY'; // Using Anon Key as fallback if Service Key missing
     if (supabaseUrl && supabaseKey) {
         supabase = createClient(supabaseUrl, supabaseKey);
     }

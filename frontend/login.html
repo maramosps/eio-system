@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="design-system.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -401,64 +400,40 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Entrando...';
 
             try {
-                // Inicializar Supabase Client (usando config global)
-                const supabaseUrl = window.EIO_CONFIG.SUPABASE_URL;
-                const supabaseKey = window.EIO_CONFIG.SUPABASE_ANON_KEY;
-
-                if (!window.supabase) throw new Error("Supabase Library not loaded");
-                const sbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-                console.log('🔄 Tentando login direto via Supabase...');
-
-                // 1. Authenticate
-                const { data, error } = await sbClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
                 });
 
-                if (error) throw error;
+                const data = await response.json();
 
-                if (data && data.session) {
-                    // 2. Fetch User Profile (para pegar dados extras como nome, plano)
-                    const { data: profile } = await sbClient
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', data.user.id)
-                        .single();
+                if (response.ok && data.success) {
+                    // Salvar token e dados do usuário - usando chaves corretas
+                    localStorage.setItem('accessToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
 
-                    // Merge user auth data + profile data
-                    const userData = { ...data.user, ...(profile || {}) };
+                    // Also save with legacy keys for compatibility
+                    localStorage.setItem('eio_token', data.token);
+                    localStorage.setItem('eio_user', JSON.stringify(data.user));
 
-                    // 3. Save Session
-                    localStorage.setItem('accessToken', data.session.access_token);
-                    localStorage.setItem('user', JSON.stringify(userData));
-
-                    // Legacy keys
-                    localStorage.setItem('eio_token', data.session.access_token);
-                    localStorage.setItem('eio_user', JSON.stringify(userData));
-
-                    console.log('✅ Login successful:', userData);
+                    console.log('✅ Login successful:', data.user);
                     showAlert('Login realizado com sucesso! Redirecionando...', 'success');
 
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 800);
                 } else {
-                    throw new Error("Sessão não criada.");
+                    showAlert(data.message || 'Email ou senha incorretos', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Entrar';
                 }
-
             } catch (error) {
                 console.error('Erro:', error);
-                let text = 'Erro ao conectar. Tente novamente.';
-
-                // Mensagens amigáveis
-                if (error.message.includes('Invalid login') || error.message.includes('Invalid credentials')) {
-                    text = 'Email ou senha incorretos.';
-                } else if (error.message.includes('Email not confirmed')) {
-                    text = 'Verifique seu email para confirmar a conta.';
-                }
-
-                showAlert(text, 'error');
+                showAlert('Erro de conexão. Tente novamente.', 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Entrar';
             }
