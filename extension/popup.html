@@ -137,17 +137,74 @@
                 <div class="eio-queue-options">
                     <div class="eio-option-group">
                         <label><input type="checkbox" id="optLikePosts" checked> Curtir até <input type="number"
-                                id="optLikeCount" value="3" min="1" max="5" class="eio-mini-input"> posts</label>
+                                id="optLikeCount" value="1" min="1" max="2" class="eio-mini-input"> posts</label>
                     </div>
                     <div class="eio-option-group">
                         <label><input type="checkbox" id="optViewStory" checked> Ver stories</label>
                     </div>
-                    <div class="eio-option-group">
-                        <label><input type="checkbox" id="optUseDashboardMsg"> Usar msg do Dashboard</label>
-                    </div>
                 </div>
 
-                <!-- Barra de Automação -->
+                <!-- NOVA POSIÇÃO: Botões de Ferramentas (Carregar, Selecionar, Exportar) -->
+                <div class="eio-action-buttons-bar"
+                    style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.03);">
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Carregar contas ▾
+                        </button>
+                        <div class="eio-dropdown-menu" id="loadAccountsMenu">
+                            <div class="eio-dropdown-section-title">Do perfil: <span id="targetProfileName"
+                                    class="profile-ref">detectando...</span></div>
+                            <button data-action="load-followers">👥 Carregar Seguidores</button>
+                            <button data-action="load-following">➡️ Carregar Seguindo</button>
+                            <div class="eio-dropdown-divider"></div>
+                            <div class="eio-dropdown-section-title">Do post atual:</div>
+                            <button data-action="load-likers">❤️ Carregar Curtidores</button>
+                            <button data-action="load-commenters">💬 Carregar Comentadores</button>
+                            <div class="eio-dropdown-divider"></div>
+                            <button data-action="load-saved-queue">💾 Carregar Fila Salva</button>
+                        </div>
+                    </div>
+
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect">
+                            Selecionar ▾
+                        </button>
+                        <div class="eio-dropdown-menu" id="selectMenu">
+                            <button data-action="select-all">✓ Selecionar Todos</button>
+                            <button data-action="remove-selected">🗑️ Remover selecionados</button>
+                        </div>
+                    </div>
+
+                    <!-- Botão Processar REMOVIDO conforme solicitado -->
+
+                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Salvar
+                    </button>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar CSV">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        CSV
+                    </button>
+                </div>
+
+                <!-- Barra de Automação (Play/Pause) -->
                 <div class="eio-automation-bar">
                     <div class="eio-automation-status-mini">
                         <span class="eio-status-dot-mini" id="automationStatusDot"></span>
@@ -226,99 +283,7 @@
                 </div>
 
                 <!-- Botões de Ação (Fixos na base) -->
-                <div class="eio-action-buttons-bar">
-                    <div class="eio-dropdown">
-                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            Carregar contas ▾
-                        </button>
-                        <div class="eio-dropdown-menu" id="loadAccountsMenu">
-                            <div class="eio-dropdown-section-title">Do perfil: <span id="targetProfileName"
-                                    class="profile-ref">detectando...</span></div>
-                            <button data-action="load-followers">👥 Carregar Seguidores</button>
-                            <button data-action="load-following">➡️ Carregar Seguindo</button>
-                            <div class="eio-dropdown-divider"></div>
-                            <div class="eio-dropdown-section-title">Do post atual:</div>
-                            <button data-action="load-likers">❤️ Carregar Curtidores</button>
-                            <button data-action="load-commenters">💬 Carregar Comentadores</button>
-                            <div class="eio-dropdown-divider"></div>
-                            <button data-action="load-saved-queue">💾 Carregar Fila Salva</button>
-                            <div class="eio-dropdown-divider"></div>
-                            <div class="eio-dropdown-item-inline">
-                                <label><input type="checkbox" id="limitQueue" checked> Limite:</label>
-                                <input type="number" id="queueLimit" value="200" min="10" max="1000"
-                                    class="eio-input-mini">
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="eio-dropdown">
-                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect">
-                            Selecionar ▾
-                        </button>
-                        <div class="eio-dropdown-menu" id="selectMenu">
-                            <button data-action="select-all">✓ Selecionar Todos da listagem</button>
-                            <button data-action="remove-selected">🗑️ Remover selecionados da listagem</button>
-                        </div>
-                    </div>
-
-                    <div class="eio-dropdown">
-                        <button class="eio-btn eio-btn-accent eio-dropdown-trigger" id="btnProcessQueue">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                            Processar Fila ▾
-                        </button>
-                        <div class="eio-dropdown-menu" id="processQueueMenu">
-                            <div class="eio-dropdown-section-title">Ação a executar:</div>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="follow" checked> ✅ Seguir
-                            </label>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="follow-like"> 💜 Seguir + Curtir
-                            </label>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="like-only"> ❤️ Apenas Curtir
-                            </label>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="view-stories"> 👁️ Ver Stories
-                            </label>
-                            <div class="eio-dropdown-divider"></div>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="unfollow"> ➖ Deixar de Seguir
-                            </label>
-                            <label class="eio-dropdown-radio">
-                                <input type="radio" name="processAction" value="block"> 🚫 Bloquear
-                            </label>
-                        </div>
-                    </div>
-
-                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
-                        </svg>
-                        Salvar Fila
-                    </button>
-
-                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar CSV">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        Export CSV
-                    </button>
-                </div>
             </div>
 
             <!-- ═══════════════════════════════════════════════════════════ -->
