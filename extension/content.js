@@ -29,9 +29,9 @@ const config = {
     api: {
         xIgAppId: '936619743392459',
         xAsbdId: '129477',
-        // Query hashes para GraphQL
-        followersQueryHash: '37479f2b8209594dde7facb0d904896a',
-        followingQueryHash: '58712303d941c6855d4e888c5f0cd22f'
+        // Updated Query hashes (2025 compatible)
+        followersQueryHash: 'c76146de99bb02f6415203be841dd25a',
+        followingQueryHash: 'd04b0a864b4b54837c0d870b0e77e076'
     }
 };
 
@@ -43,6 +43,40 @@ let loadedAccounts = [];
 let currentProfileUsername = null;
 let currentProfileId = null;
 
+// Helper para detectar ID na página
+function detectUserIdFromPage() {
+    try {
+        // Tentar via meta tag al:ios:url (instagram://user?username=X) - as vezes tem id
+        const meta = document.querySelector('meta[property="al:ios:url"]');
+        if (meta) {
+            const content = meta.content; // instagram://user?username=xyz
+            // Infelizmente n dá ID direto aqui sempre
+        }
+
+        // Tentar via script sharedData (método clássico)
+        const scripts = document.querySelectorAll('script');
+        for (const script of scripts) {
+            const text = script.textContent;
+            if (text.includes('"id":"') && text.includes('"username":"')) {
+                const match = text.match(/"id":"(\d+)","username":"([^"]+)"/);
+                if (match && match[2] === getCurrentProfileUsername()) {
+                    return match[1];
+                }
+            }
+        }
+
+        // Tentar via profilePage_XXXX
+        for (const key in window) {
+            if (key.startsWith('profilePage_')) {
+                return key.split('_')[1];
+            }
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
+
 /**
  * Obter username do perfil atual da URL
  */
@@ -52,6 +86,76 @@ function getCurrentProfileUsername() {
     if (match && match[1] && !['explore', 'direct', 'accounts', 'p', 'reel', 'stories'].includes(match[1])) {
         return match[1];
     }
+    return null;
+}
+
+/* ... loadFollowers functions logic keeps the same structure but using new hashes ... */
+
+/**
+ * Obter ID do usuário a partir do username - HÍBRIDO (DOM + API)
+ */
+async function getUserId(username) {
+    const cleanUsername = username.replace('@', '').toLowerCase();
+
+    // 1. Verificar cache primeiro
+    if (userIdCache.has(cleanUsername)) {
+        return userIdCache.get(cleanUsername);
+    }
+
+    // 2. Se for o perfil atual, tentar extrair do DOM instantaneamente
+    if (cleanUsername === getCurrentProfileUsername()) {
+        const domId = detectUserIdFromPage();
+        if (domId) {
+            userIdCache.set(cleanUsername, domId);
+            addConsoleLog('success', `✅ ID obtido do DOM: ${domId}`);
+            return domId;
+        }
+    }
+
+    addConsoleLog('info', `🔍 Buscando ID de @${cleanUsername} via API...`);
+
+    try {
+        // 3. Tentar API web_profile_info
+        const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
+            headers: {
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-ASBD-ID': config.api.xAsbdId,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const userId = data?.data?.user?.id;
+            if (userId) {
+                userIdCache.set(cleanUsername, userId);
+                return userId;
+            }
+        }
+
+        // 4. Fallback: Search API (menos restritiva)
+        const searchResp = await fetch(`https://www.instagram.com/web/search/topsearch/?context=blended&query=${cleanUsername}&rank_token=0.1`, {
+            headers: {
+                'X-IG-App-ID': config.api.xIgAppId,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (searchResp.ok) {
+            const searchData = await searchResp.json();
+            const user = searchData.users?.find(u => u.user.username === cleanUsername)?.user;
+            if (user && user.pk) {
+                userIdCache.set(cleanUsername, user.pk);
+                addConsoleLog('success', `✅ ID recuperado via Search: ${user.pk}`);
+                return user.pk;
+            }
+        }
+
+    } catch (error) {
+        addConsoleLog('error', `❌ Erro ao obter ID: ${error.message}`);
+    }
+
     return null;
 }
 
