@@ -899,150 +899,79 @@ async function runExtractionFlow(payload) {
             const isVerified = !!item.querySelector('svg[aria-label="Verified"]') || !!item.querySelector('svg[aria-label="Verificado"]');
 
             // ═══════════════════════════════════════════════════════════
-            // DETECÇÃO SE VOCÊ JÁ SEGUE ESTE PERFIL
-            // Múltiplos métodos para garantir precisão
+            // DETECÇÃO SE VOCÊ JÁ SEGUE ESTE PERFIL - FILTRO RIGOROSO
             // ═══════════════════════════════════════════════════════════
-            const followBtn = item.querySelector('button');
-            let followedByMe = false;
-            let followsMe = false;
-            let requestedByMe = false;
 
-            if (followBtn) {
-                const btnText = (followBtn.textContent || '').toLowerCase().trim();
-                const btnInnerHTML = (followBtn.innerHTML || '').toLowerCase();
+            const btnText = item.innerText.toLowerCase();
 
-                // Método 1: Texto do botão
-                // "Seguindo" = você segue
-                // "Seguir" = você NÃO segue
-                // "Solicitado" = você enviou solicitação
-                if (btnText === 'seguindo' || btnText === 'following' ||
-                    btnText.includes('seguindo') || btnText.includes('following')) {
-                    followedByMe = true;
+            // 1. Você já segue?
+            const isFollowing = btnText.includes('seguindo') || btnText.includes('following');
+
+            // 2. Pedido pendente?
+            const isRequested = btnText.includes('solicitado') || btnText.includes('requested');
+
+            // 3. Ele te segue? (Para contato totalmente frio)
+            // Se o usuário pedir 'followers' (leads), geralmente quer quem NÃO o segue ainda.
+            // O texto "Segue você" ou "Follows you" aparece no item.
+            const followsMe = btnText.includes('segue você') || btnText.includes('follows you');
+
+            // APLICAR FILTROS
+            if (extractType === 'followers') {
+                // Se o objetivo é ganhar novos seguidores, ignorar quem já sigo ou quem já me segue
+                if (isFollowing || isRequested || followsMe) {
+                    continue;
                 }
-
-                if (btnText === 'solicitado' || btnText === 'requested' ||
-                    btnText.includes('solicitado') || btnText.includes('requested')) {
-                    requestedByMe = true;
-                }
-
-                // Método 2: Cor do botão (botão "Seguindo" geralmente é cinza/secundário)
-                const btnStyle = window.getComputedStyle(followBtn);
-                const bgColor = btnStyle.backgroundColor;
-                // Botões de "Seguir" geralmente são azuis (rgb(0, 149, 246))
-                // Botões de "Seguindo" geralmente são transparentes ou cinza
-
-                // Método 3: SVG de check dentro do botão
-                const hasSvgCheck = followBtn.querySelector('svg') !== null;
-                if (hasSvgCheck && !followedByMe) {
-                    // Se tem um ícone SVG e não detectamos "Seguindo", verificar mais
-                    const svgPath = followBtn.querySelector('svg path');
-                    if (svgPath) {
-                        // O ícone de "pessoa com check" indica que você segue
-                        followedByMe = true;
-                    }
-                }
+            } else if (extractType === 'following') {
+                // Se carrego quem sigo, obviamente aceito 'isFollowing'
+                // Mas aqui é loadFromInstagram 'following' -> Unfollow list.
             }
 
-            // Método 4: Verificar texto "Segue você" no item completo
-            const itemText = item.innerText || '';
-            if (itemText.includes('Segue você') || itemText.includes('Follows you')) {
-                followsMe = true;
-            }
-
-            // Log de debug para o primeiro perfil
-            if (leads.length === 0) {
-                console.log('[E.I.O DEBUG] Primeiro perfil do modal:', {
-                    username,
-                    btnText: followBtn?.textContent,
-                    followedByMe,
-                    followsMe,
-                    requestedByMe
-                });
-            }
-
-            // Apply filters
-            if (filters.hasPhoto && !avatarSrc) continue;
-            if (filters.publicOnly && isPrivate) continue;
-            if (filters.brOnly) {
-                const brChars = /[áéíóúâêîôûãõç]/i;
-                const isBR = brChars.test(name) || brChars.test(username) ||
-                    ['silva', 'santos', 'oliveira', 'souza', 'lima', 'pereira', 'ferreira', 'alves'].some(s => name.toLowerCase().includes(s));
-                if (!isBR) continue;
-            }
-
+            // Adicionar à lista
             leads.push({
                 username: cleanUsername,
                 fullName: name,
-                avatar: avatarSrc,
-                bio: '',
-                posts: null,
-                followers: null,
-                following: null,
-                ratio: null,
-                mutual: followedByMe && followsMe,
-                followedByMe: followedByMe,
-                followsMe: followsMe,
-                requestedByMe: requestedByMe,
+                profilePic: avatarSrc || '',
+                followers: 0,
+                following: 0,
+                posts: 0,
                 isPrivate: isPrivate,
                 isVerified: isVerified,
-                hasStory: hasStoryRing,
-                source: extractType
+                status: 'none'
             });
-            newFound++;
 
+            newFound++;
             if (leads.length >= limit) break;
         }
 
-        if (newFound > 0) {
-            addConsoleLog('info', `+${newFound} leads. (Total: ${leads.length})`);
-        }
-
-        chrome.runtime.sendMessage({
-            action: 'extraction_progress',
-            count: leads.length
-        }).catch(() => { });
-
         if (leads.length >= limit) break;
 
-        // Scroll mais agressivo para atingir os 30s
-        scrollContainer.scrollTop += 800; // Passo maior
-        await randomDelay(300, 700); // Delay muito menor
+        // SCROLL MAIS AGRESSIVO
+        if (scrollContainer) {
+            scrollContainer.scrollTop += 800;
+            // Ás vezes o Instagram carrega placeholders, esperar mais
+            await randomDelay(800, 1500);
 
-        if (leads.length === lastLeadCount) {
-            idleCount++;
-            if (idleCount > 3) break; // Desistir mais rápido se travar
-            scrollContainer.scrollTop -= 200;
-            await randomDelay(200, 400);
-            scrollContainer.scrollTop += 400;
-        } else {
-            idleCount = 0;
-            lastLeadCount = leads.length;
+            if (newFound === 0) {
+                idleCount++;
+                // Tente scrolar um pouco para cima e para baixo para destravar
+                if (idleCount > 5) {
+                    scrollContainer.scrollTop -= 200;
+                    await randomDelay(500, 1000);
+                    scrollContainer.scrollTop += 500;
+                }
+            } else {
+                idleCount = 0;
+            }
+        }
+
+        if (idleCount > 15) {
+            addConsoleLog('warning', `⚠️ Parando scroll: Sem novos itens por 15 tentativas. (Total: ${leads.length})`);
+            break;
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // FILTRO AUTOMÁTICO: Remover perfis que você já segue
-    // ═══════════════════════════════════════════════════════════
-    const totalBeforeFilter = leads.length;
-
-    // Contar quantos você já segue
-    const alreadyFollowing = leads.filter(l => l.followedByMe).length;
-    const alreadyRequested = leads.filter(l => l.requestedByMe).length;
-
-    addConsoleLog('info', `📊 Análise: ${totalBeforeFilter} total | ${alreadyFollowing} já seguidos | ${alreadyRequested} solicitados`);
-
-    const filteredLeads = leads.filter(lead => {
-        // Manter apenas quem você NÃO segue e NÃO tem solicitação pendente
-        return !lead.followedByMe && !lead.requestedByMe;
-    });
-
-    const removedCount = totalBeforeFilter - filteredLeads.length;
-    if (removedCount > 0) {
-        addConsoleLog('info', `🔍 Filtrados: ${alreadyFollowing} já seguidos + ${alreadyRequested} solicitados = ${removedCount} removidos`);
-    }
-
-    addConsoleLog('success', `✅ Finalizado! ${filteredLeads.length} perfis NOVOS prontos para seguir!`);
-    return { success: true, data: filteredLeads };
+    addConsoleLog('success', `✅ Extração finalizada: ${leads.length} contas coletadas.`);
+    return leads;
 }
 
 /**

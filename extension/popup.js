@@ -746,6 +746,11 @@ function formatNumber(num) {
 // ═══════════════════════════════════════════════════════════
 
 async function loadFromInstagram(type, limit = 200) {
+    // LIMPEZA: Remover lista anterior para não misturar resultados
+    AppState.accounts = [];
+    AppState.selectedAccounts.clear();
+    renderAccountsTable();
+
     addLog('info', `📥 Carregando ${type} (limite: ${limit})...`);
 
     // Mostrar loading
