@@ -1,8 +1,8 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação ultra-estável - VERSÃO 3.9
-  COM DELAYS SEGUROS (120-180s entre perfis)
+  Motor de automação ultra-estável - VERSÃO 4.1.0 (RESTORATION)
+  COM DELAYS INTELIGENTES (Anti-Hibernação)
 ═══════════════════════════════════════════════════════════
 */
 
@@ -25,7 +25,8 @@ let extensionState = {
     },
     actionsInCurrentBatch: 0,
     queue: [],
-    activeTabId: null
+    activeTabId: null,
+    nextRunTimestamp: null // v4.1 - Delay à prova de hibernação
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -41,6 +42,10 @@ const DELAY_CONFIG = {
     // 1 minuto e 30 segundos = 90.000 milissegundos  
     BETWEEN_PROFILES: 90000
 };
+
+// v4.2 - Cloud Sync Config
+const SUPABASE_URL = 'https://zupnyvnrmwoyqajecxmm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY';
 
 let isProcessing = false;
 let processingTimeout = null;
@@ -82,10 +87,21 @@ chrome.alarms.create('keepAlive', { periodInMinutes: 0.4 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'keepAlive') {
-        console.log('[E.I.O KeepAlive] Check - Running:', extensionState.isRunning, 'Queue:', extensionState.queue.length, 'Processing:', isProcessing);
-        if (extensionState.isRunning && !isProcessing && extensionState.queue.length > 0) {
-            console.log('[E.I.O KeepAlive] Detectou travamento! Reiniciando motor...');
-            processQueue();
+        // v4.1 - Verificação inteligente de tempo
+        const now = Date.now();
+        console.log('[E.I.O KeepAlive] Check - Running:', extensionState.isRunning, 'Processing:', isProcessing);
+
+        if (extensionState.isRunning && !isProcessing) {
+            // Se tiver um tempo agendado e já passou
+            if (extensionState.nextRunTimestamp && now >= extensionState.nextRunTimestamp) {
+                console.log('[E.I.O KeepAlive] ⏰ Tempo de espera concluído! Executando agora...');
+                extensionState.nextRunTimestamp = null; // Limpar para não executar 2x
+                processQueue();
+            } else if (extensionState.queue.length > 0 && !extensionState.nextRunTimestamp) {
+                // Se tem fila mas não tem agendamento (travou?), forçar run
+                console.log('[E.I.O KeepAlive] ⚠️ Fila parada sem agendamento. Retomando...');
+                processQueue();
+            }
         }
     }
 });
@@ -270,6 +286,8 @@ async function processQueue() {
                 if (result?.success || result?.meta?.success || result?.action?.includes('followed') || result?.action?.includes('liked')) {
                     updateStats(actionType);
                     logAction('success', `✅ ${actionType} OK (@${item.username})`);
+                    // v4.2 Cloud Sync
+                    syncToCloud(actionType, item.username, 'success');
 
                     // Notificar popup para atualizar stamp visual
                     let status = 'followed';
@@ -312,7 +330,17 @@ async function processQueue() {
             console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
 
             isProcessing = false;
+
+            // v4.1 - Agendamento Robusto
+            const triggerTime = Date.now() + delay;
+            extensionState.nextRunTimestamp = triggerTime;
+
+            console.log(`[E.I.O Motor] Agendado para: ${new Date(triggerTime).toLocaleTimeString()} (em ${delaySeconds}s)`);
+            saveState(); // Salvar timestamp no disco para sobreviver restart
+
+            // Manter setTimeout para execução rápida se o navegador estiver acordado
             processingTimeout = setTimeout(() => {
+                extensionState.nextRunTimestamp = null;
                 processQueue();
             }, delay);
         } else {
@@ -440,4 +468,33 @@ loadState().then(() => {
     }
 });
 
-console.log('E.I.O Extension v3.8 installed');
+// v4.2 - Cloud Sync Function
+async function syncToCloud(action, target, status) {
+    try {
+        const storage = await chrome.storage.local.get(['eio_user']);
+        let userId = null;
+        if (storage.eio_user) {
+            try { userId = JSON.parse(storage.eio_user).id; } catch (e) { }
+        }
+        if (!userId) return;
+
+        fetch(`${SUPABASE_URL}/rest/v1/logs`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                level: status,
+                action: action,
+                message: `${action.toUpperCase()} @${target}`,
+                created_at: new Date().toISOString()
+            })
+        }).catch(err => console.log('Sync failed silent', err));
+    } catch (e) { console.error('Cloud Sync Error', e); }
+}
+
+console.log('E.I.O Extension v4.3.0 Ready');

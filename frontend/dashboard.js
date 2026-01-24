@@ -464,14 +464,14 @@ async function initExtensionDownload() {
     const extensionVersion = document.getElementById('extensionVersion');
 
     // Set default values based on the latest package
-    if (extensionSize) extensionSize.textContent = '1.6 MB (Otimizada)';
-    if (extensionVersion) extensionVersion.textContent = '3.4.0';
+    if (extensionSize) extensionSize.textContent = '1.7 MB (Fixed)';
+    if (extensionVersion) extensionVersion.textContent = '4.3.0 (Fixed)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
-            // Direct navigation to download file
-            window.location.href = '/downloads/eio-extension.zip';
+            // Direct navigation to update file
+            window.location.href = '/downloads/eio-extension-v4.3-fixed.zip';
         });
     }
 
