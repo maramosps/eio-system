@@ -146,44 +146,58 @@
 
                 <!-- NOVA POSIÇÃO: Botões de Ferramentas (Carregar, Selecionar, Exportar) -->
                 <div class="eio-action-buttons-bar"
-                    style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.03);">
+                    style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow: visible;">
                     <div class="eio-dropdown">
-                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            Carregar contas ▾
+                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts"
+                            style="min-width: 160px; justify-content: space-between;">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Carregar contas
+                            </span>
+                            <span>▾</span>
                         </button>
-                        <div class="eio-dropdown-menu" id="loadAccountsMenu">
-                            <div class="eio-dropdown-section-title">Do perfil: <span id="targetProfileName"
-                                    class="profile-ref">detectando...</span></div>
+                        <!-- FIX: Menu abrindo para BAIXO (top: 100%) -->
+                        <div class="eio-dropdown-menu" id="loadAccountsMenu"
+                            style="top: 100%; bottom: auto; margin-top: 5px; max-height: 400px; overflow-y: auto;">
+                            <div class="eio-dropdown-section-title">Do perfil alvo: <span id="targetProfileName"
+                                    class="profile-ref">...</span></div>
+
                             <button data-action="load-followers">👥 Carregar Seguidores</button>
-                            <button data-action="load-following">➡️ Carregar Seguindo</button>
+                            <button data-action="load-following">➡️ Carregar Seguindo / Unfollow</button>
+
                             <div class="eio-dropdown-divider"></div>
                             <div class="eio-dropdown-section-title">Do post atual:</div>
+
                             <button data-action="load-likers">❤️ Carregar Curtidores</button>
                             <button data-action="load-commenters">💬 Carregar Comentadores</button>
+
                             <div class="eio-dropdown-divider"></div>
-                            <button data-action="load-saved-queue">💾 Carregar Fila Salva</button>
+
+                            <button data-action="load-saved-queue">💾 Carregar Última Fila Salva</button>
+                            <button data-action="load-whitelist">🛡️ Carregar Whitelist (Protegidos)</button>
                         </div>
                     </div>
 
                     <div class="eio-dropdown">
-                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect">
-                            Selecionar ▾
+                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect"
+                            style="justify-content: space-between;">
+                            Selecionar <span>▾</span>
                         </button>
-                        <div class="eio-dropdown-menu" id="selectMenu">
+                        <!-- FIX: Menu abrindo para BAIXO -->
+                        <div class="eio-dropdown-menu" id="selectMenu"
+                            style="top: 100%; bottom: auto; margin-top: 5px;">
                             <button data-action="select-all">✓ Selecionar Todos</button>
-                            <button data-action="remove-selected">🗑️ Remover selecionados</button>
+                            <button data-action="invert-selection">🔄 Inverter Seleção</button>
+                            <button data-action="remove-selected">🗑️ Remover Selecionados</button>
                         </div>
                     </div>
 
-                    <!-- Botão Processar REMOVIDO conforme solicitado -->
-
-                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila">
+                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila Atual">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -193,7 +207,7 @@
                         Salvar
                     </button>
 
-                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar CSV">
+                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar para Excel/CSV">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
