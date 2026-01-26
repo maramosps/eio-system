@@ -252,13 +252,21 @@ async function loadFollowersViaAPI(username, limit = 200) {
                 const skipped = totalLoaded - newFollowers.length;
                 addConsoleLog('info', `📊 ${newFollowers.length}/${limit} novos (${skipped} já seguidos pulados)...`);
 
+                // ENVIAR PROGRESSO PARA O POPUP
+                chrome.runtime.sendMessage({
+                    action: 'extraction_progress',
+                    count: newFollowers.length,
+                    total: limit,
+                    type: 'followers'
+                }).catch(() => { });
+
             } else {
                 hasNext = false;
             }
 
             // Delay entre requisições
             if (hasNext && newFollowers.length < limit) {
-                await randomDelay(1000, 2000);
+                await randomDelay(800, 1500); // um pouco mais rápido
             }
 
         } catch (error) {
@@ -269,6 +277,14 @@ async function loadFollowersViaAPI(username, limit = 200) {
 
     const skippedTotal = totalLoaded - newFollowers.length;
     addConsoleLog('success', `✅ Carregados ${newFollowers.length} perfis novos! (${skippedTotal} já seguidos ignorados)`);
+
+    // Progresso final 100%
+    chrome.runtime.sendMessage({
+        action: 'extraction_progress',
+        count: newFollowers.length,
+        total: limit,
+        type: 'followers'
+    }).catch(() => { });
 
     loadedAccounts = newFollowers;
     return newFollowers;
@@ -325,11 +341,6 @@ async function loadFollowingViaAPI(username, limit = 200) {
             const data = await response.json();
 
             if (data.users && data.users.length > 0) {
-                // Log de debug para ver a estrutura (apenas no primeiro usuário)
-                if (allFollowing.length === 0 && data.users[0]) {
-                    console.log('[E.I.O DEBUG] Estrutura seguindo - primeiro usuário:', JSON.stringify(data.users[0], null, 2));
-                }
-
                 for (const user of data.users) {
                     // Verificar se VOCÊ (viewer) segue esta pessoa
                     const isFollowing =
@@ -361,12 +372,21 @@ async function loadFollowingViaAPI(username, limit = 200) {
                 hasNext = !!data.next_max_id && allFollowing.length < limit;
 
                 addConsoleLog('info', `📊 Carregados ${allFollowing.length} seguindo...`);
+
+                // ENVIAR PROGRESSO PARA O POPUP
+                chrome.runtime.sendMessage({
+                    action: 'extraction_progress',
+                    count: allFollowing.length,
+                    total: limit,
+                    type: 'following'
+                }).catch(() => { });
+
             } else {
                 hasNext = false;
             }
 
             // Delay entre requisições para evitar rate limit
-            if (hasNext) await randomDelay(1000, 2000);
+            if (hasNext) await randomDelay(800, 1500);
 
         } catch (error) {
             addConsoleLog('error', `❌ Erro ao carregar seguindo: ${error.message}`);
@@ -375,6 +395,15 @@ async function loadFollowingViaAPI(username, limit = 200) {
     }
 
     addConsoleLog('success', `✅ Total: ${allFollowing.length} seguindo carregados!`);
+
+    // Progresso final
+    chrome.runtime.sendMessage({
+        action: 'extraction_progress',
+        count: allFollowing.length,
+        total: limit,
+        type: 'following'
+    }).catch(() => { });
+
     loadedAccounts = allFollowing;
     return allFollowing;
 }

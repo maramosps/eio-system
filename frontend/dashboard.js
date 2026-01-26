@@ -464,8 +464,8 @@ async function initExtensionDownload() {
     const extensionVersion = document.getElementById('extensionVersion');
 
     // Set default values based on the latest package
-    if (extensionSize) extensionSize.textContent = '1.7 MB (Clean & Scroll)';
-    if (extensionVersion) extensionVersion.textContent = '4.3.5 (Latest)';
+    if (extensionSize) extensionSize.textContent = '1.7 MB (Fast API)';
+    if (extensionVersion) extensionVersion.textContent = '4.3.6 (Latest)';
 
     // Download button - Simple direct download
     if (btnDownload) {
