@@ -43,6 +43,38 @@ let loadedAccounts = [];
 let currentProfileUsername = null;
 let currentProfileId = null;
 
+// ═══════════════════════════════════════════════════════════
+// MONITOR DE NAVEGAÇÃO SPA (Single Page Application)
+// Detecta mudanças de rota sem refresh
+// ═══════════════════════════════════════════════════════════
+let lastUrl = window.location.href;
+const urlObserver = new MutationObserver(() => {
+    if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        const newProfile = getCurrentProfileUsername();
+
+        // Sempre logar navegação para debug
+        console.log('[E.I.O] Navegação detectada:', window.location.pathname);
+
+        if (newProfile && newProfile !== currentProfileUsername) {
+            currentProfileUsername = newProfile;
+            console.log('[E.I.O] Perfil ativo alterado para:', newProfile);
+            // Limpar cache de ID se mudou de perfil (para evitar misturar)
+            // mas manter o cache global userIdCache para reuso futuro
+        }
+    }
+});
+
+if (document.body) {
+    urlObserver.observe(document.body, { subtree: true, childList: true });
+}
+
+// Inicializar perfil atual
+setTimeout(() => {
+    currentProfileUsername = getCurrentProfileUsername();
+    if (currentProfileUsername) console.log('[E.I.O] Perfil inicial:', currentProfileUsername);
+}, 1000);
+
 // Helper para detectar ID na página
 function detectUserIdFromPage() {
     try {
