@@ -104,17 +104,11 @@ async function checkAction(userId, plan, currentStats, actionType, metadata) {
     // ----------------------------------------------------
     // 6. Atualizar Estado do Perfil (Persistência)
     // ----------------------------------------------------
-    if (targetUsername) {
-        // Se for follow, like, etc, atualizar contador
-        const newCount = (actionType === profileState?.current_step) ? (profileState.actions_count + 1) : 1;
-
-        await Flow.updateProfileState(userId, targetUsername, {
-            current_step: actionType,
-            actions_count: newCount,
-            last_action_type: actionType,
-            last_delay_ms: securityCheck.delay
-        });
-    }
+    // ----------------------------------------------------
+    // 6. Atualizar Estado do Perfil (Persistência)
+    // REMOVIDO: A atualização agora DEVE ocorrer apenas pós-execução (ACK)
+    // para evitar dessincronia em caso de falha na extensão.
+    // ----------------------------------------------------
 
     // ----------------------------------------------------
     // 7. Resposta Final Padronizada
