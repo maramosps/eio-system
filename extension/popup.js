@@ -2089,26 +2089,115 @@ window.processMediaItem = function (index) {
 // AUTHENTICATION (SIMPLIFICADA/PERMISSIVA)
 // ═══════════════════════════════════════════════════════════
 function checkAuthentication() {
-    // Para user "Sistema Completo", assumimos auth válida
-    // Se precisar de token real, tente pegar do storage ou gerar um placeholder
-    chrome.storage.local.get(['eio_token'], (result) => {
-        if (result.eio_token) {
-            AppState.isAuthenticated = true;
-            console.log('Auth: Token encontrado.');
-        } else {
-            console.log('Auth: Token não encontrado, criando sessão temporária.');
-            // Auto-login transparente
-            const tempToken = 'eio_v4_auto_' + Date.now();
-            chrome.storage.local.set({ eio_token: tempToken });
-            AppState.isAuthenticated = true;
-        }
-
-        // Esconder tela de login se existir (não encontrada no HTML, mas garantindo)
-        const loginScreen = document.getElementById('loginScreen');
-        if (loginScreen) loginScreen.style.display = 'none';
-
-        // Mostrar container principal
+    chrome.storage.local.get(['eio_token', 'user'], (result) => {
+        const termsModal = document.getElementById('termsModal');
         const mainContainer = document.querySelector('.eio-popup-container');
-        if (mainContainer) mainContainer.style.display = 'flex';
+
+        if (result.eio_token && result.user) {
+            AppState.isAuthenticated = true;
+            AppState.user = result.user;
+            console.log('Auth: Logado como', result.user.instagram_handle || result.user.email);
+
+            if (termsModal) termsModal.style.display = 'none';
+            if (mainContainer) mainContainer.style.display = 'flex';
+        } else {
+            console.log('Auth: Não logado. Exibindo tela de login.');
+            AppState.isAuthenticated = false;
+
+            if (termsModal) {
+                termsModal.style.display = 'flex';
+                // Resetar para passo 1
+                const step1 = document.getElementById('termsStep1');
+                const step2 = document.getElementById('termsStep2');
+                if (step1) step1.style.display = 'block';
+                if (step2) step2.style.display = 'none';
+            }
+            if (mainContainer) mainContainer.style.display = 'none';
+        }
     });
+
+    // Inicializar listeners do Login
+    initializeLoginHandlers();
+}
+
+function initializeLoginHandlers() {
+    const btnGoToLogin = document.getElementById('btnGoToLogin');
+    const btnSubmitLogin = document.getElementById('btnSubmitExtensionLogin');
+    const inputInstagram = document.getElementById('loginInstagramHandle');
+
+    if (btnGoToLogin) {
+        btnGoToLogin.onclick = () => {
+            document.getElementById('termsStep1').style.display = 'none';
+            document.getElementById('termsStep2').style.display = 'block';
+        };
+    }
+
+    if (btnSubmitLogin) {
+        btnSubmitLogin.onclick = async () => {
+            const handle = inputInstagram.value.trim();
+            if (!handle) {
+                alert('Por favor, digite o @ do seu Instagram.');
+                return;
+            }
+
+            const originalText = btnSubmitLogin.textContent;
+            btnSubmitLogin.textContent = 'Verificando...';
+            btnSubmitLogin.disabled = true;
+
+            try {
+                // SPECIAL ACCESS FOR ADMIN
+                if (handle.toLowerCase().replace('@', '') === 'msassessoriadigital') {
+                    const adminUser = {
+                        id: 'admin-ms',
+                        name: 'MS Assessoria',
+                        email: 'maramosps@gmail.com',
+                        instagram_handle: 'msassessoriadigital',
+                        role: 'admin'
+                    };
+                    const adminToken = 'eio_admin_bypass_' + Date.now();
+
+                    await chrome.storage.local.set({ eio_token: adminToken, user: adminUser });
+                    AppState.isAuthenticated = true;
+                    AppState.user = adminUser;
+
+                    document.getElementById('termsModal').style.display = 'none';
+                    document.querySelector('.eio-popup-container').style.display = 'flex';
+                    addLog('success', '🔓 Acesso de Administrador concedido!');
+                    return;
+                }
+
+                // Call Backend for Regular Users
+                const response = await fetch('https://eio-system.vercel.app/api/v1/auth/instagram-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instagram_handle: handle })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    await chrome.storage.local.set({ eio_token: data.token, user: data.user });
+                    AppState.isAuthenticated = true;
+                    AppState.user = data.user;
+
+                    document.getElementById('termsModal').style.display = 'none';
+                    // Esconder o modal explicitamente
+                    if (document.getElementById('termsModal')) {
+                        document.getElementById('termsModal').style.display = 'none';
+                    }
+                    document.querySelector('.eio-popup-container').style.display = 'flex';
+                    addLog('success', `🔓 Bem-vindo(a), @${data.user.instagram_handle}!`);
+                } else {
+                    alert(data.message || 'Erro ao fazer login. Verifique se o @ está correto e se você possui cadastro no dashboard.');
+                }
+
+            } catch (error) {
+                console.error('Login Error:', error);
+                alert('Erro de conexão com o servidor. Tente novamente.');
+            } finally {
+                btnSubmitLogin.textContent = originalText;
+                btnSubmitLogin.disabled = false;
+            }
+        };
+    }
 }
