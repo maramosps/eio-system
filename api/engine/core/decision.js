@@ -1,46 +1,138 @@
 /**
- * Engine Core: Decisor Central
- * Orquestra as verificações de Limites, Segurança e Agentes.
+ * Engine Core: Decisor Central (Refatorado - Protocolo Rígido)
+ * Orquestra Limites, Segurança, Fluxo e Agentes.
  */
 
-const { checkLimits } = require('../strategies/limits');
-const { checkSecurity } = require('../strategies/security');
+const { checkLimits, GLOBAL_DM_LIMIT } = require('../strategies/limits');
+const { checkSecurity, RISK_LEVELS } = require('../strategies/security');
 const { needsAgentIntervention } = require('../strategies/agents');
 const { logAction } = require('../services/logs');
+
+// Importar Flow Strategy (Novo)
+const Flow = require('../strategies/flow');
 
 async function checkAction(userId, plan, currentStats, actionType, metadata) {
     if (!userId) {
         throw new Error('UserId is required');
     }
 
-    // 1. Verificar Limites do Plano
-    const limitCheck = await checkLimits(plan, currentStats);
+    const { targetUsername, currentFlowStep, flowCount } = metadata || {};
+    let nextStep = actionType; // Default (caso não tenha fluxo)
+
+    // ----------------------------------------------------
+    // 1. Verificar Limites Globais (Prioridade Máxima)
+    // ----------------------------------------------------
+    const limitCheck = await checkLimits(plan, currentStats, actionType);
     if (!limitCheck.allowed) {
-        await logAction(userId, actionType, limitCheck); // Log blocked action
-        return limitCheck;
+        await logAction(userId, actionType, limitCheck);
+        return {
+            allowed: false,
+            delay: limitCheck.blockDuration || 0,
+            reason: limitCheck.reason,
+            riskLevel: limitCheck.riskLevel || 'HIGH',
+            nextAction: null
+        };
     }
 
-    // 2. Análise de Segurança & Risco
-    const securityCheck = await checkSecurity(actionType, metadata?.settings, currentStats?.health);
+    // ----------------------------------------------------
+    // 2. Orquestração de Fluxo (Profile State)
+    // ----------------------------------------------------
+    let profileState = null;
+    if (targetUsername) {
+        profileState = await Flow.getProfileState(userId, targetUsername);
 
-    // 3. Intervenção de Agentes IA (Opcional)
+        // Determinar Próximo Passo
+        if (profileState) {
+            nextStep = Flow.determineNextAction(
+                profileState.current_step || 'follow',
+                profileState.actions_count || 0,
+                { maxLikes: 3, viewStories: true } // Config padrão
+            );
+        } else {
+            // Primeiro contato -> sempre follow
+            nextStep = 'follow';
+        }
+
+        // Se a ação solicitada não for a esperada pelo fluxo -> Bloquear (Inconsistência)
+        // Exceção: DMs de boas-vindas que são assíncronas
+        if (actionType !== nextStep && actionType !== 'dm_welcome' && actionType !== 'switch_profile') {
+            // Permitir se for a primeira vez (profileState null) e a ação for follow
+            const isFirstAction = !profileState && actionType === 'follow';
+
+            if (!isFirstAction) {
+                return {
+                    allowed: false,
+                    reason: `Fluxo Inconsistente. Esperado: ${nextStep}, Recebido: ${actionType}`,
+                    riskLevel: 'HIGH',
+                    nextAction: nextStep,
+                    resumeAt: new Date(Date.now() + 60000).toISOString() // Tente novamente em 1 min
+                };
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    // 3. Segurança e Delays (Com Anti-Repetição)
+    // ----------------------------------------------------
+    const lastDelay = profileState?.last_delay_ms || 0;
+    const securityCheck = await checkSecurity(actionType, metadata?.settings, lastDelay);
+
+    if (!securityCheck.allowed) {
+        return {
+            allowed: false,
+            reason: securityCheck.reason,
+            riskLevel: 'CRITICAL',
+            nextAction: null
+        };
+    }
+
+    // ----------------------------------------------------
+    // 4. Scheduler (DMs de Boas-vindas)
+    // ----------------------------------------------------
+    let resumeAt = null;
+    if (actionType === 'dm_welcome') {
+        const welcomeDelay = securityCheck.delay; // 15-25 min
+        resumeAt = new Date(Date.now() + welcomeDelay).toISOString();
+        securityCheck.delay = 0; // A ação é agendada, não "esperar agora"
+    }
+
+    // ----------------------------------------------------
+    // 5. Agentes IA (Opcional)
+    // ----------------------------------------------------
     const agentCheck = await needsAgentIntervention(actionType, metadata?.messageContent);
-    if (agentCheck.intervention) {
-        securityCheck.agentSuggestion = agentCheck;
+
+    // ----------------------------------------------------
+    // 6. Atualizar Estado do Perfil (Persistência)
+    // ----------------------------------------------------
+    if (targetUsername) {
+        // Se for follow, like, etc, atualizar contador
+        const newCount = (actionType === profileState?.current_step) ? (profileState.actions_count + 1) : 1;
+
+        await Flow.updateProfileState(userId, targetUsername, {
+            current_step: actionType,
+            actions_count: newCount,
+            last_action_type: actionType,
+            last_delay_ms: securityCheck.delay
+        });
     }
 
-    const decision = {
+    // ----------------------------------------------------
+    // 7. Resposta Final Padronizada
+    // ----------------------------------------------------
+    const finalDecision = {
         allowed: true,
         delay: securityCheck.delay,
+        nextAction: nextStep, // O que fazer DEPOIS dessa ação
+        reason: 'Authorized via API Engine Protocol',
         riskLevel: securityCheck.riskLevel,
-        warning: securityCheck.warning || null,
-        agentIntervention: agentCheck.intervention ? agentCheck.agent : null
+        resumeAt: resumeAt,
+        agentSuggestion: agentCheck.intervention ? agentCheck.agent : null
     };
 
-    // 4. Registrar toda decisão tomada
-    // await logAction(userId, actionType, decision); // Logging async to not block
+    // Logging (Assíncrono)
+    logAction(userId, actionType, finalDecision).catch(console.error);
 
-    return decision;
+    return finalDecision;
 }
 
 module.exports = {

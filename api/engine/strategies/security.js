@@ -1,53 +1,62 @@
 /**
- * Engine Strategy: Segurança e Anti-Ban
- * Controla pausas inteligentes e riscos de bloqueio.
+ * Engine Strategy: Segurança e Anti-Ban (Versão Rígida V2)
+ * Implementa delays randômicos não repetitivos e proteção máxima.
  */
 
-// Intervalos mínimos em milissegundos
-const BASE_DELAYS = {
-    like: 45000,       // 45s
-    follow: 60000,     // 60s
-    comment: 120000    // 2 min
+// Delays permitidos (intervalos rigorosos)
+const DELAY_RANGES = {
+    'follow': [120000, 180000],  // 2-3 min
+    'like': [45000, 120000],     // 45-120s
+    'view_story': [60000, 180000], // >= 60s
+    'like_story': [60000, 180000], // 60-180s
+    'comment': [60000, 180000],    // 60-180s
+    'switch_profile': [120000, 180000], // 2-3 min
+    'dm_welcome': [900000, 1500000] // 15-25 min
 };
 
 const RISK_LEVELS = {
-    LOW: 0,
-    MEDIUM: 1,
-    HIGH: 2,
-    CRITICAL: 3
+    LOW: 'low',
+    MEDIUM: 'medium',
+    HIGH: 'high',
+    CRITICAL: 'critical'
 };
 
-async function checkSecurity(actionType, settings, accountHealth) {
-    const minDelay = BASE_DELAYS[actionType] || 30000;
+function getRandomDelay(min, max) {
+    if (!min || !max) return 60000;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-    // Calcula delay dinâmico
-    let finalDelay = minDelay;
+async function checkSecurity(actionType, settings, lastDelayMs) {
+    const range = DELAY_RANGES[actionType] || [60000, 120000];
+    let newDelay = getRandomDelay(range[0], range[1]);
+
+    // Garantir que delay não seja idêntico ao anterior (variação forçada)
+    if (lastDelayMs && Math.abs(newDelay - lastDelayMs) < 5000) {
+        newDelay += 7000; // Shift de 7s se for muito parecido
+    }
+
+    // Validação de risco
     let risk = RISK_LEVELS.LOW;
 
-    // Se a saúde da conta estiver baixa, aumentar o delay
-    if (accountHealth?.strikes > 0) {
-        finalDelay *= (1.5 * accountHealth.strikes);
-        risk = RISK_LEVELS.MEDIUM;
+    // Fail-safe: Se delay calculado for menor que o minimo permitido
+    if (newDelay < range[0]) {
+        return {
+            allowed: false,
+            reason: 'Security Violation: Delay too short',
+            riskLevel: RISK_LEVELS.HIGH
+        };
     }
-
-    // Se estiver em modo agressivo (configuração do usuário)
-    if (settings?.aggressiveMode) {
-        finalDelay *= 0.8; // Reduz sleep em 20%
-        risk = RISK_LEVELS.HIGH;
-    }
-
-    // Adiciona uma variação randômica de 15% para parecer humano
-    const variance = Math.floor(Math.random() * (finalDelay * 0.15));
-    finalDelay += variance;
 
     return {
-        delay: Math.ceil(finalDelay),
+        allowed: true,
+        delay: newDelay,
         riskLevel: risk,
-        warning: risk >= RISK_LEVELS.HIGH ? 'Modo agressivo pode gerar bloqueios' : null
+        warning: null
     };
 }
 
 module.exports = {
     checkSecurity,
-    RISK_LEVELS
+    RISK_LEVELS,
+    DELAY_RANGES
 };

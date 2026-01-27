@@ -65,6 +65,8 @@ module.exports = async (req, res) => {
             delay: decision.delay || 0,
             riskLevel: decision.riskLevel || 'LOW',
             warning: decision.warning || null,
+            nextAction: decision.nextAction || null, // Novo campo: próxima ação do fluxo
+            resumeAt: decision.resumeAt || null,     // Novo campo: quando retomar (scheduler)
             agentSuggestion: decision.agentSuggestion || null,
             timestamp: new Date().toISOString()
         });
