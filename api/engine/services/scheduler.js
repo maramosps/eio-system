@@ -32,26 +32,49 @@ async function scheduleAction(userId, actionType, targetUsername, executeAfterDa
     }
 }
 
-async function getPendingActions() {
+/**
+ * Busca e bloqueia tarefas pendentes para execução (Dispatcher)
+ */
+async function getAndLockPendingActions(userId, limit = 1) {
     if (!supabase) return [];
 
-    // Buscar ações onde execute_after já passou e status é pendente
     const now = new Date().toISOString();
-    const { data, error } = await supabase
+
+    // 1. Buscar tarefas candidatas (Execute After <= Now AND Status = Pending)
+    const { data: candidates, error: fetchError } = await supabase
         .from('scheduled_actions')
         .select('*')
+        .eq('user_id', userId)
         .eq('status', 'pending')
         .lte('execute_after', now)
-        .limit(50); // Processar em batches
+        .limit(limit);
 
-    if (error) {
-        console.error('[Scheduler] Fetch Error:', error);
+    if (fetchError || !candidates || candidates.length === 0) {
         return [];
     }
-    return data;
+
+    // 2. Tentar bloquear (Optimistic Locking via status update)
+    // Para cada candidato, tentar mudar status para 'in_progress'
+    const lockedTasks = [];
+
+    for (const task of candidates) {
+        const { data: updated, error: updateError } = await supabase
+            .from('scheduled_actions')
+            .update({ status: 'in_progress', updated_at: now })
+            .eq('id', task.id)
+            .eq('status', 'pending') // Garante que ninguém pegou antes
+            .select()
+            .single();
+
+        if (updated && !updateError) {
+            lockedTasks.push(updated);
+        }
+    }
+
+    return lockedTasks;
 }
 
 module.exports = {
     scheduleAction,
-    getPendingActions
+    getAndLockPendingActions
 };

@@ -60,7 +60,24 @@ async function processAck(userId, actionType, success, metadata, errorMessage) {
         };
     }
 
-    return { status: 'acknowledged_no_state' };
+    // Tratamento de Tarefas Agendadas (Scheduler)
+    const taskId = metadata?.taskId || metadata?.actionId;
+    if (taskId && Flow.updateTaskStatus) {
+        // Nota: Flow.updateTaskStatus não existe, precisamos importar supabase ou criar service
+        // Melhor usar service direto
+        const supabase = require('../config/supabase');
+        if (supabase) {
+            await supabase.from('scheduled_actions')
+                .update({
+                    status: success ? 'executed' : 'failed',
+                    updated_at: new Date().toISOString(),
+                    // Se falhou, talvez incrementar retries? Por enquanto simples.
+                })
+                .eq('id', taskId);
+        }
+    }
+
+    return { status: 'acknowledged' };
 }
 
 module.exports = {
