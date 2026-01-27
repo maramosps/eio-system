@@ -42,7 +42,7 @@ window.EIO_CONFIG = {
     SUPABASE_ANON_KEY,
 
     // Versão do sistema
-    VERSION: '3.4.0',
+    VERSION: '4.4.0',
 
     // Limites padrão
     LIMITS: {

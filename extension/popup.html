@@ -75,6 +75,14 @@
                 </svg>
                 <span>Filtros</span>
             </button>
+            <button class="eio-tab" data-tab="mensagens">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                    </path>
+                </svg>
+                <span>DMs</span>
+            </button>
             <button class="eio-tab" data-tab="config">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -136,11 +144,14 @@
                 <!-- Opções da Fila -->
                 <div class="eio-queue-options">
                     <div class="eio-option-group">
-                        <label><input type="checkbox" id="optLikePosts" checked> Curtir até <input type="number"
-                                id="optLikeCount" value="1" min="1" max="2" class="eio-mini-input"> posts</label>
+                        <label><input type="checkbox" id="optLikePosts" checked
+                                aria-label="Curtir posts automaticamente"> Curtir até <input type="number"
+                                id="optLikeCount" value="1" min="1" max="2" class="eio-mini-input"
+                                aria-label="Quantidade de posts para curtir"></label>
                     </div>
                     <div class="eio-option-group">
-                        <label><input type="checkbox" id="optViewStory" checked> Ver stories</label>
+                        <label><input type="checkbox" id="optViewStory" checked
+                                aria-label="Ver stories automaticamente"> Ver stories</label>
                     </div>
                 </div>
 
@@ -253,9 +264,9 @@
                 <div class="eio-queue-toolbar">
                     <div class="eio-queue-info">
                         <span id="queuePagination">📊 1 - 10 / 50 (50)</span>
-                        <span>Page: <input type="number" id="pageNumber" value="1" min="1"
-                                class="eio-page-input"></span>
-                        <select id="pageSize" class="eio-select-mini">
+                        <span>Page: <input type="number" id="pageNumber" value="1" min="1" class="eio-page-input"
+                                aria-label="Número da página"></span>
+                        <select id="pageSize" class="eio-select-mini" aria-label="Itens por página">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50" selected>50</option>
@@ -278,7 +289,8 @@
                     <table class="eio-accounts-table" id="accountsTable" style="display: none;">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="selectAllAccounts"></th>
+                                <th><input type="checkbox" id="selectAllAccounts"
+                                        aria-label="Selecionar todas as contas"></th>
                                 <th>Pic</th>
                                 <th>@Username</th>
                             </tr>
@@ -313,14 +325,14 @@
                     <p class="eio-description">Adicione URLs de posts, reels ou stories para extrair interações.</p>
 
                     <div class="eio-form-group">
-                        <label class="eio-label">URL do Post/Reel</label>
+                        <label class="eio-label" for="mediaUrl">URL do Post/Reel</label>
                         <input type="text" class="eio-input" id="mediaUrl"
-                            placeholder="https://www.instagram.com/p/XXXX ou /reel/XXXX">
+                            placeholder="https://www.instagram.com/p/XXXX ou /reel/XXXX" aria-label="URL da mídia">
                     </div>
 
                     <div class="eio-form-group">
                         <label class="eio-label">Tipo de Extração</label>
-                        <select class="eio-select" id="mediaExtractType">
+                        <select class="eio-select" id="mediaExtractType" aria-label="Tipo de extração">
                             <option value="likers">Curtidores</option>
                             <option value="commenters">Comentadores</option>
                             <option value="tagged">Usuários Marcados</option>
@@ -443,9 +455,10 @@
                         <div class="eio-filter-group">
                             <label class="eio-label">Seguidores</label>
                             <div class="eio-range-slider">
-                                <input type="range" id="followersMin" min="0" max="100000" value="0" class="eio-range">
+                                <input type="range" id="followersMin" min="0" max="100000" value="0" class="eio-range"
+                                    aria-label="Mínimo de seguidores">
                                 <input type="range" id="followersMax" min="0" max="100000" value="100000"
-                                    class="eio-range">
+                                    class="eio-range" aria-label="Máximo de seguidores">
                             </div>
                             <div class="eio-range-values">
                                 <span id="followersMinVal">0</span> - <span id="followersMaxVal">100k</span>
@@ -455,9 +468,10 @@
                         <div class="eio-filter-group">
                             <label class="eio-label">Seguindo</label>
                             <div class="eio-range-slider">
-                                <input type="range" id="followingMin" min="0" max="10000" value="0" class="eio-range">
+                                <input type="range" id="followingMin" min="0" max="10000" value="0" class="eio-range"
+                                    aria-label="Mínimo seguindo">
                                 <input type="range" id="followingMax" min="0" max="10000" value="10000"
-                                    class="eio-range">
+                                    class="eio-range" aria-label="Máximo seguindo">
                             </div>
                             <div class="eio-range-values">
                                 <span id="followingMinVal">0</span> - <span id="followingMaxVal">10k</span>
@@ -468,9 +482,9 @@
                             <label class="eio-label">Razão de Seguidores (Followers/Following)</label>
                             <div class="eio-range-slider">
                                 <input type="range" id="ratioMin" min="0" max="100" value="0" step="0.1"
-                                    class="eio-range">
+                                    class="eio-range" aria-label="Ratio mínimo">
                                 <input type="range" id="ratioMax" min="0" max="100" value="100" step="0.1"
-                                    class="eio-range">
+                                    class="eio-range" aria-label="Ratio máximo">
                             </div>
                             <div class="eio-range-values">
                                 <span id="ratioMinVal">0</span> - <span id="ratioMaxVal">100</span>
@@ -480,8 +494,10 @@
                         <div class="eio-filter-group">
                             <label class="eio-label">Postagens</label>
                             <div class="eio-range-slider">
-                                <input type="range" id="postsMin" min="0" max="1000" value="0" class="eio-range">
-                                <input type="range" id="postsMax" min="0" max="1000" value="1000" class="eio-range">
+                                <input type="range" id="postsMin" min="0" max="1000" value="0" class="eio-range"
+                                    aria-label="Mínimo de posts">
+                                <input type="range" id="postsMax" min="0" max="1000" value="1000" class="eio-range"
+                                    aria-label="Máximo de posts">
                             </div>
                             <div class="eio-range-values">
                                 <span id="postsMinVal">0</span> - <span id="postsMaxVal">1000</span>
@@ -490,7 +506,8 @@
 
                         <div class="eio-filter-group">
                             <label class="eio-label">Última Postagem (dias atrás)</label>
-                            <input type="number" class="eio-input" id="lastPostDays" placeholder="Ex: 30" value="">
+                            <input type="number" class="eio-input" id="lastPostDays" placeholder="Ex: 30" value=""
+                                aria-label="Dias desde última postagem">
                         </div>
                     </div>
 
@@ -535,23 +552,26 @@
                         <div class="eio-form-group">
                             <label class="eio-label">Link na Bio</label>
                             <div class="eio-input-group">
-                                <select class="eio-select-mini" id="bioLinkType">
+                                <select class="eio-select-mini" id="bioLinkType" aria-label="Tipo de filtro de link">
                                     <option value="">--</option>
                                     <option value="contains">Contém</option>
                                     <option value="not-contains">Não Contém</option>
                                 </select>
-                                <input type="text" class="eio-input" id="bioLinkText" placeholder="youtube.com">
+                                <input type="text" class="eio-input" id="bioLinkText" placeholder="youtube.com"
+                                    aria-label="Texto do link">
                             </div>
                         </div>
 
                         <div class="eio-form-group">
                             <label class="eio-label">Bio Contém</label>
-                            <input type="text" class="eio-input" id="bioContains" placeholder="Ex: empreendedor">
+                            <input type="text" class="eio-input" id="bioContains" placeholder="Ex: empreendedor"
+                                aria-label="Texto contido na bio">
                         </div>
 
                         <div class="eio-form-group">
                             <label class="eio-label">Categoria Comercial</label>
-                            <input type="text" class="eio-input" id="businessCategory" placeholder="Ex: Personal Blog">
+                            <input type="text" class="eio-input" id="businessCategory" placeholder="Ex: Personal Blog"
+                                aria-label="Categoria comercial">
                         </div>
                     </div>
 
@@ -564,6 +584,68 @@
                             ✅ Aplicar Filtros à Fila Atual
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ABA MENSAGENS - Configuração de DMs                         -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <div class="eio-tab-content" id="mensagensTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">💬 Configurar Mensagens (DM)</h3>
+                    </div>
+                    <p class="eio-description">Configure o modelo de mensagem que será enviado automaticamente.</p>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Template da Mensagem</label>
+                        <div class="eio-variable-tags">
+                            <span class="eio-tag" title="Nome completo do usuário">@{{nome}}</span>
+                            <span class="eio-tag" title="Nome de usuário (@user)">@{{username}}</span>
+                            <span class="eio-tag" title="Saudação (Bom dia/tarde/noite)">@{{saudacao}}</span>
+                        </div>
+                        <textarea class="eio-textarea" id="dmMessageTemplate" rows="6"
+                            placeholder="Olá {{nome}}, tudo bem? Vi seu perfil e..."></textarea>
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Respostas Rápidas (Exemplos)</label>
+                        <select class="eio-select" id="dmQuickReplies" aria-label="Carregar resposta rápida">
+                            <option value="">-- Selecione um modelo --</option>
+                            <option value="Olá {{nome}}, adorei seu conteúdo!">Elogio Simples</option>
+                            <option
+                                value="Oi {{nome}}, vi que você tem interesse em marketing. Posso te enviar uma dica?">
+                                Abordagem de Venda</option>
+                            <option value="Obrigado por seguir, {{nome}}! Fique à vontade para chamar.">Boas-vindas
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="eio-checkbox-group">
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipPrivate" checked> Pular contas privadas
+                        </label>
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipBusiness"> Pular contas comerciais
+                        </label>
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipIfChatExists" checked> Não enviar se já tivermos conversa
+                        </label>
+                    </div>
+
+                    <button class="eio-btn eio-btn-primary" id="btnSaveDMConfig" style="width: 100%; margin-top: 15px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Salvar Configuração
+                    </button>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnTestDM" style="width: 100%; margin-top: 8px;">
+                        ✉️ Enviar Teste (para mim mesmo)
+                    </button>
                 </div>
             </div>
 
@@ -602,7 +684,7 @@
                                 <label title="Tempo máximo para busca de perfis na lista aberta">⏱️ Tempo
                                     Extração:</label>
                                 <input type="number" class="eio-input-mini" id="extractionTimeout" value="30" min="5"
-                                    max="300">
+                                    max="300" aria-label="Tempo limite de extração">
                                 <span>s (Alvo: 30s)</span>
                             </div>
                         </div>
@@ -634,29 +716,35 @@
                             </div>
                             <div class="eio-config-row">
                                 <label>Aguardar</label>
-                                <input type="number" class="eio-input-mini" id="delaySoftLimit" value="10">
+                                <input type="number" class="eio-input-mini" id="delaySoftLimit" value="10"
+                                    aria-label="Tempo de espera Soft Limit">
                                 <span>minutos após limite suave de taxa</span>
                             </div>
                             <div class="eio-config-row">
                                 <label>Aguardar</label>
-                                <input type="number" class="eio-input-mini" id="delayHardLimit" value="1">
+                                <input type="number" class="eio-input-mini" id="delayHardLimit" value="1"
+                                    aria-label="Tempo de espera Hard Limit">
                                 <span>horas após limite rígido</span>
                             </div>
                             <div class="eio-config-row">
                                 <label>Aguardar</label>
-                                <input type="number" class="eio-input-mini" id="delay429" value="10">
+                                <input type="number" class="eio-input-mini" id="delay429" value="10"
+                                    aria-label="Tempo de espera erro 429">
                                 <span>minutos após erro 429</span>
                             </div>
                             <div class="eio-config-row">
                                 <label>Retry</label>
-                                <input type="number" class="eio-input-mini" id="retry404" value="10">
+                                <input type="number" class="eio-input-mini" id="retry404" value="10"
+                                    aria-label="Tentativas após erro 404">
                                 <span>times after 404 error</span>
                             </div>
                             <label class="eio-checkbox-label">
-                                <input type="checkbox" id="configDailyLimit"> Aguardar
-                                <input type="number" class="eio-input-mini" id="dailyLimitHours" value="24">
+                                <input type="checkbox" id="configDailyLimit" aria-label="Ativar limite diário"> Aguardar
+                                <input type="number" class="eio-input-mini" id="dailyLimitHours" value="24"
+                                    aria-label="Horas de espera diária">
                                 horas após realizar
-                                <input type="number" class="eio-input-mini" id="dailyLimitActions" value="50">
+                                <input type="number" class="eio-input-mini" id="dailyLimitActions" value="50"
+                                    aria-label="Número de ações diárias">
                                 segue/deixa de seguir
                             </label>
                         </div>
@@ -743,7 +831,7 @@
                     <span
                         style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6246ea; font-weight: 600;">@</span>
                     <input type="text" id="loginInstagramHandle" class="eio-input" placeholder="seu_perfil"
-                        style="width: 100%; padding-left: 30px;">
+                        style="width: 100%; padding-left: 30px;" aria-label="Nome de usuário do Instagram">
                 </div>
             </div>
 

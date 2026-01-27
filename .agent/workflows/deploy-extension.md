@@ -1,39 +1,50 @@
 ---
-description: Deploy da extensão E.I.O - Atualiza versão em todos os arquivos, recompila ZIP e faz deploy
+description: Workflow para empacotar e preparar a Extensão E.I.O para publicação (Web Store).
 ---
 
-# Deploy da Extensão E.I.O
+# 📦 Deploy da Extensão E.I.O
 
-Este workflow atualiza a versão da extensão em todos os arquivos necessários, recompila o ZIP e faz deploy para produção.
+Este workflow guia o processo de empacotamento, versão e preparação para upload na Chrome Web Store.
 
-## Arquivos que precisam ser atualizados com a nova versão
+## 1. Verificação Prévia
 
-1. `extension/manifest.json` - linha 4 (version)
-2. `api/index.js` - linha ~427 (version)
-3. `frontend/dashboard.js` - linha ~468 (extensionVersion.textContent)
-4. `frontend/dashboard.html` - linha ~557 (id="extensionVersion")
+Antes de empacotar, garanta que:
 
-## Passos
+- O `manifest.json` está com a versão correta.
+- Não há erros de lint/sintaxe nos arquivos JS.
+- As credenciais de API (Supabase) estão configuradas para produção (se aplicável).
 
-// turbo-all
+## 2. Empacotamento Automático
 
-1. Atualizar versão no `extension/manifest.json`
-2. Atualizar versão no `api/index.js`
-3. Atualizar versão no `frontend/dashboard.js`
-4. Atualizar versão no `frontend/dashboard.html`
-5. Recompilar o ZIP:
+O projeto possui scripts automatizados para gerar o arquivo `.zip` pronto para envio.
 
-```powershell
-Remove-Item "eio-extension-new.zip" -Force -ErrorAction SilentlyContinue; Compress-Archive -Path "extension\*" -DestinationPath "eio-extension-new.zip" -Force; Copy-Item "eio-extension-new.zip" -Destination "frontend\downloads\eio-extension.zip" -Force; Copy-Item "eio-extension-new.zip" -Destination "public\downloads\eio-extension.zip" -Force; Remove-Item "eio-extension-new.zip" -Force
+### Opção A: Script Node.js (Recomendado)
+
+Este script atualiza automaticamente a versão no manifesto e gera o ZIP com nome formatado.
+
+```bash
+npm run package
 ```
 
-1. Deploy para produção:
+### Opção B: PowerShell (Avançado)
+
+Script completo que também gera backups e logs.
 
 ```powershell
-vercel --prod --yes
+./package-extension.ps1
 ```
 
-## Notas
+## 3. Validação do Pacote
 
-- Sempre usar versão semântica (ex: 2.7.1)
-- Aguardar confirmação do deploy antes de liberar para o usuário
+Após gerar o ZIP (verifique na pasta raiz algo como `eio-extension-vX.X.X.zip`):
+
+1. Abra `chrome://extensions` no navegador.
+2. Ative o "Modo do desenvolvedor".
+3. Arraste o ZIP gerado para dentro da janela para testar se ele instala corretamente.
+
+## 4. Publicação
+
+1. Acesse o [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/dev/dashboard).
+2. Selecione o item **E.I.O System**.
+3. Vá em "Pacote" > "Enviar novo pacote".
+4. Faça upload do arquivo ZIP gerado.

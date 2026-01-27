@@ -437,9 +437,89 @@ function updateStats(type) {
     notifyPopup('statsUpdate', { stats: extensionState.stats });
 }
 
+// Função para obter token do storage
+async function getAuthToken() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['eioLicenseData', 'eioUserData', 'extensionLicense'], (result) => {
+            // Tenta obter token de várias fontes possíveis
+            const token = result.eioLicenseData?.token ||
+                result.eioUserData?.token ||
+                result.extensionLicense?.token || null;
+            resolve(token);
+        });
+    });
+}
+
+// Enviar log para o backend
+async function sendLogToBackend(action, target, result = 'success', metadata = {}) {
+    try {
+        const token = await getAuthToken();
+        const API_URL = 'https://eio-system.vercel.app/api/v1'; // Hardcoded para produção por segurança
+
+        if (!token) {
+            // Se não tiver token, loga apenas no console local
+            // console.log('[E.I.O Backend] ⚠️ Log não enviado (sem token):', action);
+            return;
+        }
+
+        fetch(`${API_URL}/analytics/log`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                action: action,
+                target: target.replace('@', ''), // Remove @ se existir
+                result: result,
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    source: 'extension_background',
+                    ...metadata
+                }
+            })
+        }).then(response => {
+            if (response.ok) {
+                console.log(`[E.I.O Backend] ✅ Log enviado: ${action}`);
+            } else {
+                console.log(`[E.I.O Backend] ❌ Falha ao enviar log: ${response.status}`);
+            }
+        }).catch(err => {
+            console.error('[E.I.O Backend] Erro de rede:', err);
+        });
+
+    } catch (e) {
+        console.error('[E.I.O Backend] Erro geral:', e);
+    }
+}
+
 function logAction(level, message) {
     console.log(`[E.I.O LOG] ${message}`);
     notifyPopup('consoleMessage', { level, message, timestamp: new Date().toISOString() });
+
+    // Tenta extrair informações estruturadas da mensagem para enviar ao backend
+    // Ex: "Seguindo @usuario..."
+    const lowerMsg = message.toLowerCase();
+    let action = null;
+    let target = null;
+    let result = 'success'; // Default
+
+    // Detector simples de ações baseadas no log
+    // Isso é um fallback se não chamarmos sendLogToBackend explicitamente nos locais de ação
+    if (lowerMsg.includes('seguindo @')) {
+        action = 'follow';
+        target = message.split('@')[1]?.split(' ')[0]?.trim();
+    } else if (lowerMsg.includes('curtindo') || lowerMsg.includes('curtido')) {
+        action = 'like';
+        // Tenta achar usuario no log se houver, ou usa metadados se disponíveis
+    } else if (lowerMsg.includes('deixando de seguir @')) {
+        action = 'unfollow';
+        target = message.split('@')[1]?.split(' ')[0]?.trim();
+    }
+
+    if (action && target) {
+        sendLogToBackend(action, target, 'success', { original_message: message });
+    }
 }
 
 function notifyPopup(type, data) {

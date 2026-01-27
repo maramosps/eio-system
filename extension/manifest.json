@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "E.I.O - Decole seu Instagram",
-  "version": "4.3.7",
+  "name": "E.I.O System",
+  "version": "4.4.0",
   "description": "Engajamento Inteligente Orgânico - Sistema profissional completo de automação para Instagram com gerenciamento avançado de contas",
   "permissions": [
     "activeTab",

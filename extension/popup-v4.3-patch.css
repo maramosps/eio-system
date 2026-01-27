@@ -1,0 +1,77 @@
+/* 
+═══════════════════════════════════════════════════════════
+   E.I.O - UPDATES v4.3.0 (Restored UI)
+   Botões Neon & Limpeza Visual
+═══════════════════════════════════════════════════════════
+*/
+
+/* Ocultar contador de automação quebrado/confuso */
+#automationCounter {
+    display: none !important;
+}
+
+/* Botões de Controle - Estilo Neon Grande */
+.eio-ctrl-btn {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 1.2rem !important;
+    border-width: 2px !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; /* Bouncy transition */
+}
+
+/* Botão START (Verde) */
+.eio-ctrl-start {
+    background: rgba(37, 211, 102, 0.15) !important;
+    border-color: var(--eio-green-500) !important;
+    color: var(--eio-green-500) !important;
+}
+
+.eio-ctrl-start:hover {
+    background: var(--eio-green-500) !important;
+    color: #000 !important;
+    transform: scale(1.1) translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4) !important;
+}
+
+/* Botão PAUSE (Amarelo) */
+.eio-ctrl-pause {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: var(--eio-yellow-500) !important;
+    color: var(--eio-yellow-500) !important;
+}
+
+.eio-ctrl-pause:hover {
+    background: var(--eio-yellow-500) !important;
+    color: #000 !important;
+    transform: scale(1.1) translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4) !important;
+}
+
+/* Botão STOP (Vermelho) */
+.eio-ctrl-stop {
+    background: rgba(255, 77, 77, 0.15) !important;
+    border-color: var(--eio-red-500) !important;
+    color: var(--eio-red-500) !important;
+}
+
+.eio-ctrl-stop:hover {
+    background: var(--eio-red-500) !important;
+    color: #fff !important;
+    transform: scale(1.1) translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4) !important;
+}
+
+/* Melhorar visual do Status "Em Execução" */
+.eio-automation-status-mini {
+    background: var(--eio-dark-600);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--eio-border);
+}
+
+#automationStatusText {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}

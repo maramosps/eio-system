@@ -8,7 +8,7 @@ const path = require('path');
 const archiver = require('archiver');
 
 const EXTENSION_DIR = path.join(__dirname, 'extension');
-const OUTPUT_DIR = path.join(__dirname, 'public', 'downloads');
+const OUTPUT_DIR = path.join(__dirname, 'frontend', 'downloads');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'eio-extension.zip');
 
 // Criar diretório de saída se não existir

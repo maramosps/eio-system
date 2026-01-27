@@ -440,11 +440,11 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    version: '3.1.0',
-                    size: '4.8 MB',
+                    version: '4.4.0',
+                    size: '1.6 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
-                    downloadUrl: '/downloads/eio-extension.zip'
+                    downloadUrl: '/downloads/eio-extension.zip?v=4.4.0'
                 }
             });
         }

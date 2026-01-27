@@ -44,7 +44,13 @@ const AppState = {
         randomDelayPercent: 50,
         showProfilePics: true,
         showBadges: true,
-        autoSaveQueue: true
+        showBadges: true,
+        autoSaveQueue: true,
+        // DM Config Defaults
+        dmMessageTemplate: '',
+        dmSkipPrivate: true,
+        dmSkipBusiness: false,
+        dmSkipIfChatExists: true
     },
     logs: [],
     mediaQueue: []
@@ -70,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTabs();
     initializeDropdowns();
     initializeFilters();
+    initializeDMHandlers();
     initializeConfigSections();
     initializeTableHandlers();
     initializeActionButtons();
@@ -787,131 +794,191 @@ async function loadFromInstagram(type, limit = 200) {
                 }
             });
 
-            if (extractionResult?.success && extractionResult.data) {
+            if (extractionResult?.success && extractionResult.data && extractionResult.data.length > 0) {
                 const accounts = extractionResult.data;
                 addLog('success', `✅ ${accounts.length} perfis NOVOS extraídos do modal!`);
-
-                // Processar resultados do modal
-                // NOTA: Os perfis que chegam aqui JÁ FORAM FILTRADOS
-                // Ou seja, são apenas perfis que você NÃO segue ainda
-                AppState.accounts = accounts.map(acc => ({
-                    username: (acc.username || '').replace('@', ''),
-                    fullName: acc.fullName || acc.name || '',
-                    profilePic: acc.avatar || '',
-                    followers: acc.followers || 0,
-                    following: acc.following || 0,
-                    posts: acc.posts || 0,
-                    isPrivate: acc.isPrivate || false,
-                    isVerified: acc.isVerified || false,
-                    followedByViewer: false,  // São perfis novos, você NÃO segue
-                    followsViewer: acc.followsMe || false,
-                    requestedByViewer: false,
-                    status: 'none'  // Sem stamp - são perfis novos para seguir
-                }));
-
-                finishLoadingAccounts(type);
-                return;
+                processLoadedAccounts(accounts);
+                LoadingManager.hide();
+                return; // Sucesso, sair.
             } else {
-                addLog('warning', '⚠️ Extração do modal falhou, tentando via API...');
+                addLog('warning', '⚠️ Extração do modal retornou 0 contas. Tentando método API...');
+                // Fallthrough para o catch ou método 2
             }
+        } else {
+            addLog('info', 'ℹ️ Nenhum modal detectado. Usando método API...');
         }
 
         // ═══════════════════════════════════════════════════════════
-        // MÉTODO 2: API DIRETA (MAIS RÁPIDO, MENOS PERFIS POR VEZ)
-        // Se não há modal ou extração falhou
+        // MÉTODO 2: API (FALLBACK ROBUSTO)
         // ═══════════════════════════════════════════════════════════
-        addLog('info', '🔌 Usando API direta para carregar perfis...');
 
-        // Detectar o perfil atual
-        const profileResult = await chrome.tabs.sendMessage(instagramTab.id, { action: 'get_current_profile' });
-
-        if (!profileResult?.success || !profileResult?.username) {
-            throw new Error('Navegue até um perfil do Instagram primeiro');
+        // Mapear tipos para ações da API
+        let apiAction = '';
+        if (type === 'followers') apiAction = 'load_followers';
+        else if (type === 'following') apiAction = 'load_following';
+        else {
+            throw new Error(`O tipo '${type}' exige modal aberto para funcionar.`);
         }
 
-        const username = profileResult.username;
-        AppState.targetProfile = username;
-        document.getElementById('targetProfileName').textContent = '@' + username;
-
-        addLog('info', `📍 Perfil: @${username}`);
-        LoadingManager.updateProgress(0, limit, `Carregando ${type} via API...`);
-
-        // Chamar a API de carregamento
-        const actionMap = {
-            'followers': 'load_followers',
-            'following': 'load_following',
-            'likers': 'load_likers',
-            'commenters': 'load_commenters'
-        };
-
-        const action = actionMap[type] || 'load_followers';
-
-        const result = await chrome.tabs.sendMessage(instagramTab.id, {
-            action: action,
-            username: username,
-            limit: limit
+        const apiResult = await chrome.tabs.sendMessage(instagramTab.id, {
+            action: apiAction,
+            limit: limit,
+            username: AppState.targetProfile.replace('@', '') || undefined
         });
 
-        if (!result?.success) {
-            throw new Error(result?.error || 'Falha ao carregar contas');
+        if (apiResult?.success && apiResult?.accounts) {
+            const accounts = apiResult.accounts;
+            addLog('success', `✅ ${accounts.length} perfis carregados via API!`);
+            processLoadedAccounts(accounts);
+        } else {
+            throw new Error(apiResult?.error || 'Falha ao carregar via API');
         }
 
-        // Processar os resultados
-        const accounts = result.accounts || [];
+    } catch (e) {
+        console.error(e);
+        addLog('error', `❌ Erro: ${e.message}`);
+        // Tentar recuperar estado anterior se houver
+        if (AppState.accounts.length === 0) {
+            document.getElementById('tableEmptyState').style.display = 'flex';
+        }
+    } finally {
+        LoadingManager.hide();
+    }
+}
 
-        addLog('success', `✅ ${accounts.length} contas carregadas do Instagram!`);
+function processLoadedAccounts(accounts) {
+    // Processar resultados
+    AppState.accounts = accounts.map(acc => ({
+        username: (acc.username || '').replace('@', ''),
+        fullName: acc.fullName || acc.name || '',
+        profilePic: acc.avatar || '',
+        id: acc.id,
+        isPrivate: !!acc.isPrivate,
+        isVerified: !!acc.isVerified,
+        followers: acc.followers || null,
+        following: acc.following || null,
+        status: 'pending'
+    }));
 
-        // Atualizar estado
-        AppState.accounts = accounts.map(acc => ({
-            username: acc.username,
-            fullName: acc.full_name || '',
-            profilePic: acc.profile_pic_url || '',
-            followers: acc.followers || 0,
-            following: acc.following || 0,
+    // Aplicar filtros iniciais
+    AppState.filteredAccounts = [...AppState.accounts];
+    applyFilters();
+    saveState();
+} profilePic: acc.avatar || '',
+    followers: acc.followers || 0,
+        following: acc.following || 0,
             posts: acc.posts || 0,
-            isPrivate: acc.is_private || false,
-            isVerified: acc.is_verified || false,
-            followedByViewer: acc.followed_by_viewer || false,
-            followsViewer: acc.follows_viewer || false,
-            requestedByViewer: acc.requested_by_viewer || false,
-            status: acc.followed_by_viewer ? 'following' : (acc.requested_by_viewer ? 'requested' : 'none')
-        }));
+                isPrivate: acc.isPrivate || false,
+                    isVerified: acc.isVerified || false,
+                        followedByViewer: false,  // São perfis novos, você NÃO segue
+                            followsViewer: acc.followsMe || false,
+                                requestedByViewer: false,
+                                    status: 'none'  // Sem stamp - são perfis novos para seguir
+                }));
 
-        // Selecionar todas automaticamente
-        AppState.selectedAccounts.clear();
-        AppState.accounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
-
-        // Atualizar filtros e UI
-        applyFilters();
-        renderAccountsTable();
-        updateSelectedCount();
-        updateQueueStatus();
-        saveState();
-
-        // ═══════════════════════════════════════════════════════════
-        // SINCRONIZAR LEADS COM O DASHBOARD/CRM
-        // ═══════════════════════════════════════════════════════════
-        if (window.EIO_BACKEND && AppState.accounts.length > 0) {
-            addLog('info', '📤 Sincronizando leads com o dashboard...');
-            EIO_BACKEND.syncLeads(AppState.accounts, type === 'followers' ? 'seguidores' : 'seguindo')
-                .then(result => {
-                    if (result.success) {
-                        addLog('success', `☁️ ${result.synced} leads sincronizados com o CRM!`);
-                    }
-                })
-                .catch(err => console.log('Sync error:', err));
+finishLoadingAccounts(type);
+return;
+            } else {
+    addLog('warning', '⚠️ Extração do modal falhou, tentando via API...');
+}
         }
 
-        // Mostrar sucesso
-        addLog('success', `✅ ${AppState.accounts.length} leads carregados e prontos!`);
-        LoadingManager.showSuccess(AppState.accounts.length);
+// ═══════════════════════════════════════════════════════════
+// MÉTODO 2: API DIRETA (MAIS RÁPIDO, MENOS PERFIS POR VEZ)
+// Se não há modal ou extração falhou
+// ═══════════════════════════════════════════════════════════
+addLog('info', '🔌 Usando API direta para carregar perfis...');
+
+// Detectar o perfil atual
+const profileResult = await chrome.tabs.sendMessage(instagramTab.id, { action: 'get_current_profile' });
+
+if (!profileResult?.success || !profileResult?.username) {
+    throw new Error('Navegue até um perfil do Instagram primeiro');
+}
+
+const username = profileResult.username;
+AppState.targetProfile = username;
+document.getElementById('targetProfileName').textContent = '@' + username;
+
+addLog('info', `📍 Perfil: @${username}`);
+LoadingManager.updateProgress(0, limit, `Carregando ${type} via API...`);
+
+// Chamar a API de carregamento
+const actionMap = {
+    'followers': 'load_followers',
+    'following': 'load_following',
+    'likers': 'load_likers',
+    'commenters': 'load_commenters'
+};
+
+const action = actionMap[type] || 'load_followers';
+
+const result = await chrome.tabs.sendMessage(instagramTab.id, {
+    action: action,
+    username: username,
+    limit: limit
+});
+
+if (!result?.success) {
+    throw new Error(result?.error || 'Falha ao carregar contas');
+}
+
+// Processar os resultados
+const accounts = result.accounts || [];
+
+addLog('success', `✅ ${accounts.length} contas carregadas do Instagram!`);
+
+// Atualizar estado
+AppState.accounts = accounts.map(acc => ({
+    username: acc.username,
+    fullName: acc.full_name || '',
+    profilePic: acc.profile_pic_url || '',
+    followers: acc.followers || 0,
+    following: acc.following || 0,
+    posts: acc.posts || 0,
+    isPrivate: acc.is_private || false,
+    isVerified: acc.is_verified || false,
+    followedByViewer: acc.followed_by_viewer || false,
+    followsViewer: acc.follows_viewer || false,
+    requestedByViewer: acc.requested_by_viewer || false,
+    status: acc.followed_by_viewer ? 'following' : (acc.requested_by_viewer ? 'requested' : 'none')
+}));
+
+// Selecionar todas automaticamente
+AppState.selectedAccounts.clear();
+AppState.accounts.forEach(acc => AppState.selectedAccounts.add(acc.username));
+
+// Atualizar filtros e UI
+applyFilters();
+renderAccountsTable();
+updateSelectedCount();
+updateQueueStatus();
+saveState();
+
+// ═══════════════════════════════════════════════════════════
+// SINCRONIZAR LEADS COM O DASHBOARD/CRM
+// ═══════════════════════════════════════════════════════════
+if (window.EIO_BACKEND && AppState.accounts.length > 0) {
+    addLog('info', '📤 Sincronizando leads com o dashboard...');
+    EIO_BACKEND.syncLeads(AppState.accounts, type === 'followers' ? 'seguidores' : 'seguindo')
+        .then(result => {
+            if (result.success) {
+                addLog('success', `☁️ ${result.synced} leads sincronizados com o CRM!`);
+            }
+        })
+        .catch(err => console.log('Sync error:', err));
+}
+
+// Mostrar sucesso
+addLog('success', `✅ ${AppState.accounts.length} leads carregados e prontos!`);
+LoadingManager.showSuccess(AppState.accounts.length);
 
     } catch (error) {
-        console.error('Erro ao carregar do Instagram:', error);
-        addLog('error', `❌ Erro: ${error.message}`);
-        LoadingManager.hide();
-        alert('Erro ao carregar: ' + error.message);
-    }
+    console.error('Erro ao carregar do Instagram:', error);
+    addLog('error', `❌ Erro: ${error.message}`);
+    LoadingManager.hide();
+    alert('Erro ao carregar: ' + error.message);
+}
 }
 
 /**
@@ -1629,7 +1696,12 @@ function collectConfig() {
         showLikes: document.getElementById('configShowLikes')?.checked ?? true,
         showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true,
         dismissNotifications: document.getElementById('configDismissNotifications')?.checked ?? true,
-        loadLastQueue: document.getElementById('configLoadLastQueue')?.checked ?? true
+        loadLastQueue: document.getElementById('configLoadLastQueue')?.checked ?? true,
+        // DM Config
+        dmMessageTemplate: document.getElementById('dmMessageTemplate')?.value || '',
+        dmSkipPrivate: document.getElementById('dmSkipPrivate')?.checked ?? true,
+        dmSkipBusiness: document.getElementById('dmSkipBusiness')?.checked ?? false,
+        dmSkipIfChatExists: document.getElementById('dmSkipIfChatExists')?.checked ?? true
     };
 }
 
@@ -1971,6 +2043,83 @@ function initializeMediaHandlers() {
     }
 
     renderMediaQueue();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DM HANDLERS
+// ═══════════════════════════════════════════════════════════
+function initializeDMHandlers() {
+    const templateInput = document.getElementById('dmMessageTemplate');
+    const quickReplies = document.getElementById('dmQuickReplies');
+    const btnSave = document.getElementById('btnSaveDMConfig');
+    const btnTest = document.getElementById('btnTestDM');
+
+    // Load saved DM config into UI
+    if (AppState.config) {
+        if (templateInput) templateInput.value = AppState.config.dmMessageTemplate || '';
+        if (document.getElementById('dmSkipPrivate')) document.getElementById('dmSkipPrivate').checked = AppState.config.dmSkipPrivate !== false;
+        if (document.getElementById('dmSkipBusiness')) document.getElementById('dmSkipBusiness').checked = !!AppState.config.dmSkipBusiness;
+        if (document.getElementById('dmSkipIfChatExists')) document.getElementById('dmSkipIfChatExists').checked = AppState.config.dmSkipIfChatExists !== false;
+    }
+
+    // Handle Quick Replies
+    if (quickReplies && templateInput) {
+        quickReplies.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val) {
+                templateInput.value = val;
+            }
+        });
+    }
+
+    // Save Button
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            AppState.config = { ...AppState.config, ...collectConfig() };
+            saveState();
+            addLog('success', '💾 Configuração de DM salva!');
+            // Visual feedback
+            const originalText = btnSave.innerHTML;
+            btnSave.innerHTML = '✅ Salvo!';
+            setTimeout(() => { btnSave.innerHTML = originalText; }, 2000);
+        });
+    }
+
+    // Test Button
+    if (btnTest) {
+        btnTest.addEventListener('click', async () => {
+            const message = templateInput.value;
+            if (!message) {
+                alert('Digite uma mensagem primeiro.');
+                return;
+            }
+
+            addLog('info', '✉️ Enviando teste de DM para você mesmo...');
+
+            // Send test to background
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                const activeTab = tabs[0];
+                if (activeTab?.url?.includes('instagram.com')) {
+                    // Get current user to send to self
+                    chrome.tabs.sendMessage(activeTab.id, { action: 'get_current_profile' }, (response) => {
+                        const target = response?.username || 'instagram'; // Fallback
+
+                        chrome.tabs.sendMessage(activeTab.id, {
+                            action: 'execute',
+                            payload: {
+                                type: 'dm',
+                                target: target, // Send to self
+                                message: message,
+                                options: collectConfig()
+                            }
+                        });
+                    });
+                } else {
+                    alert('Abra o Instagram para testar.');
+                }
+            });
+        });
+    }
 }
 
 function renderMediaQueue() {

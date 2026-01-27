@@ -1356,7 +1356,7 @@ async function executeComment(target, payload) {
  */
 async function executeDM(target, payload) {
     const cleanTarget = target?.replace('@', '');
-    const message = payload?.message || payload?.text || '';
+    const message = payload?.message || payload?.text || payload?.options?.dmMessageTemplate || '';
 
     if (!message) {
         addConsoleLog('warning', '⚠️ Nenhuma mensagem definida para enviar');
@@ -1585,17 +1585,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             if (dialog) {
                 // Verificar se é um modal de lista (seguidores/seguindo)
-                const scrollContainer = dialog.querySelector('div[style*="overflow"]') ||
-                    dialog.querySelector('div._aano');
+                // Seletor _aano é o padrão atual, mas tentamos outros por segurança
+                const scrollContainer = dialog.querySelector('div._aano') ||
+                    dialog.querySelector('div[style*="overflow-y: auto"]') ||
+                    dialog.querySelector('div[style*="overflow-y: scroll"]') ||
+                    dialog.querySelector('div[class*="x1n2onr6"]'); // Nova classe comum em alguns layouts
 
+                // Verificar título também
+                const titleEl = dialog.querySelector('h1') || dialog.querySelector('span[style*="font-weight: 600"]');
+                const titleText = titleEl ? titleEl.textContent.toLowerCase() : '';
+
+                // Se o usuário está pedindo check, e tem um dialog com scroll, assumimos que é útil
                 if (scrollContainer) {
                     hasModal = true;
                     // Tentar detectar o tipo
-                    if (window.location.href.includes('/followers')) {
-                        modalType = 'followers';
-                    } else if (window.location.href.includes('/following')) {
+                    if (titleText.includes('seguindo') || titleText.includes('following') || window.location.href.includes('/following')) {
                         modalType = 'following';
+                    } else if (titleText.includes('curtidas') || titleText.includes('likes')) {
+                        modalType = 'likes';
+                    } else {
+                        // Default fallback (Seguidores é o mais comum)
+                        modalType = 'followers';
                     }
+                    console.log(`[E.I.O] Modal detectado: ${modalType} via ${scrollContainer ? 'container' : 'titulo'}`);
+                } else if (titleText.includes('seguidores') || titleText.includes('followers') || titleText.includes('seguindo') || titleText.includes('following')) {
+                    // Tem titulo mas scroll pode estar escondido ou diferente
+                    hasModal = true;
+                    modalType = titleText.includes('seguindo') || titleText.includes('following') ? 'following' : 'followers';
                 }
             }
 
