@@ -393,7 +393,19 @@ class LicenseManager {
         this.licenseData = data;
 
         if (typeof chrome !== 'undefined' && chrome.storage) {
-            await chrome.storage.local.set({ licenseData: data });
+            // Save in all keys expected by other modules for maximum compatibility
+            await chrome.storage.local.set({
+                licenseData: data,
+                eioLicenseData: data,
+                eioUserData: { token: data.token, user: data.userId ? { id: data.userId } : null },
+                eio_user: data.userId ? JSON.stringify({ id: data.userId }) : null,
+                extensionLicense: {
+                    validated: true,
+                    igHandle: data.instagramHandle,
+                    token: data.token,
+                    validatedAt: new Date().toISOString()
+                }
+            });
         } else {
             localStorage.setItem('eio_license', JSON.stringify(data));
         }
@@ -424,7 +436,13 @@ class LicenseManager {
      */
     async logout() {
         if (typeof chrome !== 'undefined' && chrome.storage) {
-            await chrome.storage.local.remove(['licenseData']);
+            await chrome.storage.local.remove([
+                'licenseData',
+                'eioLicenseData',
+                'eioUserData',
+                'eio_user',
+                'extensionLicense'
+            ]);
         } else {
             localStorage.removeItem('eio_license');
         }

@@ -283,16 +283,25 @@ async function saveState() {
 // AUTHENTICATION
 // ═══════════════════════════════════════════════════════════
 function checkAuthentication() {
-    chrome.storage.local.get(['extensionLicense'], (result) => {
-        if (result.extensionLicense && result.extensionLicense.validated) {
-            AppState.isAuthenticated = true;
-            AppState.currentProfile = result.extensionLicense.igHandle || '@user';
-            document.getElementById('currentProfile').textContent = AppState.currentProfile;
-            hideTermsModal();
-        } else {
-            showTermsModal();
-        }
-    });
+    if (window.licenseManager) {
+        window.licenseManager.initialize().then(isValid => {
+            if (isValid) {
+                AppState.isAuthenticated = true;
+                // Get handle from license manager
+                if (window.licenseManager.licenseData) {
+                    AppState.currentProfile = window.licenseManager.licenseData.instagramHandle ?
+                        `@${window.licenseManager.licenseData.instagramHandle}` : '@user';
+                }
+                document.getElementById('currentProfile').textContent = AppState.currentProfile;
+                hideTermsModal();
+            } else {
+                showTermsModal();
+            }
+        });
+    } else {
+        console.error('LicenseManager not loaded!');
+        showTermsModal();
+    }
 }
 
 function showTermsModal() {
@@ -310,27 +319,48 @@ document.getElementById('btnGoToLogin')?.addEventListener('click', () => {
 });
 
 document.getElementById('btnSubmitExtensionLogin')?.addEventListener('click', async () => {
-    const handle = document.getElementById('loginInstagramHandle').value.trim();
+    const handleInput = document.getElementById('loginInstagramHandle');
+    const handle = handleInput.value.trim();
+    const submitBtn = document.getElementById('btnSubmitExtensionLogin');
+
     if (!handle) {
         alert('Por favor, digite seu @');
         return;
     }
 
-    // Simulate validation (in production, would call backend)
-    AppState.isAuthenticated = true;
-    AppState.currentProfile = `@${handle.replace('@', '')}`;
+    try {
+        // Show loading state
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Verificando...';
+        submitBtn.disabled = true;
 
-    chrome.storage.local.set({
-        extensionLicense: {
-            validated: true,
-            igHandle: AppState.currentProfile,
-            validatedAt: new Date().toISOString()
+        if (!window.licenseManager) {
+            throw new Error('Sistema de licença não inicializado');
         }
-    });
 
-    document.getElementById('currentProfile').textContent = AppState.currentProfile;
-    hideTermsModal();
-    addLog('success', `Login realizado: ${AppState.currentProfile}`);
+        // Real login verification
+        const result = await window.licenseManager.loginWithHandle(handle);
+
+        if (result && result.success) {
+            AppState.isAuthenticated = true;
+            AppState.currentProfile = `@${handle.replace('@', '')}`;
+
+            document.getElementById('currentProfile').textContent = AppState.currentProfile;
+            hideTermsModal();
+            addLog('success', `Login realizado com sucesso: ${AppState.currentProfile}`);
+
+            // Reload page to ensure all states are fresh
+            setTimeout(() => window.location.reload(), 1000);
+        }
+
+    } catch (error) {
+        console.error('Login error:', error);
+        alert(error.message || 'Erro ao realizar login');
+        addLog('error', `Falha no login: ${error.message}`);
+    } finally {
+        submitBtn.textContent = 'Entrar no Sistema';
+        submitBtn.disabled = false;
+    }
 });
 
 // ═══════════════════════════════════════════════════════════
