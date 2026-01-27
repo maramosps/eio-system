@@ -17,10 +17,13 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
-    const { userId, actionType, success, metadata, error } = req.body || {};
+    const { userId, actionType, success, metadata, error, targetUsername } = req.body || {};
 
     try {
-        const result = await processAck(userId, actionType, success, metadata, error);
+        // Garantir que targetUsername esteja disponível no metadata
+        const safeMetadata = { ...metadata, targetUsername: targetUsername || metadata?.targetUsername };
+
+        const result = await processAck(userId, actionType, success, safeMetadata, error);
 
         return res.json({
             success: true,

@@ -11,7 +11,8 @@ async function processAck(userId, actionType, success, metadata, errorMessage) {
         throw new Error('UserId and ActionType are required for ACK');
     }
 
-    const { targetUsername, usedDelay } = metadata || {};
+    const targetUsername = metadata?.targetUsername || metadata?.username;
+    const usedDelay = metadata?.usedDelay;
 
     // Log da Tentativa de Execução
     await logAction(userId, actionType, {
