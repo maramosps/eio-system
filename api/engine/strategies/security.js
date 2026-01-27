@@ -1,17 +1,17 @@
 /**
- * Engine Strategy: Segurança e Anti-Ban (Versão Rígida V2)
- * Implementa delays randômicos não repetitivos e proteção máxima.
+ * Engine Strategy: Segurança e Anti-Ban (Versão Auditada V3)
+ * Implementa distribuição não-linear e evita padrões detectáveis.
  */
 
-// Delays permitidos (intervalos rigorosos)
+// Intervalos base (Min, Max)
 const DELAY_RANGES = {
-    'follow': [120000, 180000],  // 2-3 min
-    'like': [45000, 120000],     // 45-120s
-    'view_story': [60000, 180000], // >= 60s
-    'like_story': [60000, 180000], // 60-180s
-    'comment': [60000, 180000],    // 60-180s
-    'switch_profile': [120000, 180000], // 2-3 min
-    'dm_welcome': [900000, 1500000] // 15-25 min
+    'follow': [135000, 195000],  // Aumentado. Evita 120s cravado.
+    'like': [47000, 93000],      // Quebrado. Evita 45/60/90s.
+    'view_story': [65000, 145000],
+    'like_story': [72000, 158000],
+    'comment': [85000, 210000],
+    'switch_profile': [145000, 250000],
+    'dm_welcome': [950000, 1600000] // ~16-26 min
 };
 
 const RISK_LEVELS = {
@@ -21,36 +21,56 @@ const RISK_LEVELS = {
     CRITICAL: 'critical'
 };
 
-function getRandomDelay(min, max) {
+/**
+ * Gera um delay com distribuição "mais humana" (Beta distribution simplificada)
+ * Evita extremos e favorece o meio do range, mas com cauda longa.
+ */
+function getHumanizedDelay(min, max) {
     if (!min || !max) return 60000;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+
+    // Box-Muller transform for normal distribution approximation
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+
+    // Translate to 0 -> 1 range (approx)
+    num = num / 10.0 + 0.5;
+    if (num > 1 || num < 0) num = Math.random(); // Fallback to uniform if outlier
+
+    // Scale to range
+    let delay = Math.floor(min + (max - min) * num);
+
+    // Adicionar jitter final de +/- 3%
+    const jitter = Math.floor(delay * 0.03 * (Math.random() - 0.5));
+    return delay + jitter;
 }
 
 async function checkSecurity(actionType, settings, lastDelayMs) {
-    const range = DELAY_RANGES[actionType] || [60000, 120000];
-    let newDelay = getRandomDelay(range[0], range[1]);
+    const range = DELAY_RANGES[actionType] || [65000, 130000];
+    let newDelay = getHumanizedDelay(range[0], range[1]);
 
-    // Garantir que delay não seja idêntico ao anterior (variação forçada)
-    if (lastDelayMs && Math.abs(newDelay - lastDelayMs) < 5000) {
-        newDelay += 7000; // Shift de 7s se for muito parecido
+    // Anti-Pattern: Evitar números "redondos" (ex: 60000, 120000)
+    if (newDelay % 10000 === 0) newDelay += 1234;
+    if (newDelay % 5000 === 0) newDelay += 789;
+
+    // Anti-Repetição: Evitar sequências idênticas ou muito próximas
+    if (lastDelayMs) {
+        const diff = Math.abs(newDelay - lastDelayMs);
+        if (diff < 8000) {
+            newDelay += (Math.random() > 0.5 ? 9500 : -9500);
+            // Garantir que ainda está dentro do range mínimo aceitável
+            if (newDelay < range[0]) newDelay = range[0] + 2000;
+        }
     }
 
-    // Validação de risco
-    let risk = RISK_LEVELS.LOW;
-
-    // Fail-safe: Se delay calculado for menor que o minimo permitido
-    if (newDelay < range[0]) {
-        return {
-            allowed: false,
-            reason: 'Security Violation: Delay too short',
-            riskLevel: RISK_LEVELS.HIGH
-        };
-    }
+    // Fail-safe final
+    if (newDelay < 30000) newDelay = 30000;
 
     return {
         allowed: true,
         delay: newDelay,
-        riskLevel: risk,
+        riskLevel: RISK_LEVELS.LOW,
         warning: null
     };
 }
