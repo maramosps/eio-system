@@ -3395,9 +3395,21 @@ Significa muito pra nós ter você aqui ❤️</textarea>
             // Preencher @ do Instagram na seção de Contas
             const registeredInstagramEl = document.getElementById('registeredInstagramHandle');
             if (registeredInstagramEl) {
-                const handle = user.instagram_handle || localStorage.getItem('eio_instagram_handle');
-                if (handle) {
+                // Tentativa robusta de encontrar o handle
+                let handle = user.instagram_handle ||
+                    user.instagram ||
+                    user.handle ||
+                    user.username ||
+                    localStorage.getItem('eio_instagram_handle');
+
+                // Fallback para Admin se o handle estiver faltando mas o email for correto
+                if (!handle && (user.email === 'maramosps@gmail.com' || user.id === 'admin-ms')) {
+                    handle = 'msassessoriadigital';
+                }
+
+                if (handle && handle !== 'undefined' && handle !== 'null') {
                     registeredInstagramEl.textContent = handle.startsWith('@') ? handle : '@' + handle;
+                    registeredInstagramEl.style.color = '#fff'; // Resetar cor
                 } else {
                     registeredInstagramEl.textContent = '@não_cadastrado';
                     registeredInstagramEl.style.color = '#ff6b6b';
