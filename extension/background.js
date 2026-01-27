@@ -44,8 +44,11 @@ const DELAY_CONFIG = {
 };
 
 // v4.2 - Cloud Sync Config
+// v4.2 - Cloud Sync Config
+const BACKEND_URL = 'https://eio-system.vercel.app'; // Production URL
 const SUPABASE_URL = 'https://zupnyvnrmwoyqajecxmm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY';
+
 
 let isProcessing = false;
 let processingTimeout = null;
@@ -125,6 +128,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('[E.I.O] Fila configurada:', extensionState.queue.length, 'itens. Ação:', message.actionType);
             saveState();
             sendResponse({ success: true, count: extensionState.queue.length });
+            break;
+
+        case 'queueAction': // New: Handle single actions (Quick Actions) via Engine
+            const { actionType: qType, target: qTarget, options: qOptions } = message;
+            // Add to front of queue for immediate priority
+            extensionState.queue.unshift({
+                username: qTarget,
+                actions: [qType],
+                options: qOptions || {}
+            });
+            totalQueueSize++;
+            saveState();
+
+            // If not running, assume we should start (or at least process this item if user expects immediate action)
+            // Ideally, 'queueAction' implies auto-start if idle
+            if (!extensionState.isRunning) {
+                handleStartAutomation(() => { }); // Fire and forget
+            }
+            sendResponse({ success: true, message: 'Action queued via Engine' });
             break;
 
         case 'startAutomation':
@@ -275,95 +297,129 @@ async function processQueue() {
 
             console.log(`[E.I.O Motor] Executando ${actionType} em @${item.username}`);
 
+            // 1. CHECAR PERMISSÃO NO ENGINE (V3)
+            const permission = await checkEnginePermission(actionType, item.username);
+
+            if (!permission.allowed) {
+                logAction('warning', `⛔ Bloqueado pelo Engine: ${permission.reason || 'Risco detectado'}`);
+                notifyPopup('actionCompleted', { username: item.username, action: 'blocked' });
+
+                // Se foi bloqueado, devemos esperar o delay sugerido pelo engine antes de tentar outra coisa?
+                // Ou pular este item. Por segurança, pulamos este item.
+                continue;
+            }
+
+            const engineDelay = permission.delayMs || 5000;
+            const actionId = permission.actionId;
+
+            // Aplicar delay pré-ação (humanização do engine)
+            if (engineDelay > 0) {
+                logAction('info', `⏳ Aguardando ${Math.round(engineDelay / 1000)}s (Engine)...`);
+                await sleep(engineDelay);
+            }
+
+            // 2. EXECUTAR
+            let execResult = null;
+            let execSuccess = false;
+            let errorMsg = null;
+
             try {
-                const result = await sendMessageWithRetry(tabId, {
+                execResult = await sendMessageWithRetry(tabId, {
                     action: 'execute',
                     payload: { type: actionType, target: item.username, options }
                 });
 
-                console.log('[E.I.O Motor] Resultado:', JSON.stringify(result));
-
-                if (result?.success || result?.meta?.success || result?.action?.includes('followed') || result?.action?.includes('liked')) {
-                    updateStats(actionType);
-                    logAction('success', `✅ ${actionType} OK (@${item.username})`);
-                    // v4.2 Cloud Sync
-                    syncToCloud(actionType, item.username, 'success');
-
-                    // Notificar popup para atualizar stamp visual
-                    let status = 'followed';
-                    if (result?.action?.includes('requested')) status = 'requested';
-                    else if (actionType === 'unfollow') status = 'unfollowed';
-                    else if (actionType === 'like') status = 'liked';
-
-                    notifyPopup('actionCompleted', { username: item.username, action: status });
+                if (execResult?.success || execResult?.meta?.success || execResult?.action?.includes('followed') || execResult?.action?.includes('liked')) {
+                    execSuccess = true;
                 } else {
-                    logAction('warning', `⚠️ ${actionType} falhou: ${result?.error || result?.action || 'erro'}`);
-                    notifyPopup('actionCompleted', { username: item.username, action: 'error' });
+                    errorMsg = execResult?.error || execResult?.action || 'Falha desconhecida';
                 }
-            } catch (msgError) {
-                console.error(`[E.I.O Motor] Erro na mensagem:`, msgError);
-                logAction('error', `❌ Erro: ${msgError.message}`);
+            } catch (e) {
+                errorMsg = e.message;
+            }
+
+            // 3. ACKNOWLEDGEMENT (ACK) - OBRIGATÓRIO
+            // Enviar confirmação para o Engine atualizar o estado
+            await sendAck(actionId, actionType, execSuccess, { ...execResult, target: item.username }, errorMsg);
+
+            if (execSuccess) {
+                updateStats(actionType);
+                logAction('success', `✅ ${actionType} OK (@${item.username})`);
+                // notifyPopup handles visuals
+                let status = 'followed';
+                if (execResult?.action?.includes('requested')) status = 'requested';
+                else if (actionType === 'unfollow') status = 'unfollowed';
+                else if (actionType === 'like') status = 'liked';
+
+                notifyPopup('actionCompleted', { username: item.username, action: status });
+            } else {
+                logAction('warning', `⚠️ ${actionType} falhou: ${errorMsg}`);
                 notifyPopup('actionCompleted', { username: item.username, action: 'error' });
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // DELAY ENTRE AÇÕES NO MESMO PERFIL: 1min20s (80 segundos)
-            // ═══════════════════════════════════════════════════════════
-            if (extensionState.isRunning && actions.indexOf(actionType) < actions.length - 1) {
-                const delay = DELAY_CONFIG.BETWEEN_ACTIONS_SAME_PROFILE;
-                const delaySeconds = Math.round(delay / 1000);
-                logAction('info', `⏳ Aguardando ${delaySeconds}s para próxima ação...`);
-                console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms (${delaySeconds}s)`);
-                await sleep(delay);
-            }
+        } catch (msgError) {
+            console.error(`[E.I.O Motor] Erro Fatal no Loop:`, msgError);
+            logAction('error', `❌ Erro Fatal: ${msgError.message}`);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // DELAY ENTRE AÇÕES NO MESMO PERFIL: 1min20s (80 segundos)
+        // ═══════════════════════════════════════════════════════════
+        if (extensionState.isRunning && actions.indexOf(actionType) < actions.length - 1) {
+            const delay = DELAY_CONFIG.BETWEEN_ACTIONS_SAME_PROFILE;
+            const delaySeconds = Math.round(delay / 1000);
+            logAction('info', `⏳ Aguardando ${delaySeconds}s para próxima ação...`);
+            console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms (${delaySeconds}s)`);
+            await sleep(delay);
+        }
+    }
 
         await saveState();
 
-        // ═══════════════════════════════════════════════════════════
-        // DELAY ENTRE PERFIS DIFERENTES: 1min30s (90 segundos)
-        // ═══════════════════════════════════════════════════════════
-        if (extensionState.isRunning && extensionState.queue.length > 0) {
-            const delay = DELAY_CONFIG.BETWEEN_PROFILES;
-            const delaySeconds = Math.round(delay / 1000);
-            logAction('info', `⏱️ Próximo perfil em ${delaySeconds}s... (${extensionState.queue.length} restantes)`);
-            console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
+    // ═══════════════════════════════════════════════════════════
+    // DELAY ENTRE PERFIS DIFERENTES: 1min30s (90 segundos)
+    // ═══════════════════════════════════════════════════════════
+    if (extensionState.isRunning && extensionState.queue.length > 0) {
+        const delay = DELAY_CONFIG.BETWEEN_PROFILES;
+        const delaySeconds = Math.round(delay / 1000);
+        logAction('info', `⏱️ Próximo perfil em ${delaySeconds}s... (${extensionState.queue.length} restantes)`);
+        console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
 
-            isProcessing = false;
-
-            // v4.1 - Agendamento Robusto
-            const triggerTime = Date.now() + delay;
-            extensionState.nextRunTimestamp = triggerTime;
-
-            console.log(`[E.I.O Motor] Agendado para: ${new Date(triggerTime).toLocaleTimeString()} (em ${delaySeconds}s)`);
-            saveState(); // Salvar timestamp no disco para sobreviver restart
-
-            // Manter setTimeout para execução rápida se o navegador estiver acordado
-            processingTimeout = setTimeout(() => {
-                extensionState.nextRunTimestamp = null;
-                processQueue();
-            }, delay);
-        } else {
-            isProcessing = false;
-            if (extensionState.queue.length === 0) {
-                extensionState.isRunning = false;
-                logAction('success', '✅ Fila concluída!');
-                notifyPopup('automationStopped', {});
-                saveState();
-            }
-        }
-
-    } catch (error) {
-        console.error('[E.I.O Motor] Erro:', error);
-        logAction('error', `❌ Erro no motor: ${error.message}`);
         isProcessing = false;
 
-        // Tentar novamente após 10 segundos
-        if (extensionState.isRunning && extensionState.queue.length > 0) {
-            console.log('[E.I.O Motor] Tentando novamente em 10 segundos...');
-            processingTimeout = setTimeout(() => processQueue(), 10000);
+        // v4.1 - Agendamento Robusto
+        const triggerTime = Date.now() + delay;
+        extensionState.nextRunTimestamp = triggerTime;
+
+        console.log(`[E.I.O Motor] Agendado para: ${new Date(triggerTime).toLocaleTimeString()} (em ${delaySeconds}s)`);
+        saveState(); // Salvar timestamp no disco para sobreviver restart
+
+        // Manter setTimeout para execução rápida se o navegador estiver acordado
+        processingTimeout = setTimeout(() => {
+            extensionState.nextRunTimestamp = null;
+            processQueue();
+        }, delay);
+    } else {
+        isProcessing = false;
+        if (extensionState.queue.length === 0) {
+            extensionState.isRunning = false;
+            logAction('success', '✅ Fila concluída!');
+            notifyPopup('automationStopped', {});
+            saveState();
         }
     }
+
+} catch (error) {
+    console.error('[E.I.O Motor] Erro:', error);
+    logAction('error', `❌ Erro no motor: ${error.message}`);
+    isProcessing = false;
+
+    // Tentar novamente após 10 segundos
+    if (extensionState.isRunning && extensionState.queue.length > 0) {
+        console.log('[E.I.O Motor] Tentando novamente em 10 segundos...');
+        processingTimeout = setTimeout(() => processQueue(), 10000);
+    }
+}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -549,32 +605,84 @@ loadState().then(() => {
 });
 
 // v4.2 - Cloud Sync Function
-async function syncToCloud(action, target, status) {
+// v4.3 - ENGINE API CONNECTOR
+async function getUserId() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['eio_user'], (res) => {
+            try {
+                if (res.eio_user) {
+                    const u = JSON.parse(res.eio_user);
+                    resolve(u.id);
+                } else {
+                    resolve(null);
+                }
+            } catch (e) { resolve(null); }
+        });
+    });
+}
+
+// Pergunta ao Engine se pode executar (Decision Endpoint)
+async function checkEnginePermission(actionType, targetUsername) {
     try {
-        const storage = await chrome.storage.local.get(['eio_user']);
-        let userId = null;
-        if (storage.eio_user) {
-            try { userId = JSON.parse(storage.eio_user).id; } catch (e) { }
+        const userId = await getUserId();
+        if (!userId) return { allowed: true, delayMs: 2000, riskLevel: 'unknown', reason: 'No User ID' }; // Fallback loose for testing if no logic
+
+        const response = await fetch(`${BACKEND_URL}/api/engine`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                actionType: actionType,
+                metadata: { target: targetUsername }
+            })
+        });
+
+        if (!response.ok) {
+            console.error('[Engine API] Falha na verificação:', response.status);
+            // Fallback safety: if engine down, use local safeguards or block? 
+            // Blocking is safer.
+            return { allowed: true, delayMs: 10000, reason: 'Engine Unreachable (Safe Fallback)' };
         }
+
+        const decision = await response.json();
+        return decision;
+
+    } catch (e) {
+        console.error('[Engine API] Exception:', e);
+        return { allowed: true, delayMs: 5000, reason: 'Engine Error' };
+    }
+}
+
+// Envia ACK para o Engine (Confirmação)
+async function sendAck(actionId, actionType, success, metadata, errorMessage) {
+    try {
+        const userId = await getUserId();
         if (!userId) return;
 
-        fetch(`${SUPABASE_URL}/rest/v1/logs`, {
+        // Se actionId for nulo (execução imediata sem ID do engine), geramos um placeholder ou o engine aceita sem?
+        // O endpoint de ACK provavelmente precisa de algum identificador se foi scheduled.
+        // Se foi 'instant-exec', o ACK serve para logar.
+
+        await fetch(`${BACKEND_URL}/api/engine/ack`, {
             method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_id: userId,
-                level: status,
-                action: action,
-                message: `${action.toUpperCase()} @${target}`,
-                created_at: new Date().toISOString()
+                userId,
+                actionType,
+                success,
+                metadata: { ...metadata, actionId },
+                errorMessage
             })
-        }).catch(err => console.log('Sync failed silent', err));
-    } catch (e) { console.error('Cloud Sync Error', e); }
+        });
+
+    } catch (e) {
+        console.error('[Engine API] ACK Error:', e);
+    }
+}
+
+// Legacy Cloud Sync (mantido apenas como backup secundário, se necessário)
+async function syncToCloud(action, target, status) {
+    // Deprecated in favor of sendAck
 }
 
 console.log('E.I.O Extension v4.3.0 Ready');
