@@ -345,7 +345,6 @@ async function processQueue() {
             if (execSuccess) {
                 updateStats(actionType);
                 logAction('success', `✅ ${actionType} OK (@${item.username})`);
-                // notifyPopup handles visuals
                 let status = 'followed';
                 if (execResult?.action?.includes('requested')) status = 'requested';
                 else if (actionType === 'unfollow') status = 'unfollowed';
@@ -357,69 +356,57 @@ async function processQueue() {
                 notifyPopup('actionCompleted', { username: item.username, action: 'error' });
             }
 
-        } catch (msgError) {
-            console.error(`[E.I.O Motor] Erro Fatal no Loop:`, msgError);
-            logAction('error', `❌ Erro Fatal: ${msgError.message}`);
+            // DELAY ENTRE AÇÕES NO MESMO PERFIL: 1min20s (80 segundos)
+            if (extensionState.isRunning && actions.indexOf(actionType) < actions.length - 1) {
+                const delay = DELAY_CONFIG.BETWEEN_ACTIONS_SAME_PROFILE;
+                const delaySeconds = Math.round(delay / 1000);
+                logAction('info', `⏳ Aguardando ${delaySeconds}s para próxima ação...`);
+                console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms (${delaySeconds}s)`);
+                await sleep(delay);
+            }
         }
-
-        // ═══════════════════════════════════════════════════════════
-        // DELAY ENTRE AÇÕES NO MESMO PERFIL: 1min20s (80 segundos)
-        // ═══════════════════════════════════════════════════════════
-        if (extensionState.isRunning && actions.indexOf(actionType) < actions.length - 1) {
-            const delay = DELAY_CONFIG.BETWEEN_ACTIONS_SAME_PROFILE;
-            const delaySeconds = Math.round(delay / 1000);
-            logAction('info', `⏳ Aguardando ${delaySeconds}s para próxima ação...`);
-            console.log(`[E.I.O Motor] Delay entre ações: ${delay}ms (${delaySeconds}s)`);
-            await sleep(delay);
-        }
-    }
 
         await saveState();
 
-    // ═══════════════════════════════════════════════════════════
-    // DELAY ENTRE PERFIS DIFERENTES: 1min30s (90 segundos)
-    // ═══════════════════════════════════════════════════════════
-    if (extensionState.isRunning && extensionState.queue.length > 0) {
-        const delay = DELAY_CONFIG.BETWEEN_PROFILES;
-        const delaySeconds = Math.round(delay / 1000);
-        logAction('info', `⏱️ Próximo perfil em ${delaySeconds}s... (${extensionState.queue.length} restantes)`);
-        console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
+        // DELAY ENTRE PERFIS DIFERENTES: 1min30s (90 segundos)
+        if (extensionState.isRunning && extensionState.queue.length > 0) {
+            const delay = DELAY_CONFIG.BETWEEN_PROFILES;
+            const delaySeconds = Math.round(delay / 1000);
+            logAction('info', `⏱️ Próximo perfil em ${delaySeconds}s... (${extensionState.queue.length} restantes)`);
+            console.log(`[E.I.O Motor] Agendando próximo perfil em ${delay}ms (${delaySeconds}s)`);
 
-        isProcessing = false;
+            isProcessing = false;
 
-        // v4.1 - Agendamento Robusto
-        const triggerTime = Date.now() + delay;
-        extensionState.nextRunTimestamp = triggerTime;
+            const triggerTime = Date.now() + delay;
+            extensionState.nextRunTimestamp = triggerTime;
 
-        console.log(`[E.I.O Motor] Agendado para: ${new Date(triggerTime).toLocaleTimeString()} (em ${delaySeconds}s)`);
-        saveState(); // Salvar timestamp no disco para sobreviver restart
-
-        // Manter setTimeout para execução rápida se o navegador estiver acordado
-        processingTimeout = setTimeout(() => {
-            extensionState.nextRunTimestamp = null;
-            processQueue();
-        }, delay);
-    } else {
-        isProcessing = false;
-        if (extensionState.queue.length === 0) {
-            extensionState.isRunning = false;
-            logAction('success', '✅ Fila concluída!');
-            notifyPopup('automationStopped', {});
+            console.log(`[E.I.O Motor] Agendado para: ${new Date(triggerTime).toLocaleTimeString()} (em ${delaySeconds}s)`);
             saveState();
+
+            processingTimeout = setTimeout(() => {
+                extensionState.nextRunTimestamp = null;
+                processQueue();
+            }, delay);
+        } else {
+            isProcessing = false;
+            if (extensionState.queue.length === 0) {
+                extensionState.isRunning = false;
+                logAction('success', '✅ Fila concluída!');
+                notifyPopup('automationStopped', {});
+                saveState();
+            }
+        }
+
+    } catch (error) {
+        console.error('[E.I.O Motor] Erro:', error);
+        logAction('error', `❌ Erro no motor: ${error.message}`);
+        isProcessing = false;
+
+        if (extensionState.isRunning && extensionState.queue.length > 0) {
+            console.log('[E.I.O Motor] Tentando novamente em 10 segundos...');
+            processingTimeout = setTimeout(() => processQueue(), 10000);
         }
     }
-
-} catch (error) {
-    console.error('[E.I.O Motor] Erro:', error);
-    logAction('error', `❌ Erro no motor: ${error.message}`);
-    isProcessing = false;
-
-    // Tentar novamente após 10 segundos
-    if (extensionState.isRunning && extensionState.queue.length > 0) {
-        console.log('[E.I.O Motor] Tentando novamente em 10 segundos...');
-        processingTimeout = setTimeout(() => processQueue(), 10000);
-    }
-}
 }
 
 // ═══════════════════════════════════════════════════════════
