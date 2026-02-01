@@ -90,10 +90,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Listen for messages from background
     chrome.runtime.onMessage.addListener((message) => {
-        // Extraction progress
+        // Extraction progress (NOVO OVERLAY)
         if (message.action === 'extraction_progress') {
-            const limit = parseInt(document.getElementById('queueLimit')?.value) || 100;
-            LoadingManager.updateProgress(message.count, limit, `Capturando ${message.type}...`);
+            const limit = message.total || parseInt(document.getElementById('queueLimit')?.value) || 100;
+            const count = message.count || 0;
+
+            // Mostrar overlay se não estiver visível
+            if (document.getElementById('extractionLoadingOverlay').style.display === 'none') {
+                document.getElementById('extractionLoadingOverlay').style.display = 'flex';
+                document.getElementById('loadingTitle').textContent = `Extraindo ${message.type === 'followers' ? 'Seguidores' : 'Contas'}...`;
+            }
+
+            // Atualizar barra
+            const percent = Math.min(100, Math.round((count / limit) * 100));
+            document.getElementById('loadingProgressBar').style.width = `${percent}%`;
+            document.getElementById('loadingCount').textContent = count;
+            document.getElementById('loadingTotal').textContent = limit;
+            document.getElementById('loadingStatusText').textContent = `Coletando perfis (${count} de ${limit})...`;
+
+            if (message.completed) {
+                document.getElementById('loadingStatusText').textContent = 'Finalizando...';
+                setTimeout(() => {
+                    document.getElementById('extractionLoadingOverlay').style.display = 'none';
+                }, 1000);
+            }
         }
 
         // Progress update (X/Y em execução)
@@ -2231,3 +2251,10 @@ function initializeLoginHandlers() {
         };
     }
 }
+
+// Cancelar extração
+document.getElementById('cancelExtractionBtn')?.addEventListener('click', () => {
+    document.getElementById('extractionLoadingOverlay').style.display = 'none';
+    addLog('warning', 'Extração cancelada pelo usuário.');
+});
+

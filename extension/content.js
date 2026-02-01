@@ -850,10 +850,9 @@ async function runExtractionFlow(payload) {
 
     addConsoleLog('success', `🎯 Lista de ${listLabel} pronta. Iniciando captura...`);
 
-    let lastLeadCount = 0;
-    let idleCount = 0;
+    let idleCount = 0; // Contador para detectar fim da lista ou travamento
 
-    for (let scrollStep = 0; scrollStep < 100; scrollStep++) {
+    for (let scrollStep = 0; scrollStep < 1000; scrollStep++) { // Aumentar o limite de passos para garantir que a lista seja percorrida
         const items = scrollContainer.querySelectorAll('div[role="button"], li, div._aacl');
         let newFound = 0;
 
@@ -868,15 +867,6 @@ async function runExtractionFlow(payload) {
 
             const cleanUsername = `@${username}`;
             if (leads.find(l => l.username === cleanUsername)) continue;
-
-            // Enviar progresso a cada 10 novos perfis para não sobrecarregar
-            if (leads.length % 10 === 0) {
-                chrome.runtime.sendMessage({
-                    action: 'extraction_progress',
-                    count: leads.length,
-                    type: extractType
-                }).catch(() => { }); // Ignorar se o popup estiver fechado
-            }
 
             // Extrair nome - geralmente está em spans dentro do link
             const nameSpans = item.querySelectorAll('span');
@@ -1000,41 +990,78 @@ async function runExtractionFlow(payload) {
                 status: 'none'
             });
 
+            // -------------------------------------------------------------------------
+            // NOVA LÓGICA DE CONTROLE DE LOOP
+            // O check 'if (leads.find...)' acima já garante unicidade.
+            // Aqui garantimos que contamos novos itens para controle de fluxo.
+            // -------------------------------------------------------------------------
             newFound++;
-            if (leads.length >= limit) break;
         }
 
-        if (leads.length >= limit) break;
+        // Atualizar contagens
+        const total = leads.length;
 
-        // SCROLL MAIS AGRESSIVO
-        if (scrollContainer) {
-            scrollContainer.scrollTop += 800;
-            // Ás vezes o Instagram carrega placeholders, esperar mais
-            await randomDelay(800, 1500);
+        // Enviar progresso SEMPRE a cada bloco processado
+        chrome.runtime.sendMessage({
+            action: 'extraction_progress',
+            count: total,
+            total: limit, // Enviar meta também
+            type: extractType
+        }).catch(() => { });
 
-            if (newFound === 0) {
-                idleCount++;
-                // Tente scrolar um pouco para cima e para baixo para destravar
-                if (idleCount > 5) {
-                    scrollContainer.scrollTop -= 200;
-                    await randomDelay(500, 1000);
-                    scrollContainer.scrollTop += 500;
-                }
-            } else {
-                idleCount = 0;
-            }
-        }
+        addConsoleLog('info', `📊 Progresso: ${total}/${limit} leads coletados (${newFound} novos neste scroll)`);
 
-        if (idleCount > 15) {
-            addConsoleLog('warning', `⚠️ Parando scroll: Sem novos itens por 15 tentativas. (Total: ${leads.length})`);
+        // Verificar meta atingida
+        if (total >= limit) {
+            addConsoleLog('success', `✅ Meta alcançada: ${limit} perfis!`);
             break;
         }
+
+        // SCROLL MAIS RÁPIDO PARA PRÓXIMO LOTE
+        const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        const currentScroll = scrollContainer.scrollTop;
+
+        if (currentScroll >= maxScroll - 50 && newFound === 0) {
+            idleCount++;
+            addConsoleLog('warning', `⚠️ Sem novos itens. Tentativa ${idleCount}/5...`);
+
+            // Tentar um "shake" no scroll para acordar o Instagram
+            scrollContainer.scrollTo(0, maxScroll - 100);
+            await new Promise(r => setTimeout(r, 300));
+            scrollContainer.scrollTo(0, maxScroll);
+        } else {
+            idleCount = 0; // Resetar contador se encontrou itens
+        }
+
+        if (idleCount >= 5) {
+            addConsoleLog('warning', '⚠️ Fim da lista detectado ou carregamento travado.');
+            break;
+        }
+
+        // Scroll principal - RÁPIDO
+        scrollContainer.scrollTo(0, scrollContainer.scrollHeight);
+
+        // Esperar carregamento - Tempo otimizado
+        await new Promise(r => setTimeout(r, 800));
     }
 
-    addConsoleLog('success', `✅ Extração finalizada: ${leads.length} contas coletadas.`);
-    return leads;
-}
+    addConsoleLog('success', `🎉 Extração concluída! Total: ${leads.length} leads.`);
 
+    // Garantir envio final
+    chrome.runtime.sendMessage({
+        action: 'extraction_progress',
+        count: leads.length,
+        total: leads.length,
+        type: extractType,
+        completed: true
+    }).catch(() => { });
+
+    return {
+        success: true,
+        data: leads,
+        count: leads.length
+    };
+}
 /**
  * Executar ações no Instagram
  */
