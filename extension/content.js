@@ -114,8 +114,15 @@ function detectUserIdFromPage() {
  */
 function getCurrentProfileUsername() {
     const path = window.location.pathname;
-    const match = path.match(/^\/([^\/]+)\/?$/);
-    if (match && match[1] && !['explore', 'direct', 'accounts', 'p', 'reel', 'stories'].includes(match[1])) {
+    // Pega o primeiro segmento após a barra inicial (ex: /usuario/followers -> usuario)
+    const match = path.match(/^\/([^\/]+)/);
+
+    // Lista de rotas reservadas que NÃO são perfis
+    const ignoredRoutes = [
+        'explore', 'direct', 'accounts', 'p', 'reel', 'reels', 'stories', 'create', 'settings', 'your_activity'
+    ];
+
+    if (match && match[1] && !ignoredRoutes.includes(match[1])) {
         return match[1];
     }
     return null;
