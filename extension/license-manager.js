@@ -97,13 +97,30 @@ class LicenseManager {
                 throw new Error('Instagram @ é obrigatório');
             }
 
+            console.log(`[LicenseManager] Tentando login com handle: ${handle}`);
+
             const response = await fetch(`${LICENSE_CONFIG.API_URL}/api/v1/auth/instagram-login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ instagram_handle: handle })
             });
 
-            const data = await response.json();
+            // Verificar se a resposta é JSON válida
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('[LicenseManager] Resposta não é JSON:', contentType);
+                const textResponse = await response.text();
+                console.error('[LicenseManager] Conteúdo da resposta:', textResponse.substring(0, 200));
+                throw new Error('Servidor retornou resposta inválida. Tente novamente em alguns instantes.');
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('[LicenseManager] Erro ao parsear JSON:', jsonError);
+                throw new Error('Erro ao processar resposta do servidor. Tente novamente.');
+            }
 
             if (!response.ok) {
                 let errorMessage = data.message || 'Erro ao fazer login';

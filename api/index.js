@@ -24,10 +24,11 @@ module.exports = async (req, res) => {
     const pathFromQuery = query?.path || '';
     const path = `/api/${pathFromQuery}`.replace(/\/+$/, ''); // Remove trailing slashes
 
-    // CORS
+    // CORS e Content-Type
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Content-Type', 'application/json'); // Sempre JSON
 
     if (method === 'OPTIONS') {
         return res.status(200).end();
