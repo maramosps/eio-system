@@ -2,7 +2,23 @@
     "version": 2,
     "builds": [
         {
-            "src": "api/**/*.js",
+            "src": "api/index.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/engine/index.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/engine/ack.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/engine/schedule.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/engine/tasks.js",
             "use": "@vercel/node"
         },
         {
@@ -18,6 +34,14 @@
         {
             "src": "/api/engine/ack",
             "dest": "/api/engine/ack.js"
+        },
+        {
+            "src": "/api/engine/schedule",
+            "dest": "/api/engine/schedule.js"
+        },
+        {
+            "src": "/api/engine/tasks",
+            "dest": "/api/engine/tasks.js"
         },
         {
             "src": "/api/engine/(.*)",
