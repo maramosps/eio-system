@@ -1645,6 +1645,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ hasModal, modalType });
             return true;
 
+        case 'execute_extraction':
+            // 🔥 CORREÇÃO CRÍTICA: Listener para extração que estava faltando
+            (async () => {
+                try {
+                    console.log('[E.I.O] Recebido comando execute_extraction:', message.payload);
+                    const result = await runExtractionFlow(message.payload);
+                    sendResponse(result);
+                } catch (error) {
+                    console.error('[E.I.O] Erro na extração:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true;
+
         case 'load_followers':
             (async () => {
                 const username = message.username || getCurrentProfileUsername();

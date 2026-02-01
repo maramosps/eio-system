@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "E.I.O System",
   "version": "4.4.3",
-  "description": "Engajamento Inteligente Orgânico - Sistema profissional (Build 2026.02.01)",
+  "description": "Engajamento Inteligente Orgânico - Sistema profissional (Build 2026.02.01-v3 - FIX CRÍTICO)",
   "permissions": [
     "activeTab",
     "tabs",
