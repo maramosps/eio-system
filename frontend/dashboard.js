@@ -464,8 +464,8 @@ async function initExtensionDownload() {
     const extensionVersion = document.getElementById('extensionVersion');
 
     // Set default values based on the latest package
-    if (extensionSize) extensionSize.textContent = '1.7 MB (Faster)';
-    if (extensionVersion) extensionVersion.textContent = '4.4.3 (E.I.O Speed Update)';
+    if (extensionSize) extensionSize.textContent = '1.7 MB';
+    if (extensionVersion) extensionVersion.textContent = '4.4.3 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
