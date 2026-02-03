@@ -716,6 +716,7 @@ function imageToBase64(imgElement) {
 
 /**
  * Obter dados detalhados do perfil atual
+ * Safe version with robust error handling
  */
 function getDetailedProfileInfo() {
     const info = {
@@ -739,62 +740,95 @@ function getDetailedProfileInfo() {
         // Username from URL
         const pathParts = window.location.pathname.split('/').filter(p => p);
         info.username = pathParts[0] ? `@${pathParts[0]}` : '';
+    } catch (e) {
+        console.log('[E.I.O] Error extracting username from URL:', e.message);
+    }
 
+    try {
         // Header section
         const header = document.querySelector('header section');
         if (header) {
-            // Full Name
-            const nameEl = header.querySelector('span[style*="font-weight"]') || header.querySelector('h2');
-            if (nameEl) info.fullName = nameEl.textContent.trim();
+            try {
+                // Full Name
+                const nameEl = header.querySelector('span[style*="font-weight"]') || header.querySelector('h2');
+                if (nameEl) info.fullName = nameEl.textContent?.trim() || '';
+            } catch (e) { /* ignore */ }
 
-            // Avatar
-            const avatarEl = document.querySelector('header img');
-            if (avatarEl) info.avatar = avatarEl.src;
+            try {
+                // Avatar
+                const avatarEl = document.querySelector('header img');
+                if (avatarEl && avatarEl.src) info.avatar = avatarEl.src;
+            } catch (e) { /* ignore */ }
 
-            // Stats (posts, followers, following)
-            const statsEls = document.querySelectorAll('header section ul li');
-            if (statsEls.length >= 3) {
-                info.posts = parseCount(statsEls[0].textContent);
-                info.followers = parseCount(statsEls[1].textContent);
-                info.following = parseCount(statsEls[2].textContent);
+            try {
+                // Stats (posts, followers, following)
+                const statsEls = document.querySelectorAll('header section ul li');
+                if (statsEls && statsEls.length >= 3) {
+                    info.posts = parseCount(statsEls[0]?.textContent);
+                    info.followers = parseCount(statsEls[1]?.textContent);
+                    info.following = parseCount(statsEls[2]?.textContent);
 
-                if (info.followers && info.following) {
-                    info.ratio = parseFloat((info.followers / info.following).toFixed(2));
+                    if (info.followers && info.following && info.following > 0) {
+                        info.ratio = parseFloat((info.followers / info.following).toFixed(2));
+                    }
                 }
-            }
+            } catch (e) { /* ignore */ }
 
-            // Bio
-            const bioSection = header.querySelector('div > span');
-            if (bioSection) info.bio = bioSection.textContent.trim();
+            try {
+                // Bio
+                const bioSection = header.querySelector('div > span');
+                if (bioSection) info.bio = bioSection.textContent?.trim() || '';
+            } catch (e) { /* ignore */ }
 
-            // Verified badge
-            info.isVerified = !!header.querySelector('svg[aria-label="Verified"]');
+            try {
+                // Verified badge
+                info.isVerified = !!header.querySelector('svg[aria-label="Verified"]');
+            } catch (e) { /* ignore */ }
 
-            // Private account
-            info.isPrivate = !!document.querySelector('h2:contains("This Account is Private")') ||
-                document.body.innerText.includes('Esta conta é privada');
+            try {
+                // Private account check - avoid using :contains() which is not standard
+                const bodyText = document.body?.innerText || '';
+                info.isPrivate = bodyText.includes('This Account is Private') || bodyText.includes('Esta conta é privada');
+            } catch (e) { /* ignore */ }
 
-            // Follow button state
-            const followBtn = header.querySelector('button');
-            if (followBtn) {
-                const btnText = followBtn.textContent.toLowerCase();
-                info.followedByMe = btnText.includes('seguindo') || btnText.includes('following');
-            }
+            try {
+                // Follow button state
+                const followBtn = header.querySelector('button');
+                if (followBtn) {
+                    const btnText = (followBtn.textContent || '').toLowerCase();
+                    info.followedByMe = btnText.includes('seguindo') || btnText.includes('following');
+                }
+            } catch (e) { /* ignore */ }
 
-            // Follows me (mutual)
-            const followsText = document.body.innerText;
-            info.followsMe = followsText.includes('Segue você') || followsText.includes('Follows you');
+            try {
+                // Follows me (mutual)
+                const bodyText = document.body?.innerText || '';
+                info.followsMe = bodyText.includes('Segue você') || bodyText.includes('Follows you');
+            } catch (e) { /* ignore */ }
 
-            // External URL
-            const linkEl = header.querySelector('a[href*="l.instagram.com"]');
-            if (linkEl) info.externalUrl = linkEl.href;
+            try {
+                // External URL
+                const linkEl = header.querySelector('a[href*="l.instagram.com"]');
+                if (linkEl && linkEl.href) info.externalUrl = linkEl.href;
+            } catch (e) { /* ignore */ }
 
-            // Business category
-            const categoryEl = header.querySelector('div[style*="color: rgb(142, 142, 142)"]');
-            if (categoryEl) info.businessCategory = categoryEl.textContent.trim();
+            try {
+                // Business category - use safer selector
+                const allDivs = header.querySelectorAll('div');
+                for (const div of allDivs) {
+                    const style = div.getAttribute('style') || '';
+                    if (style.includes('color: rgb(142, 142, 142)') || style.includes('color:rgb(142, 142, 142)')) {
+                        const text = div.textContent?.trim();
+                        if (text && text.length < 50) {
+                            info.businessCategory = text;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) { /* ignore */ }
         }
     } catch (e) {
-        console.error('Error getting profile info:', e);
+        console.log('[E.I.O] Error getting profile info (outer):', e.message);
     }
 
     return info;
@@ -824,24 +858,60 @@ async function runExtractionFlow(payload) {
 
     addConsoleLog('info', `🚀 Iniciando extração de ${listLabel} (Limite: ${limit})...`);
 
-    // Localizar o Container de Scroll
+    // Localizar o Container de Scroll - Múltiplos métodos de fallback
     let scrollContainer = null;
     const dialog = document.querySelector('div[role="dialog"]');
 
     if (dialog) {
-        addConsoleLog('info', 'Janela detectada...');
-        const allDivs = dialog.querySelectorAll('div');
-        for (const div of allDivs) {
-            if (div.scrollHeight > div.clientHeight + 5) {
-                const style = window.getComputedStyle(div);
-                if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-                    scrollContainer = div;
+        addConsoleLog('info', '🔍 Janela modal detectada. Buscando container de scroll...');
+
+        // Método 1: Buscar por classe conhecida _aano (padrão atual do Instagram)
+        scrollContainer = dialog.querySelector('div._aano');
+
+        // Método 2: Buscar divs com scroll ativo
+        if (!scrollContainer) {
+            const allDivs = dialog.querySelectorAll('div');
+            for (const div of allDivs) {
+                // Verificar se tem conteúdo scrollável
+                if (div.scrollHeight > div.clientHeight + 10) {
+                    const style = window.getComputedStyle(div);
+                    const overflowY = style.overflowY || style.overflow;
+                    if (overflowY === 'auto' || overflowY === 'scroll') {
+                        // Verificar se contém links de perfil (indica lista de usuários)
+                        const hasProfileLinks = div.querySelectorAll('a[href^="/"]').length > 3;
+                        if (hasProfileLinks) {
+                            scrollContainer = div;
+                            addConsoleLog('success', '✅ Container encontrado via detecção de scroll');
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Método 3: Seletores alternativos comuns
+        if (!scrollContainer) {
+            const alternativeSelectors = [
+                'div[style*="overflow: hidden auto"]',
+                'div[style*="overflow-y: auto"]',
+                'div[style*="overflow-y: scroll"]',
+                'div[class*="x1n2onr6"]', // Classe usada em alguns layouts
+                'div[class*="x1lliihq"]', // Outra classe comum
+                'div[style*="max-height"]'
+            ];
+
+            for (const selector of alternativeSelectors) {
+                const found = dialog.querySelector(selector);
+                if (found && found.querySelectorAll('a[href^="/"]').length > 3) {
+                    scrollContainer = found;
+                    addConsoleLog('success', `✅ Container encontrado via selector alternativo`);
                     break;
                 }
             }
         }
     }
 
+    // Fallback final: buscar na página toda
     if (!scrollContainer) {
         scrollContainer = document.querySelector('div._aano');
     }
@@ -860,7 +930,15 @@ async function runExtractionFlow(payload) {
     let idleCount = 0; // Contador para detectar fim da lista ou travamento
 
     for (let scrollStep = 0; scrollStep < 1000; scrollStep++) { // Aumentar o limite de passos para garantir que a lista seja percorrida
-        const items = scrollContainer.querySelectorAll('div[role="button"], li, div._aacl');
+        let items = scrollContainer.querySelectorAll('div[role="listitem"]');
+        if (items.length === 0) items = scrollContainer.querySelectorAll('div[role="button"]');
+        if (items.length === 0) items = scrollContainer.querySelectorAll('li');
+        if (items.length === 0) items = scrollContainer.querySelectorAll('div._aacl');
+
+        // Fallback: Links diretos
+        if (items.length === 0) {
+            items = scrollContainer.querySelectorAll('a[href^="/"]');
+        }
         let newFound = 0;
 
         for (const item of items) {
@@ -973,13 +1051,17 @@ async function runExtractionFlow(payload) {
             // O texto "Segue você" ou "Follows you" aparece no item.
             const followsMe = btnText.includes('segue você') || btnText.includes('follows you');
 
-            // APLICAR FILTROS
+            // APLICAR FILTROS - COMENTADO PARA NÃO OCULTAR DADOS
+            // Deixamos o usuário filtrar no Dashboard depois
+            /* 
             if (extractType === 'followers') {
-                // Se o objetivo é ganhar novos seguidores, ignorar quem já sigo ou quem já me segue
                 if (isFollowing || isRequested || followsMe) {
                     continue;
                 }
-            } else if (extractType === 'following') {
+            }
+            */
+
+            if (extractType === 'following') {
                 // Se carrego quem sigo, obviamente aceito 'isFollowing'
                 // Mas aqui é loadFromInstagram 'following' -> Unfollow list.
             }
@@ -1590,9 +1672,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message.action) return;
 
     switch (message.action) {
-        case 'execute_extraction':
-            runExtractionFlow(message.payload).then(sendResponse);
-            return true;
+        // Note: execute_extraction case is handled below with proper async handling
 
         case 'execute':
             executeInstagramAction(message.payload).then(sendResponse);

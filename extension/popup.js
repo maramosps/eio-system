@@ -95,23 +95,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             const limit = message.total || parseInt(document.getElementById('queueLimit')?.value) || 100;
             const count = message.count || 0;
 
+            // Get elements with null-safe access
+            const overlayEl = document.getElementById('extractionLoadingOverlay');
+            const titleEl = document.getElementById('loadingTitle');
+            const progressBarEl = document.getElementById('loadingProgressBar');
+            const countEl = document.getElementById('loadingCount');
+            const totalEl = document.getElementById('loadingTotal');
+            const statusTextEl = document.getElementById('loadingStatusText');
+
             // Mostrar overlay se não estiver visível
-            if (document.getElementById('extractionLoadingOverlay').style.display === 'none') {
-                document.getElementById('extractionLoadingOverlay').style.display = 'flex';
-                document.getElementById('loadingTitle').textContent = `Extraindo ${message.type === 'followers' ? 'Seguidores' : 'Contas'}...`;
+            if (overlayEl && overlayEl.style.display === 'none') {
+                overlayEl.style.display = 'flex';
+                if (titleEl) titleEl.textContent = `Extraindo ${message.type === 'followers' ? 'Seguidores' : 'Contas'}...`;
             }
 
             // Atualizar barra
             const percent = Math.min(100, Math.round((count / limit) * 100));
-            document.getElementById('loadingProgressBar').style.width = `${percent}%`;
-            document.getElementById('loadingCount').textContent = count;
-            document.getElementById('loadingTotal').textContent = limit;
-            document.getElementById('loadingStatusText').textContent = `Coletando perfis (${count} de ${limit})...`;
+            if (progressBarEl) progressBarEl.style.width = `${percent}%`;
+            if (countEl) countEl.textContent = count;
+            if (totalEl) totalEl.textContent = limit;
+            if (statusTextEl) statusTextEl.textContent = `Coletando perfis (${count} de ${limit})...`;
 
             if (message.completed) {
-                document.getElementById('loadingStatusText').textContent = 'Finalizando...';
+                if (statusTextEl) statusTextEl.textContent = 'Finalizando...';
                 setTimeout(() => {
-                    document.getElementById('extractionLoadingOverlay').style.display = 'none';
+                    if (overlayEl) overlayEl.style.display = 'none';
                 }, 1000);
             }
         }
@@ -888,7 +896,8 @@ async function loadFromInstagram(type, limit = 200) {
         console.error(e);
         addLog('error', `❌ Erro: ${e.message}`);
         if (AppState.accounts.length === 0) {
-            document.getElementById('tableEmptyState').style.display = 'flex';
+            const emptyStateEl = document.getElementById('tableEmptyState');
+            if (emptyStateEl) emptyStateEl.style.display = 'flex';
         }
     } finally {
         LoadingManager.hide();
@@ -896,17 +905,21 @@ async function loadFromInstagram(type, limit = 200) {
 }
 
 function processLoadedAccounts(accounts) {
-    // Processar resultados
+    // Processar resultados - normalizar campos de diferentes fontes
     AppState.accounts = accounts.map(acc => ({
         username: (acc.username || '').replace('@', ''),
-        fullName: acc.fullName || acc.name || '',
-        profilePic: acc.avatar || acc.profile_pic_url || '',
-        id: acc.id,
-        isPrivate: !!acc.isPrivate,
-        isVerified: !!acc.isVerified,
-        followers: acc.followers || 0,
-        following: acc.following || 0,
-        status: 'pending'
+        fullName: acc.fullName || acc.full_name || acc.name || '',
+        // Avatar pode vir como profilePic (extração modal), avatar (API), ou profile_pic_url (API raw)
+        avatar: acc.profilePic || acc.avatar || acc.profile_pic_url || '',
+        id: acc.id || acc.pk || null,
+        isPrivate: !!acc.isPrivate || !!acc.is_private,
+        isVerified: !!acc.isVerified || !!acc.is_verified,
+        followers: acc.followers || acc.edge_followed_by?.count || 0,
+        following: acc.following || acc.edge_follow?.count || 0,
+        status: acc.status || 'pending',
+        followedByViewer: acc.followed_by_viewer || acc.followedByViewer || false,
+        followsViewer: acc.follows_viewer || acc.followsViewer || false,
+        requestedByViewer: acc.requested_by_viewer || acc.requestedByViewer || false
     }));
 
     // Aplicar filtros iniciais
@@ -990,37 +1003,56 @@ const LoadingManager = {
         const title = '🚀 Carregando Perfis…';
         const message = `Estamos sincronizando os perfis do Instagram para você.<br>Esse processo leva cerca de <strong>${timeLimit}</strong> segundos.<br>Aguarde a finalização automática.`;
 
-        document.getElementById('loadingTitle').innerHTML = title;
-        document.getElementById('loadingMessage').innerHTML = message;
-        document.getElementById('loadingTimeEstimate').textContent = timeLimit;
-        document.getElementById('loadingCount').textContent = '0';
-        document.getElementById('loadingTotal').textContent = '--';
-        document.getElementById('loadingPercentage').textContent = '0%';
-        document.getElementById('loadingProgressFill').style.width = '0%';
-        document.getElementById('loadingStatusText').textContent = 'Iniciando extração...';
-        document.getElementById('loadingTimeout').style.display = 'none';
+        // Safely update modal elements (null-safe)
+        const titleEl = document.getElementById('loadingTitle');
+        const messageEl = document.getElementById('loadingMessage');
+        const timeEstimateEl = document.getElementById('loadingTimeEstimate');
+        const countEl = document.getElementById('loadingCount');
+        const totalEl = document.getElementById('loadingTotal');
+        const percentEl = document.getElementById('loadingPercentage');
+        const fillEl = document.getElementById('loadingProgressFill');
+        const statusTextEl = document.getElementById('loadingStatusText');
+
+        if (titleEl) titleEl.innerHTML = title;
+        if (messageEl) messageEl.innerHTML = message;
+        if (timeEstimateEl) timeEstimateEl.textContent = timeLimit;
+        if (countEl) countEl.textContent = '0';
+        if (totalEl) totalEl.textContent = '--';
+        if (percentEl) percentEl.textContent = '0%';
+        if (fillEl) fillEl.style.width = '0%';
+        if (statusTextEl) statusTextEl.textContent = 'Iniciando extração...';
+        const timeoutEl = document.getElementById('loadingTimeout');
+        if (timeoutEl) timeoutEl.style.display = 'none';
 
         // Mostrar modal IMEDIATAMENTE
-        this.modal.style.display = 'flex';
+        if (this.modal) this.modal.style.display = 'flex';
 
         // Desabilitar botões
         this.disableButtons(true);
 
         // Configurar timeout
         this.timeoutId = setTimeout(() => {
-            document.getElementById('loadingTimeout').style.display = 'block';
-            document.getElementById('loadingStatusText').textContent = 'O processo está demorando mais que o esperado...';
+            const timeoutElInner = document.getElementById('loadingTimeout');
+            const statusTextElInner = document.getElementById('loadingStatusText');
+            if (timeoutElInner) timeoutElInner.style.display = 'block';
+            if (statusTextElInner) statusTextElInner.textContent = 'O processo está demorando mais que o esperado...';
         }, timeLimit * 1000);
     },
 
     updateProgress(loaded, total, statusText) {
         const percent = total > 0 ? Math.round((loaded / total) * 100) : 0;
-        document.getElementById('loadingCount').textContent = loaded;
-        document.getElementById('loadingTotal').textContent = total || '--';
-        document.getElementById('loadingPercentage').textContent = `${percent}%`;
-        document.getElementById('loadingProgressFill').style.width = `${percent}%`;
-        if (statusText) {
-            document.getElementById('loadingStatusText').textContent = statusText;
+        const countEl = document.getElementById('loadingCount');
+        const totalEl = document.getElementById('loadingTotal');
+        const percentEl = document.getElementById('loadingPercentage');
+        const fillEl = document.getElementById('loadingProgressFill');
+        const statusTextEl = document.getElementById('loadingStatusText');
+
+        if (countEl) countEl.textContent = loaded;
+        if (totalEl) totalEl.textContent = total || '--';
+        if (percentEl) percentEl.textContent = `${percent}%`;
+        if (fillEl) fillEl.style.width = `${percent}%`;
+        if (statusText && statusTextEl) {
+            statusTextEl.textContent = statusText;
         }
     },
 
