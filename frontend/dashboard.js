@@ -465,13 +465,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.4 (E.I.O System)';
+    if (extensionVersion) extensionVersion.textContent = '4.4.5 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.4.zip';
+            window.location.href = 'downloads/eio-extension-v4.4.5.zip';
         });
     }
 

@@ -98,29 +98,10 @@
                     <line x1="12" y1="19" x2="20" y2="19"></line>
                 </svg>
                 <span>Logs</span>
-                <span>Logs</span>
             </button>
         </nav>
 
-        <!-- LOADING OVERLAY -->
-        <div id="extractionLoadingOverlay" class="eio-loading-overlay" style="display: none;">
-            <div class="eio-loading-card">
-                <div class="eio-loading-spinner-wrapper">
-                    <div class="eio-loading-spinner"></div>
-                </div>
-                <h3 id="loadingTitle">Extraindo Contas...</h3>
-                <div class="eio-progress-container">
-                    <div class="eio-progress-bar">
-                        <div id="loadingProgressBar" class="eio-progress-fill" style="width: 0%"></div>
-                    </div>
-                    <div class="eio-progress-text">
-                        <span id="loadingCount">0</span> / <span id="loadingTotal">0</span> perfis
-                    </div>
-                </div>
-                <p id="loadingStatusText" class="eio-loading-status">Inicializando scroll...</p>
-                <button id="cancelExtractionBtn" class="eio-btn-secondary-small">Cancelar</button>
-            </div>
-        </div>
+        <!-- NOTA: O overlay de carregamento foi movido para loadingModal (único modal unificado) -->
 
         <main class="eio-main-scroll">
             <!-- ═══════════════════════════════════════════════════════════ -->

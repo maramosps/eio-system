@@ -90,36 +90,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Listen for messages from background
     chrome.runtime.onMessage.addListener((message) => {
-        // Extraction progress (NOVO OVERLAY)
+        // Extraction progress - Use ONLY loadingModal (unified UI)
         if (message.action === 'extraction_progress') {
             const limit = message.total || parseInt(document.getElementById('queueLimit')?.value) || 100;
             const count = message.count || 0;
 
-            // Get elements with null-safe access
-            const overlayEl = document.getElementById('extractionLoadingOverlay');
-            const titleEl = document.getElementById('loadingTitle');
-            const progressBarEl = document.getElementById('loadingProgressBar');
-            const countEl = document.getElementById('loadingCount');
-            const totalEl = document.getElementById('loadingTotal');
-            const statusTextEl = document.getElementById('loadingStatusText');
-
-            // Mostrar overlay se não estiver visível
-            if (overlayEl && overlayEl.style.display === 'none') {
-                overlayEl.style.display = 'flex';
-                if (titleEl) titleEl.textContent = `Extraindo ${message.type === 'followers' ? 'Seguidores' : 'Contas'}...`;
-            }
-
-            // Atualizar barra
-            const percent = Math.min(100, Math.round((count / limit) * 100));
-            if (progressBarEl) progressBarEl.style.width = `${percent}%`;
-            if (countEl) countEl.textContent = count;
-            if (totalEl) totalEl.textContent = limit;
-            if (statusTextEl) statusTextEl.textContent = `Coletando perfis (${count} de ${limit})...`;
+            // Use LoadingManager to show progress in the main modal (image 3 with rocket)
+            LoadingManager.updateProgress(count, limit, `Coletando perfis (${count} de ${limit})...`);
 
             if (message.completed) {
-                if (statusTextEl) statusTextEl.textContent = 'Finalizando...';
+                LoadingManager.updateProgress(limit, limit, 'Finalizando...');
                 setTimeout(() => {
-                    if (overlayEl) overlayEl.style.display = 'none';
+                    LoadingManager.hide();
                 }, 1000);
             }
         }
@@ -466,9 +448,22 @@ function initializeLoadAccountsMenu() {
 }
 
 function handleLoadAccountsAction(action) {
-    const limit = document.getElementById('limitQueue')?.checked
+    // Limites de segurança: Seguir=200, Deixar de seguir=500
+    const maxFollowLimit = 200;
+    const maxUnfollowLimit = 500;
+    const isUnfollowAction = action.includes('unfollow') || action.includes('following');
+    const defaultLimit = isUnfollowAction ? maxUnfollowLimit : maxFollowLimit;
+
+    let limit = document.getElementById('limitQueue')?.checked
         ? parseInt(document.getElementById('queueLimit')?.value) || 50
-        : 1000;
+        : defaultLimit;
+
+    // Garantir que nunca ultrapasse os limites de segurança
+    if (isUnfollowAction) {
+        limit = Math.min(limit, maxUnfollowLimit);
+    } else {
+        limit = Math.min(limit, maxFollowLimit);
+    }
 
     addLog('info', `Carregando contas: ${action} (limite: ${limit})`);
 
