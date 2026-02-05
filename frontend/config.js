@@ -21,8 +21,12 @@ const WS_URL = isProduction
     : 'http://localhost:3000';
 
 // ═══════════════════════════════════════════════════════════
-// 🗄️ SUPABASE CONFIGURATION
+// 🗄️ SUPABASE CONFIGURATION (Frontend/Client-side)
 // ═══════════════════════════════════════════════════════════
+// NOTA: A ANON_KEY é SEGURA para uso no frontend.
+// O Supabase usa Row Level Security (RLS) para proteger os dados.
+// Operações privilegiadas devem passar pela API backend.
+// Em produção futura, considere injetar via build process.
 
 const SUPABASE_URL = 'https://zupnyvnrmwoyqajecxmm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY';
@@ -37,12 +41,12 @@ window.EIO_CONFIG = {
     WS_URL,
     isProduction,
 
-    // Supabase
+    // Supabase (Client-side, protegido por RLS)
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
 
-    // Versão do sistema
-    VERSION: '4.4.0',
+    // Versão do sistema (sincronizada com manifest.json)
+    VERSION: '4.4.5',
 
     // Limites padrão
     LIMITS: {

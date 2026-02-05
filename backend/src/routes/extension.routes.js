@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
-const supabase = require('../config/supabase');
+const { supabase } = require('../../../src/services/supabase');
 
 // Middleware de autenticação
 const { authenticate } = require('../middlewares/auth');

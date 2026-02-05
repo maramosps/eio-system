@@ -6,7 +6,7 @@
  * Body: { userId: string, actionType: string, success: boolean, metadata: object, error: string }
  */
 const { processAck } = require('./core/ack');
-const supabase = require('./config/supabase');
+// Nota: supabase é usado internamente pelo processAck
 
 module.exports = async (req, res) => {
     // CORS

@@ -3,7 +3,7 @@
 // Gerencia conversas em tempo real do Instagram
 // ═══════════════════════════════════════════════════════════
 
-const supabase = require('../config/supabase');
+const { supabase } = require('../../../src/services/supabase');
 
 class ChatService {
     constructor(io) {

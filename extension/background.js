@@ -44,10 +44,12 @@ const DELAY_CONFIG = {
 };
 
 // v4.2 - Cloud Sync Config
-// v4.2 - Cloud Sync Config
+// NOTA: A extensão NÃO deve acessar Supabase diretamente.
+// Todas as operações passam pela API backend que já está autenticada.
 const BACKEND_URL = 'https://eio-system.vercel.app'; // Production URL
-const SUPABASE_URL = 'https://zupnyvnrmwoyqajecxmm.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY';
+// Chaves Supabase REMOVIDAS - use a API backend como proxy
+
+
 
 
 let isProcessing = false;

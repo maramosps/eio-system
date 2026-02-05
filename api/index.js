@@ -1,18 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { createClient } = require('@supabase/supabase-js');
 
-// Supabase Client
-let supabase = null;
-try {
-    const supabaseUrl = process.env.SUPABASE_URL || 'https://zupnyvnrmwoyqajecxmm.supabase.co';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cG55dm5ybXdveXFhamVjeG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NTc0MTUsImV4cCI6MjA4MjQzMzQxNX0.j_kNf6oUjY65DXIdIVtDKOHlkktlZvzqHuo_SlEzUvY'; // Using Anon Key as fallback if Service Key missing
-    if (supabaseUrl && supabaseKey) {
-        supabase = createClient(supabaseUrl, supabaseKey);
-    }
-} catch (e) {
-    console.error('Erro ao criar cliente Supabase:', e);
-}
+// Supabase Client - Importação centralizada (sem chaves hardcoded)
+const { supabase } = require('../src/services/supabase');
 
 const jwtSecret = process.env.JWT_SECRET || 'eio-secret-key-2026';
 
@@ -445,7 +435,7 @@ module.exports = async (req, res) => {
                     size: '1.6 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
-                    downloadUrl: '/downloads/eio-extension.zip?v=4.4.0'
+                    downloadUrl: '/downloads/eio-extension.zip?v=4.4.5'
                 }
             });
         }

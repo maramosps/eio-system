@@ -3,7 +3,7 @@
  * Retorna objeto padronizado V3.
  */
 const { checkAction } = require('./core/decision');
-const supabase = require('./config/supabase');
+const { supabase } = require('../../src/services/supabase');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');

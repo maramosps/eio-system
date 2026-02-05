@@ -65,7 +65,7 @@ async function processAck(userId, actionType, success, metadata, errorMessage) {
     if (taskId && Flow.updateTaskStatus) {
         // Nota: Flow.updateTaskStatus não existe, precisamos importar supabase ou criar service
         // Melhor usar service direto
-        const supabase = require('../config/supabase');
+        const { supabase } = require('../../../src/services/supabase');
         if (supabase) {
             await supabase.from('scheduled_actions')
                 .update({

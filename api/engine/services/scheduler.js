@@ -3,7 +3,7 @@
  * Gerencia o agendamento de ações futuras no Supabase.
  */
 
-const supabase = require('../config/supabase');
+const { supabase } = require('../../../src/services/supabase');
 
 async function scheduleAction(userId, actionType, targetUsername, executeAfterDate, payload = {}) {
     if (!supabase) return { success: false, error: 'DB not configured' };

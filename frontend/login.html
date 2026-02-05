@@ -401,8 +401,9 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Entrando...';
 
             try {
-                const supabaseUrl = window.EIO_CONFIG.SUPABASE_URL || 'https://zupnyvnrmwoyqajecxmm.supabase.co';
-                const supabaseKey = window.EIO_CONFIG.SUPABASE_ANON_KEY;
+                // Usar configuração centralizada (carregada de config.js)
+                const supabaseUrl = window.EIO_CONFIG?.SUPABASE_URL;
+                const supabaseKey = window.EIO_CONFIG?.SUPABASE_ANON_KEY;
 
                 // Fallback de segurança se Supabase não carregar
                 if (!window.supabase) {

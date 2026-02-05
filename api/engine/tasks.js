@@ -5,7 +5,7 @@
  * Rota: GET /api/engine/tasks?userId=...
  */
 const { getAndLockPendingActions } = require('./services/scheduler');
-const supabase = require('./config/supabase');
+// Nota: supabase é usado internamente pelo scheduler, não precisa importar aqui
 
 module.exports = async (req, res) => {
     // 1. CORS

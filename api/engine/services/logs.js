@@ -1,6 +1,6 @@
 // Serviço de Logs
 // Centraliza logs no Supabase para auditoria
-const supabase = require('../config/supabase.js');
+const { supabase } = require('../../../src/services/supabase');
 
 async function logAction(userId, actionType, result) {
     if (!supabase) return; // Se não tiver DB configurado

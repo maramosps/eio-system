@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const supabase = require('../config/supabase');
+const { supabase } = require('../../../src/services/supabase');
 
 /**
  * @route   POST /api/v1/license/validate

@@ -11,7 +11,7 @@
  * 6. switch_profile (troca para próximo alvo)
  */
 
-const supabase = require('../config/supabase');
+const { supabase } = require('../../../src/services/supabase');
 
 const FLOW_STEPS = ['follow', 'like', 'view_story', 'like_story', 'comment', 'switch_profile'];
 
