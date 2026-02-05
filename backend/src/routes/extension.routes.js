@@ -47,7 +47,7 @@ router.get('/download', authenticate, async (req, res) => {
         }
 
         // Caminho do arquivo ZIP
-        const extensionPath = path.join(__dirname, '../../public/downloads/eio.system-v4.4.5.zip');
+        const extensionPath = path.join(__dirname, '../../public/downloads/eio-extension-v4.4.5.zip');
 
         // Verificar se o arquivo existe
         if (!fs.existsSync(extensionPath)) {
@@ -84,7 +84,7 @@ router.get('/download', authenticate, async (req, res) => {
 
         // Configurar headers para download
         res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', 'attachment; filename="eio.system-v4.4.5.zip"');
+        res.setHeader('Content-Disposition', 'attachment; filename="eio-extension-v4.4.5.zip"');
         res.setHeader('Cache-Control', 'no-cache');
 
         // Enviar arquivo
@@ -109,7 +109,7 @@ router.get('/download', authenticate, async (req, res) => {
 
 router.get('/info', authenticate, async (req, res) => {
     try {
-        const extensionPath = path.join(__dirname, '../../public/downloads/eio.system-v4.4.5.zip');
+        const extensionPath = path.join(__dirname, '../../public/downloads/eio-extension-v4.4.5.zip');
         const manifestPath = path.join(__dirname, '../../extension/manifest.json');
 
         let fileSize = 0;

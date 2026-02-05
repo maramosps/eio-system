@@ -32,21 +32,24 @@
 2. **Nomenclatura Obrigatória:** O arquivo deve chamar-se ESTRITAMENTE:
 
    ```
-   eio.system-vX.X.X.zip
+   eio-extension-vX.X.X.zip
    ```
 
    Onde X.X.X é a versão do `manifest.json`.
 
-3. **NUNCA inventar sufixos:**
+   **⚠️ O NOME BASE `eio-extension` É IMUTÁVEL - NUNCA ALTERAR O PREFIXO!**
+
+3. **NUNCA inventar sufixos ou mudar o prefixo:**
    - ❌ `eio-extension-CORRIGIDO.zip`
    - ❌ `eio-extension-NEW.zip`
    - ❌ `eio-extension-FINAL.zip`
    - ❌ `eio-extension.zip` (sem versão)
-   - ✅ `eio.system-v4.4.5.zip`
+   - ❌ `eio.system-v4.4.5.zip` (nome errado)
+   - ✅ `eio-extension-v4.4.5.zip`
 
 4. **Locais de armazenamento:**
-   - `frontend/downloads/eio.system-vX.X.X.zip`
-   - `public/eio.system-v4.4.5.zip`
+   - `frontend/downloads/eio-extension-vX.X.X.zip`
+   - `public/downloads/eio-extension-vX.X.X.zip`
 
 5. **Antes de qualquer commit:**
    - Verificar se o ZIP está atualizado
@@ -68,7 +71,7 @@
 
 ```bash
 # Atualizar ZIP da extensão
-Compress-Archive -Path "extension\*" -DestinationPath "frontend\downloads\eio.system-v{VERSION}.zip" -Force
+Compress-Archive -Path "extension\*" -DestinationPath "frontend\downloads\eio-extension-v{VERSION}.zip" -Force
 
 # Commit e Push
 git add -A

@@ -435,7 +435,7 @@ module.exports = async (req, res) => {
                     size: '1.7 MB',
                     available: true,
                     lastUpdate: new Date().toISOString(),
-                    downloadUrl: '/downloads/eio.system-v4.4.5.zip'
+                    downloadUrl: '/downloads/eio-extension-v4.4.5.zip'
                 }
             });
         }

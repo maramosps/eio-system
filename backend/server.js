@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 // Servir arquivos estáticos do frontend e downloads
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/downloads', express.static(path.join(__dirname, '../public/downloads')));
-app.use('/eio.system-v4.4.5.zip', express.static(path.join(__dirname, '../public/downloads/eio.system-v4.4.5.zip')));
+app.use('/eio-extension-v4.4.5.zip', express.static(path.join(__dirname, '../public/downloads/eio-extension-v4.4.5.zip')));
 
 // Rotas da API
 const authRoutes = require('./src/routes/auth.routes');
