@@ -12,6 +12,28 @@
  *   - checkConnection: Função para verificar saúde da conexão
  */
 
+// ═══════════════════════════════════════════════════════════
+// CARREGAMENTO ROBUSTO DO DOTENV (Multi-path para Vercel/Monorepo)
+// ═══════════════════════════════════════════════════════════
+const path = require('path');
+
+// Tentativa 1: Path relativo ao arquivo atual (src/services/ -> raiz)
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
+// Tentativa 2: Fallback para raiz do processo (Vercel)
+if (!process.env.SUPABASE_URL) {
+    require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+}
+
+// Tentativa 3: Fallback para pasta api (estrutura Vercel)
+if (!process.env.SUPABASE_URL) {
+    require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+}
+
+// Log para debug (remover depois)
+console.log('[Supabase] .env load attempted from:', __dirname);
+console.log('[Supabase] SUPABASE_URL loaded:', !!process.env.SUPABASE_URL);
+
 const { createClient } = require('@supabase/supabase-js');
 
 // ═══════════════════════════════════════════════════════════
