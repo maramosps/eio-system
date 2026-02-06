@@ -60,14 +60,23 @@ function validateConfig() {
     if (!SUPABASE_ANON_KEY) missing.push('SUPABASE_ANON_KEY');
 
     if (missing.length > 0) {
-        const message = `❌ [Supabase] Variáveis de ambiente obrigatórias não configuradas: ${missing.join(', ')}`;
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error('❌ [E.I.O Supabase] ERRO CRÍTICO DE CONFIGURAÇÃO');
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error(`   Variáveis faltando: ${missing.join(', ')}`);
+        console.error('');
+        console.error('   📋 COMO RESOLVER:');
+        console.error('   1. Acesse: https://vercel.com/seu-projeto/settings/environment-variables');
+        console.error('   2. Adicione cada variável listada acima');
+        console.error('   3. Faça redeploy do projeto');
+        console.error('');
+        console.error('   📖 Guia completo: docs/DEPLOY_GUIA.md');
+        console.error('═══════════════════════════════════════════════════════════');
 
         if (IS_PRODUCTION) {
-            console.error(message);
-            console.error('   Configure as variáveis no Vercel Dashboard ou no arquivo .env');
-            throw new Error(message);
+            // Em produção, NÃO lança erro - permite que o health check mostre o problema
+            console.error('   ⚠️ Sistema em modo degradado - funcionalidades limitadas');
         } else {
-            console.warn(message);
             console.warn('   ⚠️ Modo desenvolvimento: Sistema pode não funcionar corretamente');
             console.warn('   💡 Copie .env.example para .env e preencha os valores');
         }

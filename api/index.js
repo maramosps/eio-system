@@ -25,15 +25,50 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // Health Check
+        // ═══════════════════════════════════════════════════════════
+        // HEALTH CHECK PROFISSIONAL - Diagnóstico de Infraestrutura
+        // ═══════════════════════════════════════════════════════════
         if (path === '/api/health' || path === '/api' || pathFromQuery === 'health') {
-            return res.json({
-                status: 'OK',
-                message: 'E.I.O System API está rodando',
+            // Verificação de variáveis de ambiente (sem expor valores)
+            const envCheck = {
+                SUPABASE_URL: process.env.SUPABASE_URL ? 'Configurado ✅' : 'Faltando ❌',
+                SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'Configurado ✅' : 'Faltando ❌',
+                SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'Configurado ✅' : 'Faltando ❌',
+                JWT_SECRET: process.env.JWT_SECRET ? 'Configurado ✅' : 'Faltando ❌',
+                NODE_ENV: process.env.NODE_ENV || 'development'
+            };
+
+            // Contagem de variáveis faltando
+            const missingCount = Object.values(envCheck).filter(v => v.includes('❌')).length;
+            const isHealthy = missingCount === 0 && !!supabase;
+
+            // Log de erro no servidor se faltar variáveis
+            if (missingCount > 0) {
+                console.error('═══════════════════════════════════════════════════════════');
+                console.error('⚠️ [HEALTH CHECK] VARIÁVEIS DE AMBIENTE FALTANDO!');
+                console.error('   Configure no Vercel Dashboard > Settings > Environment Variables');
+                Object.entries(envCheck).forEach(([key, val]) => {
+                    if (val.includes('❌')) console.error(`   • ${key}: NÃO CONFIGURADO`);
+                });
+                console.error('═══════════════════════════════════════════════════════════');
+            }
+
+            return res.status(isHealthy ? 200 : 503).json({
+                status: isHealthy ? 'online' : 'degraded',
+                message: isHealthy
+                    ? 'E.I.O System API está pronta para produção'
+                    : `${missingCount} variável(eis) de ambiente não configurada(s)`,
+                version: '4.4.5',
                 timestamp: new Date().toISOString(),
-                supabaseConfigured: !!supabase,
-                path: path,
-                pathFromQuery: pathFromQuery
+                env_check: envCheck,
+                database: {
+                    supabase_client: supabase ? 'Inicializado ✅' : 'Falha na inicialização ❌',
+                    ready: !!supabase
+                },
+                docs: {
+                    deploy_guide: '/docs/DEPLOY_GUIA.md',
+                    support: 'https://wa.me/5521975312662'
+                }
             });
         }
 
