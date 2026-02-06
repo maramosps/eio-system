@@ -10,6 +10,35 @@ _Nenhum issue crítico em aberto no momento._
 
 ---
 
+## ⚠️ Notas de Deploy
+
+### Variáveis de Ambiente em Produção
+
+**Data:** 2026-02-06  
+**Status:** ATIVO (Bypass Temporário)
+
+**Problema:**  
+Se não configurarmos as ENV VARS no painel da Vercel, o backend falha ao conectar no Supabase ("Servidor retornou resposta inválida").
+
+**Solução de Emergência:**  
+O arquivo `.env` foi forçado para o repositório (`git add -f .env`) para permitir funcionamento imediato.
+
+**⚠️ AÇÃO PENDENTE:**
+
+1. Configurar variáveis no painel Vercel (Settings > Environment Variables)
+2. Remover `.env` do repositório: `git rm --cached .env && git commit && git push`
+3. Garantir que `.env` permaneça no `.gitignore`
+
+**Variáveis Necessárias:**
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_KEY`
+- `SUPABASE_ANON_KEY`
+- `JWT_SECRET`
+- `NODE_ENV`
+
+---
+
 ## ✅ Resolvidos
 
 ### BUG: Loop de Login / Inicialização Duplicada do Supabase
