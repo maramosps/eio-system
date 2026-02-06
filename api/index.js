@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Supabase Client - Importação centralizada (sem chaves hardcoded)
-const { supabase } = require('../src/services/supabase');
+// Supabase Client - Importação centralizada com Safe Init
+const { supabase, getStatus } = require('../src/services/supabase');
 
 const jwtSecret = process.env.JWT_SECRET || 'eio-secret-key-2026';
 
@@ -29,41 +29,35 @@ module.exports = async (req, res) => {
         // HEALTH CHECK PROFISSIONAL - Diagnóstico de Infraestrutura
         // ═══════════════════════════════════════════════════════════
         if (path === '/api/health' || path === '/api' || pathFromQuery === 'health') {
+            // Obter status de inicialização do Supabase (Safe Init)
+            const supabaseStatus = getStatus();
+
             // Verificação de variáveis de ambiente (sem expor valores)
             const envCheck = {
-                SUPABASE_URL: process.env.SUPABASE_URL ? 'Configurado ✅' : 'Faltando ❌',
-                SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'Configurado ✅' : 'Faltando ❌',
-                SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'Configurado ✅' : 'Faltando ❌',
+                SUPABASE_URL: supabaseStatus.config.url ? 'Configurado ✅' : 'Faltando ❌',
+                SUPABASE_SERVICE_KEY: supabaseStatus.config.hasServiceKey ? 'Configurado ✅' : 'Faltando ❌',
+                SUPABASE_ANON_KEY: supabaseStatus.config.hasAnonKey ? 'Configurado ✅' : 'Faltando ❌',
                 JWT_SECRET: process.env.JWT_SECRET ? 'Configurado ✅' : 'Faltando ❌',
-                NODE_ENV: process.env.NODE_ENV || 'development'
+                NODE_ENV: supabaseStatus.config.nodeEnv || 'development'
             };
 
-            // Contagem de variáveis faltando
-            const missingCount = Object.values(envCheck).filter(v => v.includes('❌')).length;
-            const isHealthy = missingCount === 0 && !!supabase;
-
-            // Log de erro no servidor se faltar variáveis
-            if (missingCount > 0) {
-                console.error('═══════════════════════════════════════════════════════════');
-                console.error('⚠️ [HEALTH CHECK] VARIÁVEIS DE AMBIENTE FALTANDO!');
-                console.error('   Configure no Vercel Dashboard > Settings > Environment Variables');
-                Object.entries(envCheck).forEach(([key, val]) => {
-                    if (val.includes('❌')) console.error(`   • ${key}: NÃO CONFIGURADO`);
-                });
-                console.error('═══════════════════════════════════════════════════════════');
-            }
+            // Usar status do Safe Init para determinar saúde
+            const isHealthy = supabaseStatus.initialized && supabaseStatus.hasClient;
+            const missingVars = supabaseStatus.missingVars || [];
 
             return res.status(isHealthy ? 200 : 503).json({
                 status: isHealthy ? 'online' : 'degraded',
                 message: isHealthy
                     ? 'E.I.O System API está pronta para produção'
-                    : `${missingCount} variável(eis) de ambiente não configurada(s)`,
+                    : supabaseStatus.error || `${missingVars.length} variável(eis) de ambiente não configurada(s)`,
                 version: '4.4.5',
                 timestamp: new Date().toISOString(),
                 env_check: envCheck,
                 database: {
-                    supabase_client: supabase ? 'Inicializado ✅' : 'Falha na inicialização ❌',
-                    ready: !!supabase
+                    supabase_client: supabaseStatus.hasClient ? 'Inicializado ✅' : 'Não inicializado ❌',
+                    initialized: supabaseStatus.initialized,
+                    error: supabaseStatus.error,
+                    missing_vars: missingVars
                 },
                 docs: {
                     deploy_guide: '/docs/DEPLOY_GUIA.md',

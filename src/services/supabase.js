@@ -1,15 +1,23 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O SYSTEM - SUPABASE CLIENT CENTRALIZADO
+ * E.I.O SYSTEM - SUPABASE CLIENT CENTRALIZADO (SAFE INIT)
  * ═══════════════════════════════════════════════════════════
  * 
  * Este é o ÚNICO ponto de inicialização do Supabase no sistema.
  * Todos os outros arquivos devem importar daqui.
  * 
+ * PADRÃO SAFE INIT:
+ * - NUNCA lança exceção na inicialização
+ * - Permite servidor ligar mesmo sem chaves configuradas
+ * - Rota /health pode diagnosticar problemas
+ * 
  * Exporta:
- *   - supabaseAdmin: Cliente com SERVICE_KEY (operações privilegiadas)
- *   - supabaseClient: Cliente com ANON_KEY (operações públicas/RLS)
- *   - checkConnection: Função para verificar saúde da conexão
+ *   - supabase: Cliente principal (pode ser null se não configurado)
+ *   - supabaseAdmin: Alias para supabase
+ *   - supabaseClient: Cliente com ANON_KEY
+ *   - getSupabase(): Função segura para obter cliente
+ *   - getStatus(): Status de inicialização
+ *   - checkConnection: Verificar saúde da conexão
  */
 
 // ═══════════════════════════════════════════════════════════
@@ -17,24 +25,33 @@
 // ═══════════════════════════════════════════════════════════
 const path = require('path');
 
-// Tentativa 1: Path relativo ao arquivo atual (src/services/ -> raiz)
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+// Tenta carregar de múltiplos paths (não lança erro se falhar)
+try {
+    require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+} catch (e) { /* ignore */ }
 
-// Tentativa 2: Fallback para raiz do processo (Vercel)
 if (!process.env.SUPABASE_URL) {
-    require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+    try {
+        require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+    } catch (e) { /* ignore */ }
 }
 
-// Tentativa 3: Fallback para pasta api (estrutura Vercel)
 if (!process.env.SUPABASE_URL) {
-    require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+    try {
+        require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+    } catch (e) { /* ignore */ }
 }
 
-// Log para debug (remover depois)
-console.log('[Supabase] .env load attempted from:', __dirname);
-console.log('[Supabase] SUPABASE_URL loaded:', !!process.env.SUPABASE_URL);
+// ═══════════════════════════════════════════════════════════
+// ESTADO DE INICIALIZAÇÃO (Safe State)
+// ═══════════════════════════════════════════════════════════
 
-const { createClient } = require('@supabase/supabase-js');
+const initStatus = {
+    initialized: false,
+    error: null,
+    missingVars: [],
+    timestamp: new Date().toISOString()
+};
 
 // ═══════════════════════════════════════════════════════════
 // CONFIGURAÇÃO DE AMBIENTE
@@ -49,77 +66,122 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // ═══════════════════════════════════════════════════════════
-// VALIDAÇÃO DE CONFIGURAÇÃO
-// ═══════════════════════════════════════════════════════════
-
-function validateConfig() {
-    const missing = [];
-
-    if (!SUPABASE_URL) missing.push('SUPABASE_URL');
-    if (!SUPABASE_SERVICE_KEY) missing.push('SUPABASE_SERVICE_KEY');
-    if (!SUPABASE_ANON_KEY) missing.push('SUPABASE_ANON_KEY');
-
-    if (missing.length > 0) {
-        console.error('═══════════════════════════════════════════════════════════');
-        console.error('❌ [E.I.O Supabase] ERRO CRÍTICO DE CONFIGURAÇÃO');
-        console.error('═══════════════════════════════════════════════════════════');
-        console.error(`   Variáveis faltando: ${missing.join(', ')}`);
-        console.error('');
-        console.error('   📋 COMO RESOLVER:');
-        console.error('   1. Acesse: https://vercel.com/seu-projeto/settings/environment-variables');
-        console.error('   2. Adicione cada variável listada acima');
-        console.error('   3. Faça redeploy do projeto');
-        console.error('');
-        console.error('   📖 Guia completo: docs/DEPLOY_GUIA.md');
-        console.error('═══════════════════════════════════════════════════════════');
-
-        if (IS_PRODUCTION) {
-            // Em produção, NÃO lança erro - permite que o health check mostre o problema
-            console.error('   ⚠️ Sistema em modo degradado - funcionalidades limitadas');
-        } else {
-            console.warn('   ⚠️ Modo desenvolvimento: Sistema pode não funcionar corretamente');
-            console.warn('   💡 Copie .env.example para .env e preencha os valores');
-        }
-    }
-
-    return missing.length === 0;
-}
-
-// ═══════════════════════════════════════════════════════════
-// INICIALIZAÇÃO DOS CLIENTES
+// VARIÁVEIS DOS CLIENTES (inicializadas como null)
 // ═══════════════════════════════════════════════════════════
 
 let supabaseAdmin = null;
 let supabaseClient = null;
 
-const isConfigValid = validateConfig();
+// ═══════════════════════════════════════════════════════════
+// INICIALIZAÇÃO SEGURA (Safe Init - NUNCA lança exceção)
+// ═══════════════════════════════════════════════════════════
 
-if (isConfigValid) {
-    // Cliente Admin (SERVICE_KEY) - Para operações privilegiadas no backend
-    supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    });
+function safeInitialize() {
+    // Verificar variáveis obrigatórias
+    if (!SUPABASE_URL) initStatus.missingVars.push('SUPABASE_URL');
+    if (!SUPABASE_SERVICE_KEY) initStatus.missingVars.push('SUPABASE_SERVICE_KEY');
+    if (!SUPABASE_ANON_KEY) initStatus.missingVars.push('SUPABASE_ANON_KEY');
 
-    // Cliente Público (ANON_KEY) - Para operações com RLS
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-            autoRefreshToken: true,
-            persistSession: false
-        }
-    });
+    // Se faltar alguma variável, NÃO tenta criar cliente
+    if (initStatus.missingVars.length > 0) {
+        initStatus.error = `Variáveis de ambiente faltando: ${initStatus.missingVars.join(', ')}`;
 
-    console.log('✅ [Supabase] Clientes inicializados com sucesso');
-    console.log(`   📍 URL: ${SUPABASE_URL.substring(0, 30)}...`);
-    console.log(`   🔑 Admin: SERVICE_KEY configurada`);
-    console.log(`   🔓 Client: ANON_KEY configurada`);
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error('⚠️ [E.I.O Supabase] INICIALIZAÇÃO EM MODO DEGRADADO');
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error(`   Variáveis faltando: ${initStatus.missingVars.join(', ')}`);
+        console.error('');
+        console.error('   📋 COMO RESOLVER:');
+        console.error('   1. Acesse o Vercel Dashboard > Settings > Environment Variables');
+        console.error('   2. Adicione cada variável listada acima');
+        console.error('   3. Faça redeploy do projeto');
+        console.error('');
+        console.error('   📖 Guia: docs/DEPLOY_GUIA.md');
+        console.error('   🔍 Diagnóstico: /api/health');
+        console.error('═══════════════════════════════════════════════════════════');
+
+        return false;
+    }
+
+    // Tentar criar clientes com try-catch (NUNCA lança para fora)
+    try {
+        const { createClient } = require('@supabase/supabase-js');
+
+        // Cliente Admin (SERVICE_KEY)
+        supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
+
+        // Cliente Público (ANON_KEY)
+        supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: false
+            }
+        });
+
+        initStatus.initialized = true;
+        console.log('✅ [Supabase] Clientes inicializados com sucesso');
+        console.log(`   📍 URL: ${SUPABASE_URL.substring(0, 30)}...`);
+
+        return true;
+
+    } catch (err) {
+        // Captura QUALQUER erro de inicialização
+        initStatus.error = `Erro ao criar cliente: ${err.message}`;
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error('❌ [E.I.O Supabase] ERRO NA CRIAÇÃO DO CLIENTE');
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error(`   Erro: ${err.message}`);
+        console.error('   Verifique se as chaves estão corretas');
+        console.error('═══════════════════════════════════════════════════════════');
+
+        return false;
+    }
 }
 
+// Executar inicialização segura
+safeInitialize();
+
 // ═══════════════════════════════════════════════════════════
-// FUNÇÕES DE UTILIDADE
+// FUNÇÕES PÚBLICAS (Safe Access)
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * Retorna o cliente Supabase de forma segura
+ * @returns {{ client: object|null, error: string|null }}
+ */
+function getSupabase() {
+    if (supabaseAdmin) {
+        return { client: supabaseAdmin, error: null };
+    }
+    return {
+        client: null,
+        error: initStatus.error || 'Cliente Supabase não inicializado'
+    };
+}
+
+/**
+ * Retorna o status de inicialização (para diagnóstico)
+ * @returns {object}
+ */
+function getStatus() {
+    return {
+        initialized: initStatus.initialized,
+        error: initStatus.error,
+        missingVars: initStatus.missingVars,
+        hasClient: !!supabaseAdmin,
+        config: {
+            url: SUPABASE_URL ? `${SUPABASE_URL.substring(0, 30)}...` : null,
+            hasServiceKey: !!SUPABASE_SERVICE_KEY,
+            hasAnonKey: !!SUPABASE_ANON_KEY,
+            nodeEnv: NODE_ENV
+        }
+    };
+}
 
 /**
  * Verifica a saúde da conexão com o Supabase
@@ -127,7 +189,10 @@ if (isConfigValid) {
  */
 async function checkConnection() {
     if (!supabaseAdmin) {
-        return { ok: false, message: 'Cliente Supabase não inicializado' };
+        return {
+            ok: false,
+            message: initStatus.error || 'Cliente não inicializado'
+        };
     }
 
     try {
@@ -165,10 +230,16 @@ function getConfigInfo() {
 // ═══════════════════════════════════════════════════════════
 
 module.exports = {
+    // Clientes (podem ser null - verificar antes de usar)
     supabaseAdmin,
     supabaseClient,
+    supabase: supabaseAdmin, // Alias para compatibilidade
+
+    // Funções de acesso seguro
+    getSupabase,
+    getStatus,
+
+    // Funções de utilidade
     checkConnection,
-    getConfigInfo,
-    // Alias para compatibilidade com código existente
-    supabase: supabaseAdmin
+    getConfigInfo
 };
