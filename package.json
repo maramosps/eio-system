@@ -11,7 +11,7 @@
         "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy-automatico.ps1"
     },
     "dependencies": {
-        "@supabase/supabase-js": "^2.39.0",
+        "@supabase/supabase-js": "2.95.3",
         "archiver": "^7.0.1",
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
