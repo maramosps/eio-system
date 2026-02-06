@@ -31,9 +31,13 @@ pids
 # Build outputs
 dist/
 build/
-*.zip
+# *.zip - REMOVIDO: Precisamos dos ZIPs da extensão no git!
 *.crx
 *.pem
+
+# Exceção: Permitir ZIPs da extensão nas pastas downloads
+!frontend/downloads/*.zip
+!public/downloads/*.zip
 
 # IDE
 .vscode/
