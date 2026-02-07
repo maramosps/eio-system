@@ -635,6 +635,28 @@ function initializeTableHandlers() {
         AppState.currentPage = Math.max(1, Math.min(parseInt(e.target.value) || 1, maxPage));
         renderAccountsTable();
     });
+
+    // ═══════════════════════════════════════════════════════════
+    // CHECKBOX: Mostrar/ocultar fotos de perfil na fila
+    // ═══════════════════════════════════════════════════════════
+    const cbShowProfilePic = document.getElementById('cbShowProfilePicInQueue');
+    if (cbShowProfilePic) {
+        cbShowProfilePic.addEventListener('change', function () {
+            AppState.config.showProfilePics = this.checked;
+            console.log(`[E.I.O] 📸 Fotos de perfil: ${this.checked ? 'ATIVADO' : 'DESATIVADO'}`);
+            renderAccountsTable();
+        });
+    }
+
+    // CHECKBOX: Mostrar/ocultar badges de status
+    const cbShowBadges = document.getElementById('configShowBadges');
+    if (cbShowBadges) {
+        cbShowBadges.addEventListener('change', function () {
+            AppState.config.showBadges = this.checked;
+            console.log(`[E.I.O] 🏷️ Badges: ${this.checked ? 'ATIVADO' : 'DESATIVADO'}`);
+            renderAccountsTable();
+        });
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -642,16 +664,19 @@ function initializeTableHandlers() {
 // Carrega imagens apenas quando estão prestes a entrar na viewport
 // ═══════════════════════════════════════════════════════════
 let imageObserver = null;
+let loadedImageCount = 0;
 
+/**
+ * Inicializa o lazy loading de imagens usando IntersectionObserver
+ * @param {HTMLElement} container - Container onde as imagens estão
+ */
 function handleImagePreload(container) {
     // Verificar se IntersectionObserver é suportado
     if (!('IntersectionObserver' in window)) {
         // Fallback: carregar todas as imagens imediatamente
         console.log('[E.I.O] IntersectionObserver não suportado, carregando imagens diretamente');
-        container.querySelectorAll('img.lazy-image[data-src]').forEach(img => {
-            img.src = img.dataset.src;
-            img.classList.remove('lazy-image');
-            img.classList.add('lazy-loaded');
+        container.querySelectorAll('img.igBotQueueAcctProfilePicture[data-src]').forEach(img => {
+            loadImage(img);
         });
         return;
     }
@@ -661,46 +686,91 @@ function handleImagePreload(container) {
         imageObserver.disconnect();
     }
 
+    // Reset contador
+    loadedImageCount = 0;
+
+    // Configuração do observer
+    const observerOptions = {
+        root: null, // viewport
+        rootMargin: '0px 0px 50px 0px', // Carrega 50px antes de aparecer na viewport
+        threshold: 0 // Dispara assim que qualquer pixel estiver visível
+    };
+
     // Criar novo IntersectionObserver
     imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
+            // Se a imagem está intersectando (visível ou próxima)
             if (entry.isIntersecting) {
-                const img = entry.target;
-                const dataSrc = img.dataset.src;
-
-                if (dataSrc) {
-                    // Adicionar classe de loading
-                    img.classList.add('lazy-loading');
-
-                    // Carregar imagem
-                    img.src = dataSrc;
-
-                    // Quando carregar, remover classe de loading
-                    img.onload = () => {
-                        img.classList.remove('lazy-loading', 'lazy-image');
-                        img.classList.add('lazy-loaded');
-                        img.removeAttribute('data-src');
-                    };
-
-                    // Parar de observar esta imagem
-                    observer.unobserve(img);
-                }
+                loadImage(entry.target);
+                observer.unobserve(entry.target); // Para de observar esta imagem
             }
         });
-    }, {
-        root: null, // viewport
-        rootMargin: '50px', // Carrega 50px antes de aparecer
-        threshold: 0.1
-    });
+    }, observerOptions);
 
     // Observar todas as imagens lazy
-    const lazyImages = container.querySelectorAll('img.lazy-image[data-src]');
+    const lazyImages = container.querySelectorAll('img.igBotQueueAcctProfilePicture[data-src]');
     lazyImages.forEach(img => {
-        imageObserver.observe(img);
+        if (img.hasAttribute('data-src')) {
+            imageObserver.observe(img);
+        }
     });
 
     console.log(`[E.I.O] 📸 Lazy loading iniciado para ${lazyImages.length} imagens`);
 }
+
+/**
+ * Carrega uma imagem individual usando pré-carregamento
+ * @param {HTMLImageElement} imgElement - Elemento img a ser carregado
+ */
+function loadImage(imgElement) {
+    const imageUrl = imgElement.getAttribute('data-src');
+
+    if (!imageUrl) return;
+
+    // Adiciona classe de loading para animação
+    imgElement.classList.add('lazy-loading');
+    imgElement.classList.remove('lazy-image');
+
+    // Cria uma nova imagem para pré-carregar
+    const tempImg = new Image();
+
+    tempImg.onload = function () {
+        // Quando a imagem carrega, define o src real
+        imgElement.src = imageUrl;
+        imgElement.removeAttribute('data-src');
+        imgElement.classList.remove('lazy-loading');
+        imgElement.classList.add('lazy-loaded');
+        loadedImageCount++;
+        // console.log(`[E.I.O] ✅ Imagem carregada: ${loadedImageCount}`);
+    };
+
+    tempImg.onerror = function () {
+        console.warn('[E.I.O] ⚠️ Erro ao carregar imagem:', imageUrl);
+        // Mostrar placeholder em caso de erro
+        imgElement.removeAttribute('data-src');
+        imgElement.classList.remove('lazy-loading', 'lazy-image');
+        imgElement.style.display = 'none';
+        // Mostrar o placeholder de inicial se existir
+        const placeholder = imgElement.nextElementSibling;
+        if (placeholder && placeholder.classList.contains('card-placeholder')) {
+            placeholder.style.display = 'flex';
+        }
+    };
+
+    // Inicia o carregamento da imagem
+    tempImg.src = imageUrl;
+}
+
+/**
+ * Recarrega as imagens após atualização de dados
+ */
+function refreshProfileImages() {
+    const container = document.getElementById('accountsGrid');
+    if (container && AppState.config.showProfilePics) {
+        handleImagePreload(container);
+    }
+}
+
 
 function renderAccountsTable() {
     const gridContainer = document.getElementById('accountsGrid');
