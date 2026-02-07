@@ -206,7 +206,50 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('automationStatusText').textContent = 'Parado';
             document.getElementById('automationStatusDot').classList.remove('running', 'paused');
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // EXTRACTION COMPLETE - Receber dados da auto-extração
+        // ═══════════════════════════════════════════════════════════
+        if (message.action === 'extraction_complete') {
+            console.log(`[E.I.O] 📥 Extração completa recebida: ${message.count} perfis`);
+
+            if (message.accounts && message.accounts.length > 0) {
+                addLog('success', `✅ ${message.count} perfis extraídos de @${message.target}`);
+                processLoadedAccounts(message.accounts);
+            }
+        }
     });
+});
+
+// ═══════════════════════════════════════════════════════════
+// REAL-TIME SYNC - Atualização automática quando storage muda
+// ═══════════════════════════════════════════════════════════
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace !== 'local') return;
+
+    // Se os dados de extração mudaram
+    if (changes.eio_extracted_accounts) {
+        const accounts = changes.eio_extracted_accounts.newValue;
+
+        if (accounts && accounts.length > 0) {
+            console.log(`[E.I.O] 🔄 Storage atualizado! Sincronizando ${accounts.length} perfis...`);
+
+            // Processar e renderizar automaticamente
+            processLoadedAccounts(accounts);
+
+            // Mostrar notificação visual
+            addLog('success', `🔄 Sincronização automática: ${accounts.length} perfis atualizados`);
+        }
+    }
+
+    // Se a timestamp de extração mudou (nova extração)
+    if (changes.eio_extraction_timestamp) {
+        const timestamp = changes.eio_extraction_timestamp.newValue;
+        const type = changes.eio_extraction_type?.newValue || 'unknown';
+        const target = changes.eio_extraction_target?.newValue || 'unknown';
+
+        console.log(`[E.I.O] ⏰ Nova extração detectada: ${type} de @${target} em ${new Date(timestamp).toLocaleTimeString()}`);
+    }
 });
 
 // ═══════════════════════════════════════════════════════════
