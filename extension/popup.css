@@ -2097,3 +2097,15 @@ body {
     transform: scale(1.05);
     box-shadow: 0 0 12px rgba(98, 70, 234, 0.4);
 }
+
+/* -----------------------------------------------------------
+   PROFILE AVATAR FIX (v4.4.11)
+   ----------------------------------------------------------- */
+.profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}

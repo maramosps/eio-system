@@ -810,14 +810,17 @@ function renderAccountsTable() {
             const showProfilePics = document.getElementById('cbShowProfilePicInQueue')?.checked ?? AppState.config.showProfilePics ?? true;
 
             let avatarHtml = '';
-            if (showProfilePics && acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
+            // Se tem URL de avatar e a opção está ativada
+            if (showProfilePics && acc.avatar && acc.avatar.length > 5) {
                 // Lazy Loading: usa data-src e classe para IntersectionObserver
+                // Adicionei classe 'profile-avatar' como solicitado no prompt, mantendo as outras para compatibilidade
                 avatarHtml = `<img data-src="${acc.avatar}" 
-                                   class="card-avatar igBotQueueAcctProfilePicture lazy-image" 
-                                   alt="" 
+                                   class="card-avatar igBotQueueAcctProfilePicture profile-avatar lazy-image" 
+                                   alt="${cleanUsername}" 
                                    referrerpolicy="no-referrer" 
                                    crossorigin="anonymous" 
-                                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                   style="display: block;"
+                                   onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                               <div class="card-placeholder" style="display:none;">${initial}</div>`;
             } else {
                 avatarHtml = `<div class="card-placeholder">${initial}</div>`;
@@ -1093,21 +1096,30 @@ async function loadFromInstagram(type, limit = 200) {
 
 function processLoadedAccounts(accounts) {
     // Processar resultados - normalizar campos de diferentes fontes
-    AppState.accounts = accounts.map(acc => ({
-        username: (acc.username || '').replace('@', ''),
-        fullName: acc.fullName || acc.full_name || acc.name || '',
-        // Avatar pode vir como profilePic (extração modal), avatar (API), ou profile_pic_url (API raw)
-        avatar: acc.profilePic || acc.avatar || acc.profile_pic_url || '',
-        id: acc.id || acc.pk || null,
-        isPrivate: !!acc.isPrivate || !!acc.is_private,
-        isVerified: !!acc.isVerified || !!acc.is_verified,
-        followers: acc.followers || acc.edge_followed_by?.count || 0,
-        following: acc.following || acc.edge_follow?.count || 0,
-        status: acc.status || 'pending',
-        followedByViewer: acc.followed_by_viewer || acc.followedByViewer || false,
-        followsViewer: acc.follows_viewer || acc.followsViewer || false,
-        requestedByViewer: acc.requested_by_viewer || acc.requestedByViewer || false
-    }));
+    AppState.accounts = accounts.map(acc => {
+        // Tentar encontrar a URL da foto em vários lugares possíveis
+        const avatarUrl = acc.profilePic ||
+            acc.avatar ||
+            acc.profile_pic_url ||
+            acc.profile_pic_url_hd ||
+            acc.user?.profile_pic_url ||
+            '';
+
+        return {
+            username: (acc.username || '').replace('@', ''),
+            fullName: acc.fullName || acc.full_name || acc.name || '',
+            avatar: avatarUrl,
+            id: acc.id || acc.pk || null,
+            isPrivate: !!acc.isPrivate || !!acc.is_private,
+            isVerified: !!acc.isVerified || !!acc.is_verified,
+            followers: acc.followers || acc.edge_followed_by?.count || 0,
+            following: acc.following || acc.edge_follow?.count || 0,
+            status: acc.status || 'pending',
+            followedByViewer: acc.followed_by_viewer || acc.followedByViewer || false,
+            followsViewer: acc.follows_viewer || acc.followsViewer || false,
+            requestedByViewer: acc.requested_by_viewer || acc.requestedByViewer || false
+        };
+    });
 
     // Aplicar filtros iniciais
     AppState.filteredAccounts = [...AppState.accounts];
