@@ -673,7 +673,7 @@ function renderAccountsTable() {
 
             let avatarHtml = '';
             if (acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
-                avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                               <div class="card-placeholder" style="display:none;">${initial}</div>`;
             } else {
                 avatarHtml = `<div class="card-placeholder">${initial}</div>`;
