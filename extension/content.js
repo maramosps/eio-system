@@ -48,7 +48,6 @@ let currentProfileId = null;
 // Detecta mudanças de rota sem refresh
 // ═══════════════════════════════════════════════════════════
 let lastUrl = window.location.href;
-let autoScrapePanel = null;
 let isAutoScrapingActive = false;
 
 // Função para verificar se URL é de followers/following
@@ -73,173 +72,17 @@ function getTargetFromUrl(url) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// AUTO-SCRAPE FLOATING PANEL (Zero-Click UX)
+// SILENT AUTO-SCRAPE (Sem UI visual - apenas detecção)
+// Feedback visual exclusivo no Dashboard/Popup
 // ═══════════════════════════════════════════════════════════
-function createAutoScrapePanel(type, target) {
-    // Remover painel existente se houver
-    removeAutoScrapePanel();
-
-    const panel = document.createElement('div');
-    panel.id = 'eio-auto-scrape-panel';
-    panel.innerHTML = `
-        <style>
-            #eio-auto-scrape-panel {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 16px 20px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                z-index: 999999;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                min-width: 280px;
-                animation: eioSlideIn 0.3s ease-out;
-            }
-            @keyframes eioSlideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            #eio-auto-scrape-panel .eio-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 12px;
-            }
-            #eio-auto-scrape-panel .eio-logo {
-                font-size: 24px;
-            }
-            #eio-auto-scrape-panel .eio-title {
-                font-weight: 600;
-                font-size: 14px;
-            }
-            #eio-auto-scrape-panel .eio-subtitle {
-                font-size: 12px;
-                opacity: 0.9;
-            }
-            #eio-auto-scrape-panel .eio-target {
-                background: rgba(255,255,255,0.2);
-                padding: 8px 12px;
-                border-radius: 8px;
-                margin-bottom: 12px;
-                font-size: 13px;
-            }
-            #eio-auto-scrape-panel .eio-progress {
-                background: rgba(255,255,255,0.2);
-                border-radius: 6px;
-                height: 8px;
-                margin-bottom: 8px;
-                overflow: hidden;
-            }
-            #eio-auto-scrape-panel .eio-progress-bar {
-                background: #4ade80;
-                height: 100%;
-                width: 0%;
-                transition: width 0.3s ease;
-            }
-            #eio-auto-scrape-panel .eio-status {
-                font-size: 12px;
-                margin-bottom: 12px;
-            }
-            #eio-auto-scrape-panel .eio-buttons {
-                display: flex;
-                gap: 8px;
-            }
-            #eio-auto-scrape-panel button {
-                flex: 1;
-                padding: 10px 16px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-                font-size: 13px;
-                transition: all 0.2s;
-            }
-            #eio-auto-scrape-panel .eio-btn-start {
-                background: white;
-                color: #667eea;
-            }
-            #eio-auto-scrape-panel .eio-btn-start:hover {
-                transform: scale(1.02);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            }
-            #eio-auto-scrape-panel .eio-btn-close {
-                background: rgba(255,255,255,0.2);
-                color: white;
-            }
-            #eio-auto-scrape-panel .eio-btn-close:hover {
-                background: rgba(255,255,255,0.3);
-            }
-            #eio-auto-scrape-panel.extracting .eio-btn-start {
-                background: #ef4444;
-                color: white;
-            }
-        </style>
-        <div class="eio-header">
-            <span class="eio-logo">🚀</span>
-            <div>
-                <div class="eio-title">E.I.O Auto-Extração</div>
-                <div class="eio-subtitle">${type === 'followers' ? 'Seguidores' : 'Seguindo'} detectados</div>
-            </div>
-        </div>
-        <div class="eio-target">
-            📌 Alvo: <strong>@${target}</strong>
-        </div>
-        <div class="eio-progress" style="display: none;">
-            <div class="eio-progress-bar" id="eio-progress-bar"></div>
-        </div>
-        <div class="eio-status" id="eio-status">Pronto para extrair até 200 perfis</div>
-        <div class="eio-buttons">
-            <button class="eio-btn-start" id="eio-btn-start">⚡ Iniciar Extração</button>
-            <button class="eio-btn-close" id="eio-btn-close">✕</button>
-        </div>
-    `;
-
-    document.body.appendChild(panel);
-    autoScrapePanel = panel;
-
-    // Event listeners
-    document.getElementById('eio-btn-close').addEventListener('click', removeAutoScrapePanel);
-    document.getElementById('eio-btn-start').addEventListener('click', () => {
-        if (isAutoScrapingActive) {
-            stopAutoScrape();
-        } else {
-            startAutoScrape(type, target);
-        }
-    });
-
-    console.log(`[E.I.O] 🎯 Painel de auto-extração criado para @${target} (${type})`);
-}
-
-function removeAutoScrapePanel() {
-    if (autoScrapePanel) {
-        autoScrapePanel.remove();
-        autoScrapePanel = null;
+async function silentAutoScrape(type, target) {
+    if (isAutoScrapingActive) {
+        console.log('[E.I.O] ⏸️ Extração já em andamento, ignorando...');
+        return;
     }
-}
-
-function updateAutoScrapePanelProgress(count, total, message) {
-    const progressBar = document.getElementById('eio-progress-bar');
-    const status = document.getElementById('eio-status');
-    const progressContainer = autoScrapePanel?.querySelector('.eio-progress');
-
-    if (progressContainer) progressContainer.style.display = 'block';
-    if (progressBar) progressBar.style.width = `${(count / total) * 100}%`;
-    if (status) status.textContent = message || `${count} de ${total} perfis coletados...`;
-}
-
-async function startAutoScrape(type, target) {
-    if (isAutoScrapingActive) return;
 
     isAutoScrapingActive = true;
-    const btn = document.getElementById('eio-btn-start');
-    const panel = document.getElementById('eio-auto-scrape-panel');
-
-    if (btn) btn.textContent = '⏹️ Parar';
-    if (panel) panel.classList.add('extracting');
-
-    console.log(`[E.I.O] 🚀 Iniciando auto-extração de ${type} de @${target}`);
+    console.log(`[E.I.O] 🚀 Iniciando extração silenciosa de ${type} de @${target}`);
 
     try {
         const limit = type === 'followers' ? 200 : 500;
@@ -253,9 +96,7 @@ async function startAutoScrape(type, target) {
 
         if (result && result.success) {
             const accounts = result.accounts || [];
-            console.log(`[E.I.O] ✅ Auto-extração completa: ${accounts.length} perfis`);
-
-            updateAutoScrapePanelProgress(accounts.length, limit, `✅ ${accounts.length} perfis extraídos!`);
+            console.log(`[E.I.O] ✅ Extração silenciosa completa: ${accounts.length} perfis de @${target}`);
 
             // Salvar no storage para sincronizar com popup/dashboard
             chrome.storage.local.set({
@@ -264,7 +105,7 @@ async function startAutoScrape(type, target) {
                 eio_extraction_type: type,
                 eio_extraction_target: target
             }, () => {
-                console.log('[E.I.O] 💾 Dados salvos no storage para sincronização');
+                console.log('[E.I.O] 💾 Dados salvos no storage para sincronização com Dashboard');
             });
 
             // Notificar popup/background
@@ -276,32 +117,17 @@ async function startAutoScrape(type, target) {
                 count: accounts.length
             });
 
-            // Atualizar UI
-            if (btn) btn.textContent = '✅ Concluído!';
-            setTimeout(() => {
-                if (btn) btn.textContent = '⚡ Extrair Novamente';
-            }, 3000);
         } else {
-            throw new Error(result?.error || 'Falha na extração');
+            console.warn('[E.I.O] ⚠️ Extração retornou sem sucesso:', result?.error || 'Erro desconhecido');
         }
     } catch (error) {
-        console.error('[E.I.O] ❌ Erro na auto-extração:', error);
-        updateAutoScrapePanelProgress(0, 100, `❌ Erro: ${error.message}`);
-        if (btn) btn.textContent = '⚡ Tentar Novamente';
+        console.error('[E.I.O] ❌ Erro na extração silenciosa:', error.message);
     } finally {
         isAutoScrapingActive = false;
-        if (panel) panel.classList.remove('extracting');
     }
 }
 
-function stopAutoScrape() {
-    isAutoScrapingActive = false;
-    const btn = document.getElementById('eio-btn-start');
-    if (btn) btn.textContent = '⚡ Iniciar Extração';
-    updateAutoScrapePanelProgress(0, 100, 'Extração cancelada');
-}
-
-// URL Observer com Auto-Detecção
+// URL Observer com Auto-Detecção Silenciosa
 const urlObserver = new MutationObserver(() => {
     if (window.location.href !== lastUrl) {
         lastUrl = window.location.href;
@@ -316,22 +142,22 @@ const urlObserver = new MutationObserver(() => {
         }
 
         // ════════════════════════════════════════════════════════
-        // AUTO-DETECÇÃO: Se entrou em página de followers/following
+        // AUTO-DETECÇÃO SILENCIOSA: Se entrou em página de followers/following
+        // Apenas loga no console - sem UI visual na página do Instagram
         // ════════════════════════════════════════════════════════
         if (isFollowersFollowingPage(lastUrl)) {
             const type = getExtractionType(lastUrl);
             const target = getTargetFromUrl(lastUrl);
 
             if (type && target) {
-                console.log(`[E.I.O] 🎯 Página de ${type} detectada para @${target}`);
-                // Pequeno delay para garantir que o modal carregou
-                setTimeout(() => {
-                    createAutoScrapePanel(type, target);
-                }, 800);
+                console.log(`[E.I.O] 🎯 Página de ${type} detectada para @${target} (modo silencioso)`);
+                // Salvar contexto para uso posterior via popup/dashboard
+                chrome.storage.local.set({
+                    eio_current_page_type: type,
+                    eio_current_page_target: target,
+                    eio_current_page_url: lastUrl
+                });
             }
-        } else {
-            // Remover painel se saiu da página de followers/following
-            removeAutoScrapePanel();
         }
     }
 });
@@ -346,7 +172,7 @@ setTimeout(() => {
     if (currentProfileUsername) console.log('[E.I.O] Perfil inicial:', currentProfileUsername);
 
     // ════════════════════════════════════════════════════════
-    // VERIFICAÇÃO INICIAL: Se já está em página de followers/following
+    // VERIFICAÇÃO INICIAL SILENCIOSA
     // ════════════════════════════════════════════════════════
     const currentUrl = window.location.href;
     if (isFollowersFollowingPage(currentUrl)) {
@@ -354,8 +180,13 @@ setTimeout(() => {
         const target = getTargetFromUrl(currentUrl);
 
         if (type && target) {
-            console.log(`[E.I.O] 🎯 Inicialização em página de ${type} de @${target}`);
-            createAutoScrapePanel(type, target);
+            console.log(`[E.I.O] 🎯 Inicialização em página de ${type} de @${target} (modo silencioso)`);
+            // Salvar contexto
+            chrome.storage.local.set({
+                eio_current_page_type: type,
+                eio_current_page_target: target,
+                eio_current_page_url: currentUrl
+            });
         }
     }
 }, 1000);

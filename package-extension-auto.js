@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const VERSION = '4.4.6';
+const VERSION = '4.4.7';
 const EXTENSION_DIR = path.join(__dirname, 'extension');
 const OUTPUT_DIR = path.join(__dirname, 'frontend', 'downloads');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, `eio-extension-v${VERSION}.zip`);

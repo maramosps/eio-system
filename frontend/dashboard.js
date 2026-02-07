@@ -465,13 +465,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.6 (E.I.O System)';
+    if (extensionVersion) extensionVersion.textContent = '4.4.7 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.6.zip';
+            window.location.href = 'downloads/eio-extension-v4.4.7.zip';
         });
     }
 
@@ -504,7 +504,7 @@ function showInstructionsModal() {
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.6.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.7.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
@@ -2834,3 +2834,4 @@ window.qualifyAllLeads = function () {
         `❄️ Frios: ${leads.filter(l => l.qualificationLevel === 'Frio').length}`
     );
 };
+
