@@ -660,268 +660,267 @@ function initializeTableHandlers() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// LAZY LOADING - IntersectionObserver para imagens de perfil
-// Carrega imagens apenas quando estão prestes a entrar na viewport
+// LAZY LOADING (Modelo Growbot)
+// Implementação exata conforme solicitado para garantir funcionamento
 // ═══════════════════════════════════════════════════════════
-let imageObserver = null;
-let loadedImageCount = 0;
 
 /**
- * Inicializa o lazy loading de imagens usando IntersectionObserver
- * @param {HTMLElement} container - Container onde as imagens estão
+ * Função principal de pre-carregamento chamada APÓS renderizar o grid
  */
-function handleImagePreload(container) {
-    // Verificar se IntersectionObserver é suportado
+function handleImagePreload() {
+    const images = document.querySelectorAll('img.igBotQueueAcctProfilePicture');
+    console.log(`[E.I.O] 📸 Lazy Loading iniciado. Imagens encontradas: ${images.length}`);
+
     if (!('IntersectionObserver' in window)) {
-        // Fallback: carregar todas as imagens imediatamente
-        console.log('[E.I.O] IntersectionObserver não suportado, carregando imagens diretamente');
-        container.querySelectorAll('img.igBotQueueAcctProfilePicture[data-src]').forEach(img => {
-            loadImage(img);
-        });
+        console.warn('[E.I.O] IntersectionObserver não suportado. Carregando direto.');
+        images.forEach(img => loadImage(img));
         return;
     }
 
-    // Desconectar observer anterior se existir
-    if (imageObserver) {
-        imageObserver.disconnect();
-    }
-
-    // Reset contador
-    loadedImageCount = 0;
-
-    // Configuração do observer
     const observerOptions = {
-        root: null, // viewport
-        rootMargin: '0px 0px 50px 0px', // Carrega 50px antes de aparecer na viewport
-        threshold: 0 // Dispara assim que qualquer pixel estiver visível
+        rootMargin: '0px 0px 50px 0px',
+        threshold: 0
     };
 
-    // Criar novo IntersectionObserver
-    imageObserver = new IntersectionObserver((entries, observer) => {
+    // Observer único para todas as imagens
+    const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
-            // Se a imagem está intersectando (visível ou próxima)
             if (entry.isIntersecting) {
                 loadImage(entry.target);
-                observer.unobserve(entry.target); // Para de observar esta imagem
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    // Observar todas as imagens lazy
-    const lazyImages = container.querySelectorAll('img.igBotQueueAcctProfilePicture[data-src]');
-    lazyImages.forEach(img => {
+    images.forEach(img => {
+        // Observar apenas se tiver data-src (ainda não carregada)
         if (img.hasAttribute('data-src')) {
             imageObserver.observe(img);
         }
     });
 
-    console.log(`[E.I.O] 📸 Lazy loading iniciado para ${lazyImages.length} imagens`);
-}
+    /**
+     * Carrega a imagem copiando data-src para src
+     */
+    function loadImage(imgElement) {
+        const imageUrl = imgElement.getAttribute('data-src');
+        if (!imageUrl) return;
 
-/**
- * Carrega uma imagem individual usando pré-carregamento
- * @param {HTMLImageElement} imgElement - Elemento img a ser carregado
- */
-function loadImage(imgElement) {
-    const imageUrl = imgElement.getAttribute('data-src');
+        // Debug
+        // console.log(`[E.I.O] Carregando imagem: ${imageUrl}`);
 
-    if (!imageUrl) return;
-
-    // Adiciona classe de loading para animação
-    imgElement.classList.add('lazy-loading');
-    imgElement.classList.remove('lazy-image');
-
-    // Cria uma nova imagem para pré-carregar
-    const tempImg = new Image();
-
-    tempImg.onload = function () {
-        // Quando a imagem carrega, define o src real
+        // Copia data-src para src (O SEGREDO DO GROWBOT)
         imgElement.src = imageUrl;
+
+        // Limpa data-src para não processar novamente e liberar memória
         imgElement.removeAttribute('data-src');
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('lazy-loaded');
-        loadedImageCount++;
-        // console.log(`[E.I.O] ✅ Imagem carregada: ${loadedImageCount}`);
-    };
 
-    tempImg.onerror = function () {
-        console.warn('[E.I.O] ⚠️ Erro ao carregar imagem:', imageUrl);
-        // Mostrar placeholder em caso de erro
-        imgElement.removeAttribute('data-src');
-        imgElement.classList.remove('lazy-loading', 'lazy-image');
-        imgElement.style.display = 'none';
-        // Mostrar o placeholder de inicial se existir
-        const placeholder = imgElement.nextElementSibling;
-        if (placeholder && placeholder.classList.contains('card-placeholder')) {
-            placeholder.style.display = 'flex';
-        }
-    };
+        // Tratamento de erro visual
+        imgElement.onerror = function () {
+            console.warn('[E.I.O] Falha ao carregar imagem, ocultando.', imageUrl);
+            this.style.display = 'none';
+            // Tenta mostrar placeholder irmão se existir
+            const placeholder = this.nextElementSibling;
+            if (placeholder && placeholder.classList.contains('card-placeholder')) {
+                placeholder.style.display = 'flex';
+            }
+        };
 
-    // Inicia o carregamento da imagem
-    tempImg.src = imageUrl;
-}
-
-/**
- * Recarrega as imagens após atualização de dados
- */
-function refreshProfileImages() {
-    const container = document.getElementById('accountsGrid');
-    if (container && AppState.config.showProfilePics) {
-        handleImagePreload(container);
+        imgElement.onload = function () {
+            this.style.opacity = '1';
+        };
     }
 }
 
+/**
+ * Wrapper para recarregar imagens manualmente
+ */
+function refreshProfileImages() {
+    handleImagePreload();
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI RENDERING
+// ═══════════════════════════════════════════════════════════
 
 function renderAccountsTable() {
     const gridContainer = document.getElementById('accountsGrid');
     const emptyState = document.getElementById('tableEmptyState');
 
-    if (!gridContainer) return;
+    if (!document.getElementById('accountsGrid')) return;
 
-    // Função interna de renderização
-    const performRender = () => {
-        const accounts = getPageAccounts();
-
-        if (accounts.length === 0) {
-            gridContainer.innerHTML = '';
-            if (emptyState) emptyState.style.display = 'flex';
-            return;
-        }
-
-        if (emptyState) emptyState.style.display = 'none';
-
-        // Criar header
-        const headerHtml = `
-            <div class="eio-grid-header">
-                <label>
-                    <input type="checkbox" id="selectAllGrid" ${AppState.selectedAccounts.size === accounts.length ? 'checked' : ''}>
-                    <span>Selecionar Todos</span>
-                </label>
-            </div>
-        `;
-
-        // Criar cards
-        const cardsHtml = accounts.map(acc => {
-            const initial = (acc.username || '?').replace('@', '')[0]?.toUpperCase() || '?';
-            const isSelected = AppState.selectedAccounts.has(acc.username);
-            const cleanUsername = (acc.username || '').replace('@', '');
-
-            // Verificar se deve mostrar fotos de perfil
-            const showProfilePics = document.getElementById('cbShowProfilePicInQueue')?.checked ?? AppState.config.showProfilePics ?? true;
-
-            let avatarHtml = '';
-            // Se tem URL de avatar e a opção está ativada
-            if (showProfilePics && acc.avatar && acc.avatar.length > 5) {
-                // Lazy Loading: usa data-src e classe para IntersectionObserver
-                // Adicionei classe 'profile-avatar' como solicitado no prompt, mantendo as outras para compatibilidade
-                avatarHtml = `<img data-src="${acc.avatar}" 
-                                   class="card-avatar igBotQueueAcctProfilePicture profile-avatar lazy-image" 
-                                   alt="${cleanUsername}" 
-                                   referrerpolicy="no-referrer" 
-                                   crossorigin="anonymous" 
-                                   style="display: block;"
-                                   onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                              <div class="card-placeholder" style="display:none;">${initial}</div>`;
-            } else {
-                avatarHtml = `<div class="card-placeholder">${initial}</div>`;
-            }
-
-            // Carimbo de Ação (Stamp) - Verificar se opção está ativa
-            let stampHtml = '';
-            const showBadges = document.getElementById('configShowBadges')?.checked ?? true;
-
-            if (showBadges) {
-                // Determinar o status baseado em múltiplas propriedades
-                if (acc.status === 'followed' || acc.followedByViewer || acc.followedByMe || acc.status === 'following') {
-                    stampHtml = `<div class="card-stamp stamp-green">FOLLOWED</div>`;
-                } else if (acc.status === 'requested' || acc.requestedByViewer) {
-                    stampHtml = `<div class="card-stamp stamp-blue">REQUESTED</div>`;
-                } else if (acc.status === 'unfollowed') {
-                    stampHtml = `<div class="card-stamp stamp-red">UNFOLLOWED</div>`;
-                } else if (acc.status === 'liked') {
-                    stampHtml = `<div class="card-stamp stamp-pink">LIKED</div>`;
-                } else if (acc.status === 'error') {
-                    stampHtml = `<div class="card-stamp stamp-orange">ERROR</div>`;
-                } else if (acc.followsViewer) {
-                    stampHtml = `<div class="card-stamp stamp-cyan">FOLLOWS YOU</div>`;
-                }
-            }
-
-            return `
-                <div class="eio-account-card ${isSelected ? 'selected' : ''}" data-username="${acc.username}">
-                    <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
-                    <div style="position: relative;">
-                        ${avatarHtml}
-                        ${stampHtml}
-                    </div>
-                    <div class="card-info">
-                        <div class="card-username">
-                            <a href="https://instagram.com/${cleanUsername}" target="_blank">@${cleanUsername}</a>
-                        </div>
-                        ${acc.fullName ? `<div class="card-name">${acc.fullName}</div>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        gridContainer.innerHTML = headerHtml + cardsHtml;
-
-        // ═══════════════════════════════════════════════════════════
-        // LAZY LOADING: Inicializar IntersectionObserver
-        // ═══════════════════════════════════════════════════════════
-        handleImagePreload(gridContainer);
-
-        // Re-attach handlers
-        const selectAllGrid = document.getElementById('selectAllGrid');
-        if (selectAllGrid) {
-            selectAllGrid.addEventListener('change', (e) => {
-                const allCards = gridContainer.querySelectorAll('.eio-account-card');
-                const allCheckboxes = gridContainer.querySelectorAll('.card-checkbox');
-
-                allCards.forEach((card, idx) => {
-                    const username = card.dataset.username;
-                    if (e.target.checked) {
-                        AppState.selectedAccounts.add(username);
-                        card.classList.add('selected');
-                        allCheckboxes[idx].checked = true;
-                    } else {
-                        AppState.selectedAccounts.delete(username);
-                        card.classList.remove('selected');
-                        allCheckboxes[idx].checked = false;
-                    }
-                });
-
-                updateSelectedCount();
-            });
-        }
-
-        gridContainer.querySelectorAll('.eio-account-card').forEach(card => {
-            const checkbox = card.querySelector('.card-checkbox');
-            card.addEventListener('click', (e) => {
-                if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
-                checkbox.checked = !checkbox.checked;
-                toggleCardSelection(card, checkbox.checked);
-            });
-            checkbox.addEventListener('change', (e) => {
-                e.stopPropagation();
-                toggleCardSelection(card, e.target.checked);
-            });
-        });
-
-        updatePaginationInfo();
-    };
-
-    // Otimização: Spinner
-    if (AppState.filteredAccounts.length > 200) {
-        gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
-
-        // setTimeout para processar
-        setTimeout(() => {
-            requestAnimationFrame(performRender);
-        }, 50);
-    } else {
-        performRender();
+    // Filtros e paginação
+    let filtered = AppState.filteredAccounts;
+    if (AppState.config.hideProcessed) {
+        filtered = filtered.filter(acc => acc.status === 'pending');
     }
+
+    // Ordenação
+    sortAccounts();
+
+    // Paginação
+    const start = (AppState.currentPage - 1) * AppState.pageSize;
+    const end = start + AppState.pageSize;
+    const paginatedAccounts = filtered.slice(start, end);
+
+    // Empty State
+    if (filtered.length === 0) {
+        gridContainer.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'flex';
+        renderPagination(0);
+        updateSelectedCount();
+        return;
+    }
+
+    gridContainer.style.display = 'grid'; // Grid layout
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Gerar HTML dos cards
+    const cardsHtml = paginatedAccounts.map(acc => {
+        const isSelected = AppState.selectedAccounts.has(acc.username);
+        const cleanUsername = (acc.username || '').replace('@', '');
+        const initial = cleanUsername.charAt(0).toUpperCase();
+
+        // Verificar configuração de exibição
+        const showProfilePics = document.getElementById('cbShowProfilePicInQueue')?.checked ?? AppState.config.showProfilePics ?? true;
+        const showBadges = document.getElementById('configShowBadges')?.checked ?? AppState.config.showBadges ?? true;
+
+        // Lógica de Avatar (MODELO GROWBOT)
+        let avatarHtml = '';
+        if (showProfilePics && acc.avatar && acc.avatar.length > 5) {
+            // ✅ CORRETO (imagem real com lazy loading):
+            avatarHtml = `<img 
+                            data-src="${acc.avatar}" 
+                            data-userid="${acc.id || ''}"
+                            class="igBotQueueAcctProfilePicture"
+                            alt="${cleanUsername}"
+                            referrerpolicy="no-referrer"
+                            crossorigin="anonymous">
+                          <div class="card-placeholder" style="display:none;">${initial}</div>`;
+        } else {
+            // ❌ Falback/Opção desativada
+            avatarHtml = `<div class="card-placeholder">${initial}</div>`;
+        }
+
+        // Badges HTML
+        let badgesHtml = '';
+        if (showBadges) {
+            if (acc.isVerified) badgesHtml += '<span class="badge badge-verified" title="Verificado">✓</span>';
+            if (acc.isPrivate) badgesHtml += '<span class="badge badge-private" title="Privado">🔒</span>';
+            if (acc.followsViewer) badgesHtml += '<span class="badge badge-follows" title="Segue você">S</span>';
+        }
+
+        // Status Stamp
+        let stampHtml = '';
+        if (acc.status && acc.status !== 'pending') {
+            let stampClass = 'stamp-green';
+            let stampText = acc.status.toUpperCase();
+
+            if (acc.status === 'requested') { stampClass = 'stamp-blue'; stampText = 'REQUESTED'; }
+            else if (acc.status === 'unfollowed') { stampClass = 'stamp-red'; stampText = 'UNFOLLOWED'; }
+            else if (acc.status === 'liked') { stampClass = 'stamp-pink'; stampText = 'LIKED'; }
+            else if (acc.status === 'error') { stampClass = 'stamp-orange'; stampText = 'ERROR'; }
+
+            stampHtml = `<div class="card-stamp ${stampClass}">${stampText}</div>`;
+        }
+
+        return `
+        <div class="eio-account-card ${isSelected ? 'selected' : ''}" data-username="${cleanUsername}">
+            <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
+            <div style="position: relative;">
+                <div class="card-avatar-wrapper">
+                    ${avatarHtml}
+                    ${badgesHtml}
+                </div>
+            </div>
+            
+            <div class="card-info">
+                <div class="card-username" title="@${cleanUsername}">@${cleanUsername}</div>
+                <div class="card-fullname" title="${acc.fullName || ''}">${acc.fullName || ''}</div>
+            </div>
+
+            <div class="card-stats">
+                <div class="stat-item" title="Seguidores">
+                    <span class="stat-label">Seguidores</span>
+                    <span class="stat-value">${formatNumber(acc.followers)}</span>
+                </div>
+                <div class="stat-item" title="Seguindo">
+                    <span class="stat-label">Seguindo</span>
+                    <span class="stat-value">${formatNumber(acc.following)}</span>
+                </div>
+            </div>
+
+            ${stampHtml}
+        </div>
+        `;
+    }).join('');
+
+    // Criar header de seleção (se necessário, ou manter separado)
+    // Para simplificar, insertamos apenas os cards
+    gridContainer.innerHTML = cardsHtml;
+
+    // ═══════════════════════════════════════════════════════════
+    // EVENT LISTENERS (Re-attach)
+    // ═══════════════════════════════════════════════════════════
+
+    // Select All
+    const selectAllGrid = document.getElementById('selectAllGrid');
+    if (selectAllGrid) {
+        // Remove listener antigo clonando e substituindo
+        const newSelectAll = selectAllGrid.cloneNode(true);
+        selectAllGrid.parentNode.replaceChild(newSelectAll, selectAllGrid);
+
+        newSelectAll.addEventListener('change', (e) => {
+            const allCards = gridContainer.querySelectorAll('.eio-account-card');
+            const allCheckboxes = gridContainer.querySelectorAll('.card-checkbox');
+            const shouldSelect = e.target.checked;
+
+            // Loop correto que estava faltando
+            paginatedAccounts.forEach(acc => {
+                if (shouldSelect) {
+                    AppState.selectedAccounts.add(acc.username);
+                } else {
+                    AppState.selectedAccounts.delete(acc.username);
+                }
+            });
+
+            allCards.forEach(card => shouldSelect ? card.classList.add('selected') : card.classList.remove('selected'));
+            allCheckboxes.forEach(cb => cb.checked = shouldSelect);
+
+            updateSelectedCount();
+        });
+    }
+
+    gridContainer.querySelectorAll('.eio-account-card').forEach(card => {
+        const checkbox = card.querySelector('.card-checkbox');
+        card.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
+            checkbox.checked = !checkbox.checked;
+            toggleCardSelection(card, checkbox.checked);
+        });
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            toggleCardSelection(card, e.target.checked);
+        });
+    });
+
+    updatePaginationInfo();
+
+    // Iniciar lazy loading após renderizar o DOM
+    handleImagePreload();
+};
+
+// Otimização: Spinner
+if (AppState.filteredAccounts.length > 200) {
+    gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
+
+    // setTimeout para processar
+    setTimeout(() => {
+        requestAnimationFrame(performRender);
+    }, 50);
+} else {
+    performRender();
+}
 }
 
 /**
