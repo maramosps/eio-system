@@ -2163,11 +2163,11 @@ function renderMediaQueue() {
                 </div>
                 <div class="eio-media-actions" style="display: flex; gap: 5px;">
                     ${item.status === 'pending' ? `
-                        <button class="eio-btn-icon" onclick="processMediaItem(${index})" title="Processar agora" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                        <button class="eio-btn-icon eio-media-process" data-action="process-media" data-index="${index}" title="Processar agora" style="background: none; border: none; cursor: pointer; padding: 4px;">
                             ▶️
                         </button>
                     ` : ''}
-                    <button class="eio-btn-icon" onclick="removeMediaFromQueue(${index})" title="Remover" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                    <button class="eio-btn-icon eio-media-remove" data-action="remove-media" data-index="${index}" title="Remover" style="background: none; border: none; cursor: pointer; padding: 4px;">
                         ❌
                     </button>
                 </div>
@@ -2176,16 +2176,36 @@ function renderMediaQueue() {
     }).join('');
 }
 
-// Global functions for inline onclick handlers
-window.removeMediaFromQueue = function (index) {
+// ═══════════════════════════════════════════════════════════
+// MEDIA QUEUE EVENT DELEGATION (CSP-Compliant)
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('click', function (e) {
+    // Handle process-media action
+    const processBtn = e.target.closest('[data-action="process-media"]');
+    if (processBtn) {
+        const index = parseInt(processBtn.dataset.index, 10);
+        processMediaItem(index);
+        return;
+    }
+
+    // Handle remove-media action
+    const removeBtn = e.target.closest('[data-action="remove-media"]');
+    if (removeBtn) {
+        const index = parseInt(removeBtn.dataset.index, 10);
+        removeMediaFromQueue(index);
+        return;
+    }
+});
+
+function removeMediaFromQueue(index) {
     if (!AppState.mediaQueue) return;
     AppState.mediaQueue.splice(index, 1);
     saveState();
     renderMediaQueue();
     addLog('info', 'Mídia removida da fila.');
-};
+}
 
-window.processMediaItem = function (index) {
+function processMediaItem(index) {
     if (!AppState.mediaQueue) return;
     const item = AppState.mediaQueue[index];
     if (!item) return;
@@ -2198,7 +2218,7 @@ window.processMediaItem = function (index) {
 
     // Trigger existing extraction logic
     loadFromInstagram(item.type, 1000);
-};
+}
 
 
 // ═══════════════════════════════════════════════════════════
