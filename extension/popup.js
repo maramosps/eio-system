@@ -908,19 +908,6 @@ function renderAccountsTable() {
 
     // Iniciar lazy loading após renderizar o DOM
     handleImagePreload();
-};
-
-// Otimização: Spinner
-if (AppState.filteredAccounts.length > 200) {
-    gridContainer.innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--eio-text-secondary);">⏳ Carregando...</div>';
-
-    // setTimeout para processar
-    setTimeout(() => {
-        requestAnimationFrame(performRender);
-    }, 50);
-} else {
-    performRender();
-}
 }
 
 /**
