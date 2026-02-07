@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Supabase Client - Importação centralizada com Safe Init
-const { supabase, getStatus } = require('../src/services/supabase');
+// Supabase Client - Importação LOCAL (dentro da pasta api para Vercel)
+const { supabase, getStatus } = require('./services/supabase');
 
 const jwtSecret = process.env.JWT_SECRET || 'eio-secret-key-2026';
 
