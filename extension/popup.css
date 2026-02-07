@@ -1956,7 +1956,6 @@ body {
 .eio-toast-close:hover {
     color: #fff;
 }
-
 /* LOADING OVERLAY */
 .eio-loading-overlay {
     position: fixed;
@@ -1979,7 +1978,7 @@ body {
     padding: 24px;
     width: 85%;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .eio-loading-spinner-wrapper {
@@ -1998,9 +1997,7 @@ body {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 .eio-progress-container {
@@ -2073,13 +2070,8 @@ body {
 }
 
 @keyframes shimmer {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* Imagem carregando */
@@ -2095,15 +2087,8 @@ body {
 }
 
 @keyframes fadeInImg {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 /* Hover effect nas imagens carregadas */
@@ -2113,24 +2098,14 @@ body {
     box-shadow: 0 0 12px rgba(98, 70, 234, 0.4);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   PROFILE PICTURE STYLES (Growbot Model)
-   ═══════════════════════════════════════════════════════════ */
-.igBotQueueAcctProfilePicture,
+/* -----------------------------------------------------------
+   PROFILE AVATAR FIX (v4.4.11)
+   ----------------------------------------------------------- */
 .profile-avatar {
-    width: 60px;
-    height: 60px;
-    border: 3px solid white;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    margin: 0 0 -5px 0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
-    background-color: #f0f0f0;
-    /* Fundo cinza claro enquanto carrega */
-    transition: opacity 0.3s ease;
-}
-
-/* Estado inicial (antes de carregar) */
-.igBotQueueAcctProfilePicture:not([src]) {
-    opacity: 0.6;
 }
