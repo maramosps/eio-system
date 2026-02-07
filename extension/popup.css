@@ -2047,3 +2047,53 @@ body {
     background: #2a2a2a;
 }
 
+
+/* ===============================================================
+   LAZY LOADING STYLES - Profile Pictures (v4.4.9)
+   =============================================================== */
+.igBotQueueAcctProfilePicture {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+    transition: opacity 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+}
+
+/* Imagem lazy (antes de carregar) */
+.lazy-image {
+    opacity: 0;
+    background: linear-gradient(135deg, #22222d 25%, #2a2a38 50%, #22222d 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Imagem carregando */
+.lazy-loading {
+    opacity: 0.5;
+    animation: none;
+}
+
+/* Imagem carregada com sucesso */
+.lazy-loaded {
+    opacity: 1;
+    animation: fadeInImg 0.3s ease-out;
+}
+
+@keyframes fadeInImg {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Hover effect nas imagens carregadas */
+.igBotQueueAcctProfilePicture.lazy-loaded:hover {
+    border-color: #7c5dfa;
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(98, 70, 234, 0.4);
+}

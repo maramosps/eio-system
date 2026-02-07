@@ -637,6 +637,71 @@ function initializeTableHandlers() {
     });
 }
 
+// ═══════════════════════════════════════════════════════════
+// LAZY LOADING - IntersectionObserver para imagens de perfil
+// Carrega imagens apenas quando estão prestes a entrar na viewport
+// ═══════════════════════════════════════════════════════════
+let imageObserver = null;
+
+function handleImagePreload(container) {
+    // Verificar se IntersectionObserver é suportado
+    if (!('IntersectionObserver' in window)) {
+        // Fallback: carregar todas as imagens imediatamente
+        console.log('[E.I.O] IntersectionObserver não suportado, carregando imagens diretamente');
+        container.querySelectorAll('img.lazy-image[data-src]').forEach(img => {
+            img.src = img.dataset.src;
+            img.classList.remove('lazy-image');
+            img.classList.add('lazy-loaded');
+        });
+        return;
+    }
+
+    // Desconectar observer anterior se existir
+    if (imageObserver) {
+        imageObserver.disconnect();
+    }
+
+    // Criar novo IntersectionObserver
+    imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                const dataSrc = img.dataset.src;
+
+                if (dataSrc) {
+                    // Adicionar classe de loading
+                    img.classList.add('lazy-loading');
+
+                    // Carregar imagem
+                    img.src = dataSrc;
+
+                    // Quando carregar, remover classe de loading
+                    img.onload = () => {
+                        img.classList.remove('lazy-loading', 'lazy-image');
+                        img.classList.add('lazy-loaded');
+                        img.removeAttribute('data-src');
+                    };
+
+                    // Parar de observar esta imagem
+                    observer.unobserve(img);
+                }
+            }
+        });
+    }, {
+        root: null, // viewport
+        rootMargin: '50px', // Carrega 50px antes de aparecer
+        threshold: 0.1
+    });
+
+    // Observar todas as imagens lazy
+    const lazyImages = container.querySelectorAll('img.lazy-image[data-src]');
+    lazyImages.forEach(img => {
+        imageObserver.observe(img);
+    });
+
+    console.log(`[E.I.O] 📸 Lazy loading iniciado para ${lazyImages.length} imagens`);
+}
+
 function renderAccountsTable() {
     const gridContainer = document.getElementById('accountsGrid');
     const emptyState = document.getElementById('tableEmptyState');
@@ -671,9 +736,18 @@ function renderAccountsTable() {
             const isSelected = AppState.selectedAccounts.has(acc.username);
             const cleanUsername = (acc.username || '').replace('@', '');
 
+            // Verificar se deve mostrar fotos de perfil
+            const showProfilePics = document.getElementById('cbShowProfilePicInQueue')?.checked ?? AppState.config.showProfilePics ?? true;
+
             let avatarHtml = '';
-            if (acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
-                avatarHtml = `<img src="${acc.avatar}" class="card-avatar" alt="" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            if (showProfilePics && acc.avatar && (acc.avatar.startsWith('http') || acc.avatar.startsWith('data:'))) {
+                // Lazy Loading: usa data-src e classe para IntersectionObserver
+                avatarHtml = `<img data-src="${acc.avatar}" 
+                                   class="card-avatar igBotQueueAcctProfilePicture lazy-image" 
+                                   alt="" 
+                                   referrerpolicy="no-referrer" 
+                                   crossorigin="anonymous" 
+                                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                               <div class="card-placeholder" style="display:none;">${initial}</div>`;
             } else {
                 avatarHtml = `<div class="card-placeholder">${initial}</div>`;
@@ -718,6 +792,11 @@ function renderAccountsTable() {
         }).join('');
 
         gridContainer.innerHTML = headerHtml + cardsHtml;
+
+        // ═══════════════════════════════════════════════════════════
+        // LAZY LOADING: Inicializar IntersectionObserver
+        // ═══════════════════════════════════════════════════════════
+        handleImagePreload(gridContainer);
 
         // Re-attach handlers
         const selectAllGrid = document.getElementById('selectAllGrid');
