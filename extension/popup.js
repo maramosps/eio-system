@@ -998,12 +998,15 @@ async function loadFromInstagram(type, limit = 200) {
     LoadingManager.show(type);
 
     try {
-        // Obter aba ativa do Instagram
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        const instagramTab = tabs.find(t => t.url?.includes('instagram.com'));
+        // Obter aba ativa do Instagram (suporta Popout Window)
+        const tabs = await chrome.tabs.query({ url: "*://*.instagram.com/*" });
+
+        let instagramTab = tabs.find(t => t.active && t.currentWindow) ||
+            tabs.find(t => t.active) ||
+            tabs[0];
 
         if (!instagramTab) {
-            throw new Error('Abra o Instagram primeiro');
+            throw new Error('Nenhuma aba do Instagram encontrada. Abra o Instagram e faça login.');
         }
 
         // Verificar se há um modal de seguidores/seguindo aberto
