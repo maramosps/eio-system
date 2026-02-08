@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
                 message: isHealthy
                     ? 'E.I.O System API está pronta para produção'
                     : supabaseStatus.error || `${missingVars.length} variável(eis) de ambiente não configurada(s)`,
-                version: '4.4.5',
+                version: '4.4.16',
                 timestamp: new Date().toISOString(),
                 env_check: envCheck,
                 database: {
@@ -767,6 +767,82 @@ module.exports = async (req, res) => {
                 });
             } catch (err) {
                 return res.status(401).json({ message: 'Token inválido' });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // v4.4.16 ACTION LOG ENDPOINT - Extension Sync Protocol
+        // Recebe logs de ações da extensão para sincronização
+        // Retorna status 201 para confirmar sucesso
+        // ═══════════════════════════════════════════════════════════
+        if ((path === '/api/v1/actions' || pathFromQuery === 'v1/actions') && method === 'POST') {
+            if (!supabase) {
+                console.error('[API /api/v1/actions] ❌ Supabase não configurado');
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            try {
+                const { user_id, action_type, target_username, timestamp, success, source } = req.body;
+
+                // Validar campos obrigatórios
+                if (!action_type || !target_username) {
+                    console.warn('[API /api/v1/actions] ⚠️ Campos obrigatórios faltando');
+                    return res.status(400).json({
+                        success: false,
+                        message: 'action_type e target_username são obrigatórios'
+                    });
+                }
+
+                // Tentar extrair user_id do token, se não vier no body
+                let userId = user_id;
+                const authHeader = req.headers['authorization'];
+                if (!userId && authHeader) {
+                    try {
+                        const token = authHeader.replace('Bearer ', '');
+                        const decoded = jwt.verify(token, jwtSecret);
+                        userId = decoded.userId;
+                    } catch (authErr) {
+                        console.log('[API /api/v1/actions] Token inválido, usando user_id do body');
+                    }
+                }
+
+                // Inserir na tabela action_logs
+                const { data, error } = await supabase.from('action_logs').insert([{
+                    user_id: userId || null,
+                    action_type: action_type.toLowerCase(),
+                    target_username: target_username.replace('@', ''),
+                    success: success !== false,
+                    details: {
+                        source: source || 'extension',
+                        original_timestamp: timestamp || new Date().toISOString()
+                    },
+                    created_at: new Date().toISOString()
+                }]);
+
+                if (error) {
+                    console.error('[API /api/v1/actions] ❌ Erro ao inserir:', error);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Erro ao salvar log de ação',
+                        error: error.message
+                    });
+                }
+
+                console.log('[API /api/v1/actions] ✅ Log sincronizado:', action_type, '@' + target_username);
+
+                // Retorna 201 Created para confirmar sincronização
+                return res.status(201).json({
+                    success: true,
+                    message: 'Log de ação sincronizado',
+                    synced_at: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error('[API /api/v1/actions] ❌ Fetch Error:', err.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Erro interno',
+                    error: err.message
+                });
             }
         }
 

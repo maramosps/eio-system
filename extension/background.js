@@ -1,12 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação ultra-estável - VERSÃO 4.1.0 (RESTORATION)
+  Motor de automação ultra-estável - VERSÃO 4.4.16 (SYNC PROTOCOL)
   COM DELAYS INTELIGENTES (Anti-Hibernação)
+  + ACTION LOG MIDDLEWARE + HEARTBEAT
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Extension v3.9 starting...');
+console.log('E.I.O Extension v4.4.16 starting...');
 
 let extensionState = {
     isRunning: false,
@@ -120,6 +121,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('[E.I.O] Mensagem recebida:', action, message);
 
     switch (action) {
+        // ═══════════════════════════════════════════════════════════
+        // HEARTBEAT - Dashboard Extension Detection (v4.4.16)
+        // ═══════════════════════════════════════════════════════════
+        case 'eio_ping':
+        case 'EIO_HEARTBEAT_PING':
+            console.log('[E.I.O Heartbeat] Ping recebido do Dashboard');
+            sendResponse({
+                pong: true,
+                version: '4.4.16',
+                status: extensionState.isRunning ? 'running' : 'idle',
+                stats: extensionState.stats,
+                timestamp: Date.now()
+            });
+            break;
+
         case 'setQueue':
             extensionState.queue = message.queue || [];
             extensionState.currentActionType = message.actionType;
@@ -180,7 +196,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 isRunning: extensionState.isRunning,
                 queueLength: extensionState.queue.length,
                 stats: extensionState.stats,
-                isProcessing: isProcessing
+                isProcessing: isProcessing,
+                version: '4.4.16'
             });
             break;
 
@@ -353,6 +370,12 @@ async function processQueue() {
                 else if (actionType === 'like') status = 'liked';
 
                 notifyPopup('actionCompleted', { username: item.username, action: status });
+
+                // ═══════════════════════════════════════════════════════════
+                // v4.4.16 ACTION LOG MIDDLEWARE - POST to /api/v1/actions
+                // Envia log para API somente após ação BEM-SUCEDIDA
+                // ═══════════════════════════════════════════════════════════
+                await sendActionLog(actionType, item.username, execSuccess);
             } else {
                 logAction('warning', `⚠️ ${actionType} falhou: ${errorMsg}`);
                 notifyPopup('actionCompleted', { username: item.username, action: 'error' });
@@ -674,4 +697,106 @@ async function syncToCloud(action, target, status) {
     // Deprecated in favor of sendAck
 }
 
-console.log('E.I.O Extension v4.3.0 Ready');
+// ═══════════════════════════════════════════════════════════
+// v4.4.16 ACTION LOG MIDDLEWARE
+// Envia log de ações BEM-SUCEDIDAS para /api/v1/actions
+// Aguarda Status 201 para validar sincronização
+// ═══════════════════════════════════════════════════════════
+async function sendActionLog(actionType, targetUsername, success) {
+    try {
+        const userId = await getUserId();
+        const token = await getAuthToken();
+
+        if (!userId && !token) {
+            console.log('[E.I.O ActionLog] ⚠️ Sem autenticação, log não enviado');
+            return false;
+        }
+
+        const payload = {
+            user_id: userId,
+            action_type: actionType,
+            target_username: targetUsername.replace('@', ''),
+            timestamp: new Date().toISOString(),
+            success: success,
+            source: 'extension_v4.4.16'
+        };
+
+        console.log('[E.I.O ActionLog] 📤 Enviando log para API...', payload);
+
+        const response = await fetch(`${BACKEND_URL}/api/v1/actions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.status === 201) {
+            console.log('[E.I.O ActionLog] ✅ Log sincronizado com sucesso (201)');
+            return true;
+        } else {
+            console.warn('[E.I.O ActionLog] ⚠️ Resposta inesperada:', response.status);
+            // Log detalhado em produção para debug de falhas de rede
+            if (process?.env?.NODE_ENV === 'production' || true) {
+                console.error('[E.I.O ActionLog] Fetch Error Details:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: `${BACKEND_URL}/api/v1/actions`
+                });
+            }
+            return false;
+        }
+    } catch (err) {
+        // Log detalhado de erro de rede para produção
+        console.error('[E.I.O ActionLog] ❌ Fetch Error:', err.message);
+        console.error('[E.I.O ActionLog] Stack:', err.stack);
+        return false;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// v4.4.16 EXTERNAL MESSAGE LISTENER (Dashboard Heartbeat)
+// Permite que páginas externas (dashboard) detectem a extensão
+// ═══════════════════════════════════════════════════════════
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+    console.log('[E.I.O External] Mensagem externa recebida:', message, 'de:', sender.origin);
+
+    // Verificar origem permitida
+    const allowedOrigins = [
+        'https://eio-system.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500'
+    ];
+
+    if (!allowedOrigins.some(origin => sender.origin?.startsWith(origin) || sender.url?.startsWith(origin))) {
+        console.warn('[E.I.O External] Origem não autorizada:', sender.origin);
+        sendResponse({ error: 'Unauthorized origin' });
+        return true;
+    }
+
+    if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
+        console.log('[E.I.O Heartbeat] 💓 Ping recebido do Dashboard');
+        sendResponse({
+            pong: true,
+            version: '4.4.16',
+            status: extensionState.isRunning ? 'running' : 'idle',
+            stats: extensionState.stats,
+            queueLength: extensionState.queue.length,
+            timestamp: Date.now()
+        });
+    } else if (message.type === 'EIO_GET_STATUS') {
+        sendResponse({
+            isRunning: extensionState.isRunning,
+            queueLength: extensionState.queue.length,
+            stats: extensionState.stats,
+            isProcessing: isProcessing,
+            version: '4.4.16'
+        });
+    }
+
+    return true;
+});
+
+console.log('E.I.O Extension v4.4.16 Ready - Sync Protocol Active');

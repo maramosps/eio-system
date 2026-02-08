@@ -1,9 +1,18 @@
 /*
 ═══════════════════════════════════════════════════════════
-  E.I.O - CONTENT SCRIPT STYLES
+  E.I.O - CONTENT SCRIPT STYLES v4.4.16
   Estilos do console flutuante injetado no Instagram
+  + SECURITY: Referrer Policy para imagens CDN
 ═══════════════════════════════════════════════════════════
 */
+
+/* ═══════════════════════════════════════════════════════════
+   SECURITY: Referrer Policy for Instagram CDN images
+   NOTE: referrer-policy must be set via HTML attribute, not CSS.
+   The extension automatically adds referrerpolicy="no-referrer"
+   attribute to all images when loading Instagram CDN content.
+   (*.cdninstagram.com, *.fbcdn.net)
+   ═══════════════════════════════════════════════════════════ */
 
 #eio-console-float {
     position: fixed;
