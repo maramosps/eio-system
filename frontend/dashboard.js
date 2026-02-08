@@ -1,8 +1,11 @@
 // ═══════════════════════════════════════════════════════════
-// v4.4.19 - GLOBAL BRIDGE LISTENER (MUST BE AT TOP)
-// Recebe o ID da extensão e envia Token de autenticação de volta
+// v4.4.20 - GLOBAL BRIDGE LISTENER (MUST BE AT TOP)
+// Recebe o ID da extensão via EIO_HANDSHAKE_INIT
+// Envia o Token de volta via EIO_SEND_TOKEN
 // ═══════════════════════════════════════════════════════════
 (function initBridgeListener() {
+    console.log('%c[Dashboard Bridge] 👂 Listener global inicializado', 'color: #6246ea; font-weight: bold;');
+
     window.addEventListener('message', (event) => {
         // Apenas mensagens da própria janela (injetadas pela bridge)
         if (event.source !== window) return;
@@ -11,99 +14,123 @@
         if (!data || !data.type) return;
 
         // ───────────────────────────────────────────────────────
-        // HANDSHAKE - Extensão enviando seu ID
+        // EIO_HANDSHAKE_INIT - Extensão se injetando no Dashboard
         // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_EXTENSION_HANDSHAKE') {
-            console.log('[Dashboard Bridge] 🌉 Handshake recebido!');
-            console.log('[Dashboard Bridge] Extension ID:', data.extensionId);
+        if (data.type === 'EIO_HANDSHAKE_INIT') {
+            console.log('%c[Dashboard Bridge] 🌉 Extensão detectada via Bridge!', 'color: #39FF14; font-weight: bold; font-size: 14px;');
+            console.log('[Dashboard Bridge] Extension ID:', data.id);
             console.log('[Dashboard Bridge] Version:', data.version);
 
             // Salvar ID no localStorage para uso futuro
-            localStorage.setItem('eio_extension_id', data.extensionId);
-            localStorage.setItem('eio_extension_version', data.version);
+            localStorage.setItem('eio_extension_id', data.id);
+            localStorage.setItem('eio_extension_version', data.version || '4.4.20');
             localStorage.setItem('eio_extension_connected', 'true');
 
-            // Atualizar UI para mostrar extensão conectada
-            const statusBadge = document.getElementById('extension-status-badge') ||
+            // ═══════════════════════════════════════════════════════════
+            // FORÇA O STATUS VERDE IMEDIATAMENTE
+            // ═══════════════════════════════════════════════════════════
+            const badge = document.getElementById('extension-status-badge') ||
                 document.querySelector('.eio-sync-status');
-            const statusText = document.getElementById('extension-status-text');
-
-            if (statusBadge) {
-                statusBadge.className = 'status-badge online eio-sync-status';
-                statusBadge.style.background = 'rgba(57, 255, 20, 0.1)';
-                statusBadge.style.borderColor = 'rgba(57, 255, 20, 0.3)';
-                statusBadge.style.boxShadow = '0 0 15px rgba(57, 255, 20, 0.2)';
-                statusBadge.innerHTML = `
+            if (badge) {
+                badge.className = 'status-badge online eio-sync-status';
+                badge.style.background = 'rgba(57, 255, 20, 0.1)';
+                badge.style.borderColor = 'rgba(57, 255, 20, 0.3)';
+                badge.style.boxShadow = '0 0 15px rgba(57, 255, 20, 0.2)';
+                badge.innerHTML = `
                     <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;"></span>
-                    <span style="color: #39FF14; font-weight: 600;">ONLINE (v${data.version || '4.4.19'})</span>
+                    <span style="color: #39FF14; font-weight: 600;">ONLINE (v${data.version || '4.4.20'})</span>
                 `;
             }
+
+            const statusText = document.getElementById('extension-status-text');
             if (statusText) {
-                statusText.innerText = 'Extensão Conectada';
+                statusText.innerText = 'Conectado (v' + (data.version || '4.4.20') + ')';
                 statusText.style.color = '#39FF14';
             }
 
             // Disparar evento customizado para outros scripts
             window.dispatchEvent(new CustomEvent('eio:extension:connected', {
                 detail: {
-                    extensionId: data.extensionId,
+                    extensionId: data.id,
                     version: data.version,
                     timestamp: Date.now()
                 }
             }));
 
             // ═══════════════════════════════════════════════════════════
-            // ENVIAR TOKEN DE AUTENTICAÇÃO DE VOLTA PARA A EXTENSÃO
+            // ENVIA O TOKEN DE VOLTA PARA A EXTENSÃO SALVAR
             // ═══════════════════════════════════════════════════════════
-            const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
-            const userStr = localStorage.getItem('eio_user') || localStorage.getItem('user') || '{}';
-            let user = {};
-            try {
-                user = JSON.parse(userStr);
-            } catch (e) {
-                console.warn('[Dashboard Bridge] Erro ao parsear user:', e);
-            }
 
-            if (token && user.id) {
-                console.log('[Dashboard Bridge] 🔐 Enviando AUTH_SYNC para extensão...');
-                console.log('[Dashboard Bridge] User ID:', user.id);
+            // Tentar buscar sessão do Supabase
+            const sbSession = localStorage.getItem('sb-user-session');
+            let session = {};
+            try {
+                session = JSON.parse(sbSession || '{}');
+            } catch (e) { }
+
+            // Fallback para tokens do E.I.O
+            const token = session.access_token ||
+                localStorage.getItem('eio_token') ||
+                localStorage.getItem('accessToken');
+
+            const userId = session.user?.id ||
+                JSON.parse(localStorage.getItem('eio_user') || '{}').id ||
+                JSON.parse(localStorage.getItem('user') || '{}').id;
+
+            const userEmail = session.user?.email ||
+                JSON.parse(localStorage.getItem('eio_user') || '{}').email ||
+                JSON.parse(localStorage.getItem('user') || '{}').email;
+
+            if (token && userId) {
+                console.log('%c[Dashboard Bridge] 🔐 Enviando Token para extensão...', 'color: #39FF14;');
+                console.log('[Dashboard Bridge] User ID:', userId);
 
                 window.postMessage({
-                    type: 'EIO_AUTH_SYNC',
-                    userId: user.id,
-                    email: user.email || user.instagram_handle || null,
+                    type: 'EIO_SEND_TOKEN',
                     token: token,
+                    userId: userId,
+                    email: userEmail || null,
                     timestamp: Date.now()
                 }, '*');
             } else {
-                console.warn('[Dashboard Bridge] ⚠️ Usuário não autenticado, não enviando token');
+                console.warn('[Dashboard Bridge] ⚠️ Sem token/userId, não enviando auth');
             }
         }
 
         // ───────────────────────────────────────────────────────
-        // AUTH_SYNC_CONFIRMED - Extensão confirmou recebimento
+        // EIO_TOKEN_SAVED - Extensão confirmou que salvou o token
         // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_AUTH_SYNC_CONFIRMED') {
-            console.log('[Dashboard Bridge] ✅ Auth sincronizado com extensão!');
+        if (data.type === 'EIO_TOKEN_SAVED') {
+            console.log('%c[Dashboard Bridge] ✅ Token salvo na extensão!', 'color: #39FF14; font-weight: bold;');
             localStorage.setItem('eio_auth_synced', 'true');
             localStorage.setItem('eio_auth_synced_at', Date.now().toString());
         }
 
         // ───────────────────────────────────────────────────────
-        // PONG - Resposta ao ping do heartbeat
+        // EIO_PONG - Resposta ao ping do heartbeat
         // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_EXTENSION_PONG') {
+        if (data.type === 'EIO_PONG') {
             console.log('[Dashboard Bridge] 💓 Pong recebido da extensão');
             window.EIO_EXTENSION_STATUS = {
                 online: true,
                 version: data.version,
-                extensionId: data.extensionId,
+                extensionId: data.id,
                 lastPong: Date.now()
             };
         }
-    });
 
-    console.log('[Dashboard Bridge] 👂 Listener global inicializado');
+        // ───────────────────────────────────────────────────────
+        // LEGACY: EIO_EXTENSION_HANDSHAKE (compatibilidade)
+        // ───────────────────────────────────────────────────────
+        if (data.type === 'EIO_EXTENSION_HANDSHAKE') {
+            // Redirecionar para o novo handler
+            window.postMessage({
+                type: 'EIO_HANDSHAKE_INIT',
+                id: data.extensionId,
+                version: data.version
+            }, '*');
+        }
+    });
 })();
 
 // Dashboard functionality
@@ -573,13 +600,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.19 (E.I.O System)';
+    if (extensionVersion) extensionVersion.textContent = '4.4.20 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.19.zip';
+            window.location.href = 'downloads/eio-extension-v4.4.20.zip';
         });
     }
 
@@ -612,7 +639,7 @@ function showInstructionsModal() {
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.19.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.20.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
@@ -2944,7 +2971,7 @@ window.qualifyAllLeads = function () {
 };
 
 // ═══════════════════════════════════════════════════════════
-// v4.4.19 HEARTBEAT SYSTEM + BRIDGE CONNECTION
+// v4.4.20 HEARTBEAT SYSTEM + BRIDGE CONNECTION
 // Usa postMessage para detectar extensão (resolve ID dinâmico)
 // A extensão injeta bridge.js que envia o ID via postMessage
 // ═══════════════════════════════════════════════════════════
@@ -2969,7 +2996,7 @@ window.qualifyAllLeads = function () {
         // HANDSHAKE - Extensão enviando seu ID
         if (data.type === 'EIO_EXTENSION_HANDSHAKE') {
             EXTENSION_ID = data.extensionId;
-            extensionVersion = data.version || '4.4.19';
+            extensionVersion = data.version || '4.4.20';
             bridgeConnected = true;
 
             console.log('[Dashboard Bridge] 🌉 Handshake recebido! ID:', EXTENSION_ID);
@@ -3018,7 +3045,7 @@ window.qualifyAllLeads = function () {
             // ONLINE - Verde neon com accent purple
             statusEl.innerHTML = `
                 <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;"></span>
-                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.19'})</span>
+                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.20'})</span>
             `;
             statusEl.style.background = 'rgba(57, 255, 20, 0.1)';
             statusEl.style.borderColor = 'rgba(57, 255, 20, 0.3)';
@@ -3092,7 +3119,7 @@ window.qualifyAllLeads = function () {
     function handleHeartbeatResponse(response) {
         if (response && response.pong === true) {
             extensionOnline = true;
-            extensionVersion = response.version || '4.4.19';
+            extensionVersion = response.version || '4.4.20';
             updateExtensionStatusUI(true, extensionVersion, response.stats);
 
             // Salvar estado para uso em outras partes do dashboard
@@ -3161,6 +3188,6 @@ window.qualifyAllLeads = function () {
     window.addEventListener('beforeunload', stopHeartbeat);
 })();
 
-console.log('E.I.O Dashboard v4.4.19 - Sync Analytics + Hardcoded Safety');
+console.log('E.I.O Dashboard v4.4.20 - Sync Analytics + Hardcoded Safety');
 
 

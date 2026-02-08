@@ -1,49 +1,50 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O BRIDGE SCRIPT v4.4.19
- * Ponte de Conexão + Sincronização de Autenticação
+ * E.I.O BRIDGE SCRIPT v4.4.20
+ * Ponte de Injeção - Conexão Inversa
  * 
- * Este script é injetado pelo content_scripts no Dashboard
- * para informar o ID dinâmico da extensão instalada via ZIP
- * E receber o Token de autenticação do usuário.
+ * A extensão SE INJETA no Dashboard (não o contrário).
+ * Resolve o problema de ID dinâmico em instalações via ZIP.
  * ═══════════════════════════════════════════════════════════
  */
 
 (function () {
     'use strict';
 
-    const EXTENSION_ID = chrome.runtime.id;
-    const VERSION = '4.4.19';
+    const extensionId = chrome.runtime.id;
+    const VERSION = '4.4.20';
 
-    console.log('[E.I.O Bridge] 🌉 Iniciando ponte de conexão v4.4.19...');
-    console.log('[E.I.O Bridge] Extension ID:', EXTENSION_ID);
+    console.log('%c[E.I.O BRIDGE] 🌉 Injetando ID: ' + extensionId, 'color: #39FF14; font-weight: bold; font-size: 14px;');
+    console.log('%c[E.I.O BRIDGE] Versão: ' + VERSION, 'color: #6246ea; font-weight: bold;');
 
     // ═══════════════════════════════════════════════════════════
-    // 1. HANDSHAKE INICIAL - Enviar ID para a página
+    // 1. HANDSHAKE INICIAL - Avisa o Dashboard quem eu sou
     // ═══════════════════════════════════════════════════════════
     function sendHandshake() {
         window.postMessage({
-            type: 'EIO_EXTENSION_HANDSHAKE',
-            extensionId: EXTENSION_ID,
+            type: 'EIO_HANDSHAKE_INIT',
+            id: extensionId,
             version: VERSION,
             timestamp: Date.now()
         }, '*');
-        console.log('[E.I.O Bridge] ✅ Handshake enviado para o Dashboard');
     }
 
     // Enviar imediatamente
     sendHandshake();
 
-    // Enviar novamente quando DOM estiver pronto (redundância)
+    // Enviar quando DOM carregar (redundância)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', sendHandshake);
+    } else {
+        // DOM já carregado, enviar de novo após pequeno delay
+        setTimeout(sendHandshake, 100);
     }
 
-    // Enviar periodicamente para garantir conexão (a cada 5 segundos)
-    setInterval(sendHandshake, 5000);
+    // Enviar periodicamente para garantir conexão (a cada 3 segundos)
+    setInterval(sendHandshake, 3000);
 
     // ═══════════════════════════════════════════════════════════
-    // 2. LISTENER PRINCIPAL - Receber mensagens do Dashboard
+    // 2. LISTENER - Escuta o Dashboard mandar o Token de volta
     // ═══════════════════════════════════════════════════════════
     window.addEventListener('message', (event) => {
         // Ignorar mensagens de outras origens
@@ -53,45 +54,30 @@
         if (!data || !data.type) return;
 
         // ───────────────────────────────────────────────────────
-        // PING/PONG - Heartbeat do Dashboard
+        // EIO_SEND_TOKEN - Dashboard enviando Token para salvar
         // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_DASHBOARD_PING') {
-            console.log('[E.I.O Bridge] 📡 Ping recebido do Dashboard, respondendo...');
+        if (data.type === 'EIO_SEND_TOKEN' && data.token) {
+            console.log('%c[E.I.O BRIDGE] 🔐 Recebendo Token do Dashboard...', 'color: #39FF14;');
+            console.log('[E.I.O BRIDGE] User ID:', data.userId);
 
-            window.postMessage({
-                type: 'EIO_EXTENSION_PONG',
-                extensionId: EXTENSION_ID,
-                version: VERSION,
-                status: 'connected',
-                timestamp: Date.now()
-            }, '*');
-        }
-
-        // ───────────────────────────────────────────────────────
-        // AUTH_SYNC - Receber Token do Dashboard e salvar na extensão
-        // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_AUTH_SYNC') {
-            console.log('[E.I.O Bridge] 🔐 AUTH_SYNC recebido do Dashboard!');
-            console.log('[E.I.O Bridge] User ID:', data.userId);
-            console.log('[E.I.O Bridge] Token presente:', !!data.token);
-
-            // Enviar para o background script salvar no chrome.storage
             chrome.runtime.sendMessage({
-                action: 'SYNC_AUTH',
-                userId: data.userId,
-                token: data.token,
-                email: data.email || null,
-                timestamp: Date.now()
+                type: 'SAVE_AUTH',
+                action: 'SAVE_AUTH',
+                payload: {
+                    userId: data.userId,
+                    token: data.token,
+                    email: data.email || null
+                }
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error('[E.I.O Bridge] ❌ Erro ao sincronizar auth:', chrome.runtime.lastError.message);
+                    console.error('[E.I.O BRIDGE] ❌ Erro:', chrome.runtime.lastError.message);
                     return;
                 }
-                console.log('[E.I.O Bridge] ✅ Auth sincronizado com sucesso!', response);
+                console.log('%c[E.I.O BRIDGE] ✅ Token salvo com sucesso!', 'color: #39FF14; font-weight: bold;');
 
-                // Confirmar de volta para o Dashboard
+                // Confirmar para o Dashboard
                 window.postMessage({
-                    type: 'EIO_AUTH_SYNC_CONFIRMED',
+                    type: 'EIO_TOKEN_SAVED',
                     success: true,
                     timestamp: Date.now()
                 }, '*');
@@ -99,22 +85,16 @@
         }
 
         // ───────────────────────────────────────────────────────
-        // COMMAND - Redirecionar comandos para o background script
+        // EIO_PING - Dashboard pedindo status
         // ───────────────────────────────────────────────────────
-        if (data.type === 'EIO_COMMAND' && data.command) {
-            console.log('[E.I.O Bridge] 📨 Comando recebido:', data.command);
-
-            chrome.runtime.sendMessage({
-                action: data.command,
-                payload: data.payload || {}
-            }, (response) => {
-                window.postMessage({
-                    type: 'EIO_COMMAND_RESPONSE',
-                    command: data.command,
-                    response: response,
-                    timestamp: Date.now()
-                }, '*');
-            });
+        if (data.type === 'EIO_PING') {
+            window.postMessage({
+                type: 'EIO_PONG',
+                id: extensionId,
+                version: VERSION,
+                status: 'connected',
+                timestamp: Date.now()
+            }, '*');
         }
     });
 
@@ -123,13 +103,14 @@
     // ═══════════════════════════════════════════════════════════
     chrome.runtime.sendMessage({
         action: 'bridge_connected',
+        type: 'bridge_connected',
         origin: window.location.origin,
-        extensionId: EXTENSION_ID,
+        extensionId: extensionId,
         version: VERSION,
         timestamp: Date.now()
     }).catch(() => {
-        // Ignorar erro se background não responder
+        // Ignorar erro se background não responder imediatamente
     });
 
-    console.log('[E.I.O Bridge] 🚀 Ponte de conexão v4.4.19 ativa!');
+    console.log('%c[E.I.O BRIDGE] 🚀 Bridge v4.4.20 ativa e pronta!', 'color: #39FF14; font-weight: bold; font-size: 12px;');
 })();
