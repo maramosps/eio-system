@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O BRIDGE SCRIPT v4.4.20
+ * E.I.O BRIDGE SCRIPT v4.4.21
  * Ponte de Injeção - Conexão Inversa
  * 
  * A extensão SE INJETA no Dashboard (não o contrário).
@@ -12,10 +12,10 @@
     'use strict';
 
     const extensionId = chrome.runtime.id;
-    const VERSION = '4.4.20';
+    const VERSION = '4.4.21';
 
-    console.log('%c[E.I.O BRIDGE] 🌉 Injetando ID: ' + extensionId, 'color: #39FF14; font-weight: bold; font-size: 14px;');
-    console.log('%c[E.I.O BRIDGE] Versão: ' + VERSION, 'color: #6246ea; font-weight: bold;');
+    console.log('%c[E.I.O BRIDGE v4.4.21] Tentando injetar ID: ' + extensionId, 'background: #222; color: #bada55; font-size: 12px; padding: 4px 8px;');
+    console.log('%c[E.I.O BRIDGE] 🌉 Versão: ' + VERSION, 'color: #6246ea; font-weight: bold;');
 
     // ═══════════════════════════════════════════════════════════
     // 1. HANDSHAKE INICIAL - Avisa o Dashboard quem eu sou
