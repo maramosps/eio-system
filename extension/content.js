@@ -1269,14 +1269,15 @@ async function runExtractionFlow(payload) {
 }
 /**
  * Executar ações no Instagram
- * v4.4.17 - HARDCODED SAFETY RULES - Regras obrigatórias para proteger a conta
+ * v4.4.18 - ZERO-RISK PROTOCOL - Regras obrigatórias para proteger a conta
  */
 async function executeInstagramAction(payload) {
     const { type, target } = payload;
 
     // ═══════════════════════════════════════════════════════════
-    // v4.4.17 HARDCODED SAFETY - Regras obrigatórias (não configuráveis)
-    // Estas regras protegem a conta do usuário contra Action Blocks
+    // v4.4.18 ZERO-RISK PROTOCOL - Pre-Flight Check
+    // Verifica metadados ANTES de qualquer interação
+    // Retorna SKIPPED (sucesso) em vez de erro para não poluir logs
     // ═══════════════════════════════════════════════════════════
 
     // Para ações de follow, verificar perfil antes de executar
@@ -1288,46 +1289,49 @@ async function executeInstagramAction(payload) {
             const profileInfo = await getProfileInfoViaAPI(cleanUsername);
 
             if (profileInfo) {
-                // REGRA 1: Pular contas privadas
+                // REGRA 1: Pular contas privadas - ZERO INTERAÇÃO
                 if (profileInfo.isPrivate) {
-                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - Conta PRIVADA (pulada automaticamente)`);
+                    addConsoleLog('info', `🔒 [IGNORADO] @${cleanUsername} - Conta Privada (risco de block)`);
                     return {
-                        success: false,
-                        action: 'skipped_private',
-                        error: 'Conta privada - Risco de Action Block',
-                        skipped: true,
-                        reason: 'private_account'
+                        success: true,  // SUCESSO no skip, não erro!
+                        status: 'SKIPPED',
+                        action: 'skipped',
+                        reason: 'private_account',
+                        message: 'Conta privada ignorada automaticamente',
+                        username: cleanUsername
                     };
                 }
 
-                // REGRA 2: Pular contas verificadas
+                // REGRA 2: Pular contas verificadas - ZERO INTERAÇÃO
                 if (profileInfo.isVerified) {
-                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - Conta VERIFICADA (pulada automaticamente)`);
+                    addConsoleLog('info', `✓ [IGNORADO] @${cleanUsername} - Conta Verificada (alto risco)`);
                     return {
-                        success: false,
-                        action: 'skipped_verified',
-                        error: 'Conta verificada - Alto risco de denúncia',
-                        skipped: true,
-                        reason: 'verified_account'
+                        success: true,  // SUCESSO no skip, não erro!
+                        status: 'SKIPPED',
+                        action: 'skipped',
+                        reason: 'verified_account',
+                        message: 'Conta verificada ignorada automaticamente',
+                        username: cleanUsername
                     };
                 }
 
-                // REGRA 3: Pular contas sem foto de perfil
+                // REGRA 3: Pular contas sem foto de perfil - ZERO INTERAÇÃO
                 const hasNoPicture = !profileInfo.avatar ||
                     profileInfo.avatar.includes('default') ||
                     profileInfo.avatar.includes('44884218_345707102882519');
                 if (hasNoPicture) {
-                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - SEM FOTO (pulada automaticamente)`);
+                    addConsoleLog('info', `📷 [IGNORADO] @${cleanUsername} - Sem Foto (possível fake)`);
                     return {
-                        success: false,
-                        action: 'skipped_no_picture',
-                        error: 'Sem foto de perfil - Possível conta fake',
-                        skipped: true,
-                        reason: 'no_profile_picture'
+                        success: true,  // SUCESSO no skip, não erro!
+                        status: 'SKIPPED',
+                        action: 'skipped',
+                        reason: 'no_profile_picture',
+                        message: 'Conta sem foto ignorada automaticamente',
+                        username: cleanUsername
                     };
                 }
 
-                addConsoleLog('success', `✅ [SEGURANÇA] @${cleanUsername} - Perfil seguro, prosseguindo...`);
+                addConsoleLog('success', `✅ [SEGURO] @${cleanUsername} - Perfil aprovado, executando ação...`);
             }
         } catch (safetyCheckError) {
             // Se não conseguir verificar, continuar com a ação (não bloquear por erro de verificação)

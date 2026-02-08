@@ -465,13 +465,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.17 (E.I.O System)';
+    if (extensionVersion) extensionVersion.textContent = '4.4.18 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.17.zip';
+            window.location.href = 'downloads/eio-extension-v4.4.18.zip';
         });
     }
 
@@ -504,7 +504,7 @@ function showInstructionsModal() {
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.17.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.18.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
@@ -2836,18 +2836,63 @@ window.qualifyAllLeads = function () {
 };
 
 // ═══════════════════════════════════════════════════════════
-// v4.4.17 HEARTBEAT SYSTEM - Extension Detection
-// Envia ping para a extensão a cada 10 segundos
-// Atualiza status de "Não detectada" para "ONLINE (v4.4.17)"
-// Paleta de cores: Verde neon / Purple
+// v4.4.18 HEARTBEAT SYSTEM + BRIDGE CONNECTION
+// Usa postMessage para detectar extensão (resolve ID dinâmico)
+// A extensão injeta bridge.js que envia o ID via postMessage
 // ═══════════════════════════════════════════════════════════
 
 (function initHeartbeat() {
-    const EXTENSION_ID = 'njdkomkicaibobnopdkjfbefhgmnikpc'; // ID da extensão E.I.O
+    let EXTENSION_ID = null; // Será preenchido pelo handshake da bridge
     const HEARTBEAT_INTERVAL = 10000; // 10 segundos
     let extensionOnline = false;
     let extensionVersion = null;
     let heartbeatTimer = null;
+    let bridgeConnected = false;
+
+    // ═══════════════════════════════════════════════════════════
+    // BRIDGE LISTENER - Captura ID da extensão via postMessage
+    // ═══════════════════════════════════════════════════════════
+    window.addEventListener('message', (event) => {
+        // Apenas mensagens da própria janela (injetadas pela bridge)
+        if (event.source !== window) return;
+
+        const data = event.data;
+
+        // HANDSHAKE - Extensão enviando seu ID
+        if (data.type === 'EIO_EXTENSION_HANDSHAKE') {
+            EXTENSION_ID = data.extensionId;
+            extensionVersion = data.version || '4.4.18';
+            bridgeConnected = true;
+
+            console.log('[Dashboard Bridge] 🌉 Handshake recebido! ID:', EXTENSION_ID);
+            console.log('[Dashboard Bridge] Versão:', extensionVersion);
+
+            // Marcar como online imediatamente
+            updateExtensionStatusUI(true, extensionVersion);
+
+            // Iniciar heartbeat se ainda não iniciou
+            if (!heartbeatTimer) {
+                startHeartbeat();
+            }
+        }
+
+        // PONG - Resposta ao ping do dashboard
+        if (data.type === 'EIO_EXTENSION_PONG') {
+            extensionOnline = true;
+            extensionVersion = data.version || extensionVersion;
+            updateExtensionStatusUI(true, extensionVersion);
+        }
+
+        // COMMAND RESPONSE - Resposta a comandos enviados
+        if (data.type === 'EIO_COMMAND_RESPONSE') {
+            console.log('[Dashboard Bridge] Resposta do comando:', data.command, data.response);
+        }
+    });
+
+    // Função para enviar ping via postMessage (bridge method)
+    function sendBridgePing() {
+        window.postMessage({ type: 'EIO_DASHBOARD_PING', timestamp: Date.now() }, '*');
+    }
 
     // Elemento de status (pode estar no dashboard ou analytics)
     function getStatusElement() {
@@ -2865,7 +2910,7 @@ window.qualifyAllLeads = function () {
             // ONLINE - Verde neon com accent purple
             statusEl.innerHTML = `
                 <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;"></span>
-                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.17'})</span>
+                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.18'})</span>
             `;
             statusEl.style.background = 'rgba(57, 255, 20, 0.1)';
             statusEl.style.borderColor = 'rgba(57, 255, 20, 0.3)';
@@ -2899,9 +2944,14 @@ window.qualifyAllLeads = function () {
     // Enviar ping para a extensão
     async function sendHeartbeatPing() {
         try {
-            // Método 1: Tentar via chrome.runtime.sendMessage (se extensão estiver conectada)
-            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-                // Tentar enviar para extensão específica
+            // Método 1: Tentar via Bridge (postMessage) - funciona com IDs dinâmicos
+            if (bridgeConnected) {
+                sendBridgePing();
+                return; // Bridge vai responder via postMessage listener
+            }
+
+            // Método 2: Tentar via chrome.runtime.sendMessage (se extensão estiver conectada e ID conhecido)
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage && EXTENSION_ID) {
                 try {
                     chrome.runtime.sendMessage(
                         EXTENSION_ID,
@@ -2916,21 +2966,13 @@ window.qualifyAllLeads = function () {
                         }
                     );
                 } catch (extErr) {
-                    // Fallback: tentar enviar para qualquer extensão escutando
-                    chrome.runtime.sendMessage(
-                        { action: 'eio_ping', type: 'EIO_HEARTBEAT_PING' },
-                        (response) => {
-                            if (chrome.runtime.lastError) {
-                                handleHeartbeatResponse(null);
-                                return;
-                            }
-                            handleHeartbeatResponse(response);
-                        }
-                    );
+                    // Extensão não acessível
+                    handleHeartbeatResponse(null);
                 }
             } else {
-                // Chrome runtime não disponível
-                handleHeartbeatResponse(null);
+                // Aguardando handshake da bridge
+                console.log('[Dashboard Heartbeat] ⏳ Aguardando conexão da Bridge...');
+                updateExtensionStatusUI(false);
             }
         } catch (err) {
             console.log('[Dashboard Heartbeat] Erro ao enviar ping:', err.message);
@@ -2942,7 +2984,7 @@ window.qualifyAllLeads = function () {
     function handleHeartbeatResponse(response) {
         if (response && response.pong === true) {
             extensionOnline = true;
-            extensionVersion = response.version || '4.4.17';
+            extensionVersion = response.version || '4.4.18';
             updateExtensionStatusUI(true, extensionVersion, response.stats);
 
             // Salvar estado para uso em outras partes do dashboard
@@ -3011,6 +3053,6 @@ window.qualifyAllLeads = function () {
     window.addEventListener('beforeunload', stopHeartbeat);
 })();
 
-console.log('E.I.O Dashboard v4.4.17 - Sync Analytics + Hardcoded Safety');
+console.log('E.I.O Dashboard v4.4.18 - Sync Analytics + Hardcoded Safety');
 
 
