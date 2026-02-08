@@ -1,10 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O BRIDGE SCRIPT v4.4.21
- * Ponte de Injeção - Conexão Inversa
+ * E.I.O BRIDGE SCRIPT v4.4.22
+ * Ponte de Injeção - Conexão Persistente (Ping/Pong)
  * 
  * A extensão SE INJETA no Dashboard (não o contrário).
  * Resolve o problema de ID dinâmico em instalações via ZIP.
+ * Responde a chamados do Dashboard para evitar race conditions.
  * ═══════════════════════════════════════════════════════════
  */
 
@@ -12,13 +13,13 @@
     'use strict';
 
     const extensionId = chrome.runtime.id;
-    const VERSION = '4.4.21';
+    const VERSION = '4.4.22';
 
-    console.log('%c[E.I.O BRIDGE v4.4.21] Tentando injetar ID: ' + extensionId, 'background: #222; color: #bada55; font-size: 12px; padding: 4px 8px;');
+    console.log('%c[E.I.O BRIDGE v4.4.22] Tentando injetar ID: ' + extensionId, 'background: #222; color: #bada55; font-size: 12px; padding: 4px 8px;');
     console.log('%c[E.I.O BRIDGE] 🌉 Versão: ' + VERSION, 'color: #6246ea; font-weight: bold;');
 
     // ═══════════════════════════════════════════════════════════
-    // 1. HANDSHAKE INICIAL - Avisa o Dashboard quem eu sou
+    // 1. HANDSHAKE - Função para enviar ID ao Dashboard
     // ═══════════════════════════════════════════════════════════
     function sendHandshake() {
         window.postMessage({
@@ -27,24 +28,35 @@
             version: VERSION,
             timestamp: Date.now()
         }, '*');
+        console.log('%c[E.I.O BRIDGE] ✅ Handshake enviado!', 'color: #39FF14;');
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // 2. ENVIAR COM DELAY PARA GARANTIR QUE DOM EXISTE
+    // ═══════════════════════════════════════════════════════════
 
     // Enviar imediatamente
     sendHandshake();
 
+    // Enviar após 500ms (para garantir que scripts do Dashboard carregaram)
+    setTimeout(sendHandshake, 500);
+
+    // Enviar após 1 segundo (redundância máxima)
+    setTimeout(sendHandshake, 1000);
+
+    // Enviar após 2 segundos (caso o DOM demore)
+    setTimeout(sendHandshake, 2000);
+
     // Enviar quando DOM carregar (redundância)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', sendHandshake);
-    } else {
-        // DOM já carregado, enviar de novo após pequeno delay
-        setTimeout(sendHandshake, 100);
     }
 
-    // Enviar periodicamente para garantir conexão (a cada 3 segundos)
-    setInterval(sendHandshake, 3000);
+    // Enviar periodicamente para manter conexão (a cada 5 segundos)
+    setInterval(sendHandshake, 5000);
 
     // ═══════════════════════════════════════════════════════════
-    // 2. LISTENER - Escuta o Dashboard mandar o Token de volta
+    // 3. RESPONDER A PINGS DO DASHBOARD (Polling System)
     // ═══════════════════════════════════════════════════════════
     window.addEventListener('message', (event) => {
         // Ignorar mensagens de outras origens
@@ -52,6 +64,14 @@
 
         const data = event.data;
         if (!data || !data.type) return;
+
+        // ───────────────────────────────────────────────────────
+        // EIO_PING_EXTENSION - Dashboard perguntando "Quem está aí?"
+        // ───────────────────────────────────────────────────────
+        if (data.type === 'EIO_PING_EXTENSION') {
+            console.log('%c[E.I.O BRIDGE] 📡 Respondendo ao Ping do Dashboard', 'color: #6246ea;');
+            sendHandshake();
+        }
 
         // ───────────────────────────────────────────────────────
         // EIO_SEND_TOKEN - Dashboard enviando Token para salvar
@@ -85,7 +105,7 @@
         }
 
         // ───────────────────────────────────────────────────────
-        // EIO_PING - Dashboard pedindo status
+        // EIO_PING - Dashboard pedindo status (heartbeat)
         // ───────────────────────────────────────────────────────
         if (data.type === 'EIO_PING') {
             window.postMessage({
@@ -99,7 +119,7 @@
     });
 
     // ═══════════════════════════════════════════════════════════
-    // 3. NOTIFICAR BACKGROUND QUE BRIDGE ESTÁ ATIVO
+    // 4. NOTIFICAR BACKGROUND QUE BRIDGE ESTÁ ATIVO
     // ═══════════════════════════════════════════════════════════
     chrome.runtime.sendMessage({
         action: 'bridge_connected',
@@ -112,5 +132,5 @@
         // Ignorar erro se background não responder imediatamente
     });
 
-    console.log('%c[E.I.O BRIDGE] 🚀 Bridge v4.4.20 ativa e pronta!', 'color: #39FF14; font-weight: bold; font-size: 12px;');
+    console.log('%c[E.I.O BRIDGE] 🚀 Bridge v4.4.22 ativa - Sistema de Conexão Persistente!', 'color: #39FF14; font-weight: bold; font-size: 12px;');
 })();
