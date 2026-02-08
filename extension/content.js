@@ -1269,13 +1269,13 @@ async function runExtractionFlow(payload) {
 }
 /**
  * Executar ações no Instagram
- * v4.4.22 - ZERO-RISK PROTOCOL - Regras obrigatórias para proteger a conta
+ * v4.4.23 - ZERO-RISK PROTOCOL - Regras obrigatórias para proteger a conta
  */
 async function executeInstagramAction(payload) {
     const { type, target } = payload;
 
     // ═══════════════════════════════════════════════════════════
-    // v4.4.22 ZERO-RISK PROTOCOL - Pre-Flight Check
+    // v4.4.23 ZERO-RISK PROTOCOL - Pre-Flight Check
     // Verifica metadados ANTES de qualquer interação
     // Retorna SKIPPED (sucesso) em vez de erro para não poluir logs
     // ═══════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O BRIDGE SCRIPT v4.4.22
+ * E.I.O BRIDGE SCRIPT v4.4.23
  * Ponte de Injeção - Conexão Persistente (Ping/Pong)
  * 
  * A extensão SE INJETA no Dashboard (não o contrário).
@@ -13,9 +13,9 @@
     'use strict';
 
     const extensionId = chrome.runtime.id;
-    const VERSION = '4.4.22';
+    const VERSION = '4.4.23';
 
-    console.log('%c[E.I.O BRIDGE v4.4.22] Tentando injetar ID: ' + extensionId, 'background: #222; color: #bada55; font-size: 12px; padding: 4px 8px;');
+    console.log('%c[E.I.O BRIDGE v4.4.23] Tentando injetar ID: ' + extensionId, 'background: #222; color: #bada55; font-size: 12px; padding: 4px 8px;');
     console.log('%c[E.I.O BRIDGE] 🌉 Versão: ' + VERSION, 'color: #6246ea; font-weight: bold;');
 
     // ═══════════════════════════════════════════════════════════
@@ -132,5 +132,5 @@
         // Ignorar erro se background não responder imediatamente
     });
 
-    console.log('%c[E.I.O BRIDGE] 🚀 Bridge v4.4.22 ativa - Sistema de Conexão Persistente!', 'color: #39FF14; font-weight: bold; font-size: 12px;');
+    console.log('%c[E.I.O BRIDGE] 🚀 Bridge v4.4.23 ativa - Sistema de Conexão Persistente!', 'color: #39FF14; font-weight: bold; font-size: 12px;');
 })();
