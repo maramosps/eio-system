@@ -1269,9 +1269,71 @@ async function runExtractionFlow(payload) {
 }
 /**
  * Executar ações no Instagram
+ * v4.4.17 - HARDCODED SAFETY RULES - Regras obrigatórias para proteger a conta
  */
 async function executeInstagramAction(payload) {
     const { type, target } = payload;
+
+    // ═══════════════════════════════════════════════════════════
+    // v4.4.17 HARDCODED SAFETY - Regras obrigatórias (não configuráveis)
+    // Estas regras protegem a conta do usuário contra Action Blocks
+    // ═══════════════════════════════════════════════════════════
+
+    // Para ações de follow, verificar perfil antes de executar
+    if (type === 'follow' && target) {
+        const cleanUsername = target.replace('@', '').toLowerCase();
+
+        try {
+            // Tentar obter informações do perfil via API
+            const profileInfo = await getProfileInfoViaAPI(cleanUsername);
+
+            if (profileInfo) {
+                // REGRA 1: Pular contas privadas
+                if (profileInfo.isPrivate) {
+                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - Conta PRIVADA (pulada automaticamente)`);
+                    return {
+                        success: false,
+                        action: 'skipped_private',
+                        error: 'Conta privada - Risco de Action Block',
+                        skipped: true,
+                        reason: 'private_account'
+                    };
+                }
+
+                // REGRA 2: Pular contas verificadas
+                if (profileInfo.isVerified) {
+                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - Conta VERIFICADA (pulada automaticamente)`);
+                    return {
+                        success: false,
+                        action: 'skipped_verified',
+                        error: 'Conta verificada - Alto risco de denúncia',
+                        skipped: true,
+                        reason: 'verified_account'
+                    };
+                }
+
+                // REGRA 3: Pular contas sem foto de perfil
+                const hasNoPicture = !profileInfo.avatar ||
+                    profileInfo.avatar.includes('default') ||
+                    profileInfo.avatar.includes('44884218_345707102882519');
+                if (hasNoPicture) {
+                    addConsoleLog('warning', `⛔ [SEGURANÇA] @${cleanUsername} - SEM FOTO (pulada automaticamente)`);
+                    return {
+                        success: false,
+                        action: 'skipped_no_picture',
+                        error: 'Sem foto de perfil - Possível conta fake',
+                        skipped: true,
+                        reason: 'no_profile_picture'
+                    };
+                }
+
+                addConsoleLog('success', `✅ [SEGURANÇA] @${cleanUsername} - Perfil seguro, prosseguindo...`);
+            }
+        } catch (safetyCheckError) {
+            // Se não conseguir verificar, continuar com a ação (não bloquear por erro de verificação)
+            console.warn('[E.I.O Safety] Erro ao verificar perfil:', safetyCheckError.message);
+        }
+    }
 
     const actionFunctions = {
         'follow': executeFollow,

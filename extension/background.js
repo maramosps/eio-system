@@ -1,13 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação ultra-estável - VERSÃO 4.4.16 (SYNC PROTOCOL)
-  COM DELAYS INTELIGENTES (Anti-Hibernação)
-  + ACTION LOG MIDDLEWARE + HEARTBEAT
+  Motor de automação ultra-estável - VERSÃO 4.4.17 (SYNC ANALYTICS)
+  COM DELAYS INTELIGENTES + HARDCODED SAFETY
+  + ACTION LOG MIDDLEWARE + HEARTBEAT + AUTO-FILTERS
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Extension v4.4.16 starting...');
+console.log('E.I.O Extension v4.4.17 starting...');
 
 let extensionState = {
     isRunning: false,
@@ -49,6 +49,29 @@ const DELAY_CONFIG = {
 // Todas as operações passam pela API backend que já está autenticada.
 const BACKEND_URL = 'https://eio-system.vercel.app'; // Production URL
 // Chaves Supabase REMOVIDAS - use a API backend como proxy
+
+// ═══════════════════════════════════════════════════════════
+// v4.4.17 - HELPER FUNCTIONS FOR AUTH
+// ═══════════════════════════════════════════════════════════
+async function getUserId() {
+    try {
+        const result = await chrome.storage.local.get(['eio_user_id', 'userId', 'user']);
+        return result.eio_user_id || result.userId || result.user?.id || null;
+    } catch (e) {
+        console.warn('[E.I.O] getUserId error:', e);
+        return null;
+    }
+}
+
+async function getAuthToken() {
+    try {
+        const result = await chrome.storage.local.get(['eio_auth_token', 'authToken', 'token']);
+        return result.eio_auth_token || result.authToken || result.token || null;
+    } catch (e) {
+        console.warn('[E.I.O] getAuthToken error:', e);
+        return null;
+    }
+}
 
 
 
@@ -129,7 +152,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('[E.I.O Heartbeat] Ping recebido do Dashboard');
             sendResponse({
                 pong: true,
-                version: '4.4.16',
+                version: '4.4.17',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats,
                 timestamp: Date.now()
@@ -197,7 +220,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 queueLength: extensionState.queue.length,
                 stats: extensionState.stats,
                 isProcessing: isProcessing,
-                version: '4.4.16'
+                version: '4.4.17'
             });
             break;
 
@@ -718,7 +741,7 @@ async function sendActionLog(actionType, targetUsername, success) {
             target_username: targetUsername.replace('@', ''),
             timestamp: new Date().toISOString(),
             success: success,
-            source: 'extension_v4.4.16'
+            source: 'extension_v4.4.17'
         };
 
         console.log('[E.I.O ActionLog] 📤 Enviando log para API...', payload);
@@ -780,7 +803,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
         console.log('[E.I.O Heartbeat] 💓 Ping recebido do Dashboard');
         sendResponse({
             pong: true,
-            version: '4.4.16',
+            version: '4.4.17',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats,
             queueLength: extensionState.queue.length,
@@ -792,11 +815,11 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
             queueLength: extensionState.queue.length,
             stats: extensionState.stats,
             isProcessing: isProcessing,
-            version: '4.4.16'
+            version: '4.4.17'
         });
     }
 
     return true;
 });
 
-console.log('E.I.O Extension v4.4.16 Ready - Sync Protocol Active');
+console.log('E.I.O Extension v4.4.17 Ready - Sync Analytics + Hardcoded Safety Active');

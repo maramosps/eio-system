@@ -450,149 +450,86 @@
             </div>
 
             <!-- ═══════════════════════════════════════════════════════════ -->
-            <!-- ABA FILTROS - Filtros avançados com sliders                 -->
+            <!-- ABA FILTROS - Segurança Automática Ativada (v4.4.17)         -->
             <!-- ═══════════════════════════════════════════════════════════ -->
             <div class="eio-tab-content" id="filtrosTab">
                 <div class="eio-section">
                     <div class="eio-section-header">
-                        <h3 class="eio-section-title">🎯 Filtros de Conta</h3>
-                    </div>
-                    <p class="eio-description">Você pode habilitar a aplicação automática de filtros ao seguir ou deixar
-                        de seguir nas configurações.</p>
-
-                    <!-- Sliders de Range -->
-                    <div class="eio-filter-sliders">
-                        <div class="eio-filter-group">
-                            <label class="eio-label">Seguidores</label>
-                            <div class="eio-range-slider">
-                                <input type="range" id="followersMin" min="0" max="100000" value="0" class="eio-range"
-                                    aria-label="Mínimo de seguidores">
-                                <input type="range" id="followersMax" min="0" max="100000" value="100000"
-                                    class="eio-range" aria-label="Máximo de seguidores">
-                            </div>
-                            <div class="eio-range-values">
-                                <span id="followersMinVal">0</span> - <span id="followersMaxVal">100k</span>
-                            </div>
-                        </div>
-
-                        <div class="eio-filter-group">
-                            <label class="eio-label">Seguindo</label>
-                            <div class="eio-range-slider">
-                                <input type="range" id="followingMin" min="0" max="10000" value="0" class="eio-range"
-                                    aria-label="Mínimo seguindo">
-                                <input type="range" id="followingMax" min="0" max="10000" value="10000"
-                                    class="eio-range" aria-label="Máximo seguindo">
-                            </div>
-                            <div class="eio-range-values">
-                                <span id="followingMinVal">0</span> - <span id="followingMaxVal">10k</span>
-                            </div>
-                        </div>
-
-                        <div class="eio-filter-group">
-                            <label class="eio-label">Razão de Seguidores (Followers/Following)</label>
-                            <div class="eio-range-slider">
-                                <input type="range" id="ratioMin" min="0" max="100" value="0" step="0.1"
-                                    class="eio-range" aria-label="Ratio mínimo">
-                                <input type="range" id="ratioMax" min="0" max="100" value="100" step="0.1"
-                                    class="eio-range" aria-label="Ratio máximo">
-                            </div>
-                            <div class="eio-range-values">
-                                <span id="ratioMinVal">0</span> - <span id="ratioMaxVal">100</span>
-                            </div>
-                        </div>
-
-                        <div class="eio-filter-group">
-                            <label class="eio-label">Postagens</label>
-                            <div class="eio-range-slider">
-                                <input type="range" id="postsMin" min="0" max="1000" value="0" class="eio-range"
-                                    aria-label="Mínimo de posts">
-                                <input type="range" id="postsMax" min="0" max="1000" value="1000" class="eio-range"
-                                    aria-label="Máximo de posts">
-                            </div>
-                            <div class="eio-range-values">
-                                <span id="postsMinVal">0</span> - <span id="postsMaxVal">1000</span>
-                            </div>
-                        </div>
-
-                        <div class="eio-filter-group">
-                            <label class="eio-label">Última Postagem (dias atrás)</label>
-                            <input type="number" class="eio-input" id="lastPostDays" placeholder="Ex: 30" value=""
-                                aria-label="Dias desde última postagem">
-                        </div>
+                        <h3 class="eio-section-title">🛡️ Segurança Automática</h3>
                     </div>
 
-                    <!-- Checkboxes de Qualidade -->
-                    <div class="eio-filter-checkboxes">
-                        <div class="eio-filter-row">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterNoPhoto"> Não Tem Foto de Perfil
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterHasPhoto"> Tem Foto de Perfil
-                            </label>
+                    <!-- Banner de Segurança Ativada -->
+                    <div
+                        style="background: linear-gradient(135deg, rgba(0, 200, 83, 0.2), rgba(0, 149, 246, 0.2)); padding: 20px; border-radius: 12px; border: 1px solid rgba(0, 200, 83, 0.4); margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <span style="font-size: 32px;">✅</span>
+                            <div>
+                                <h4 style="margin: 0; color: #00C853; font-size: 18px;">PROTEÇÃO ATIVA</h4>
+                                <p style="margin: 5px 0 0 0; color: #a0a0a0; font-size: 13px;">v4.4.17 - Filtros de
+                                    segurança automáticos</p>
+                            </div>
                         </div>
-                        <div class="eio-filter-row">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterPrivate"> Contas Privadas
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterPublic"> Contas Públicas
-                            </label>
-                        </div>
-                        <div class="eio-filter-row">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterFollowsMe"> Contas que me Seguem
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterNotFollowsMe"> Contas que Não me Seguem
-                            </label>
-                        </div>
-                        <div class="eio-filter-row">
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterVerified"> Contas Verificadas
-                            </label>
-                            <label class="eio-checkbox-label">
-                                <input type="checkbox" id="filterNotVerified"> Contas Não Verificadas
-                            </label>
+                        <p style="color: #e0e0e0; font-size: 14px; line-height: 1.6; margin: 0;">
+                            Para proteger sua conta contra bloqueios do Instagram, os filtros de segurança agora são
+                            <strong>obrigatórios e automáticos</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Lista de Regras Automáticas -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                        <h4 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 14px;">🔒 Regras Automáticas
+                            Aplicadas:</h4>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 82, 82, 0.1); border-radius: 8px; border-left: 3px solid #FF5252;">
+                                <span style="font-size: 18px;">🔒</span>
+                                <div>
+                                    <strong style="color: #FF5252;">Contas Privadas</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Risco de Action Block</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 8px; border-left: 3px solid #FFC107;">
+                                <span style="font-size: 18px;">✓</span>
+                                <div>
+                                    <strong style="color: #FFC107;">Contas Verificadas</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Alto risco de denúncia</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(156, 39, 176, 0.1); border-radius: 8px; border-left: 3px solid #9C27B0;">
+                                <span style="font-size: 18px;">📷</span>
+                                <div>
+                                    <strong style="color: #9C27B0;">Sem Foto de Perfil</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Possível conta fake/bot</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0, 149, 246, 0.1); border-radius: 8px; border-left: 3px solid #0095F6;">
+                                <span style="font-size: 18px;">⏱️</span>
+                                <div>
+                                    <strong style="color: #0095F6;">Delays Inteligentes</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">80s entre ações • 90s
+                                        entre perfis</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Filtros de Texto -->
-                    <div class="eio-filter-text-group">
-                        <div class="eio-form-group">
-                            <label class="eio-label">Link na Bio</label>
-                            <div class="eio-input-group">
-                                <select class="eio-select-mini" id="bioLinkType" aria-label="Tipo de filtro de link">
-                                    <option value="">--</option>
-                                    <option value="contains">Contém</option>
-                                    <option value="not-contains">Não Contém</option>
-                                </select>
-                                <input type="text" class="eio-input" id="bioLinkText" placeholder="youtube.com"
-                                    aria-label="Texto do link">
-                            </div>
-                        </div>
-
-                        <div class="eio-form-group">
-                            <label class="eio-label">Bio Contém</label>
-                            <input type="text" class="eio-input" id="bioContains" placeholder="Ex: empreendedor"
-                                aria-label="Texto contido na bio">
-                        </div>
-
-                        <div class="eio-form-group">
-                            <label class="eio-label">Categoria Comercial</label>
-                            <input type="text" class="eio-input" id="businessCategory" placeholder="Ex: Personal Blog"
-                                aria-label="Categoria comercial">
-                        </div>
-                    </div>
-
-                    <!-- Botões de Ação -->
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button class="eio-btn eio-btn-ghost" style="flex: 1;" id="btnResetFilters">
-                            🔄 Redefinir Filtros
-                        </button>
-                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="btnApplyFilters">
-                            ✅ Aplicar Filtros à Fila Atual
-                        </button>
+                    <!-- Estatísticas de Proteção -->
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: rgba(0, 200, 83, 0.08); border-radius: 10px; text-align: center;">
+                        <p style="color: #00C853; font-size: 13px; margin: 0;">
+                            🛡️ Estas regras protegem sua conta 24/7 e <strong>não podem ser desativadas</strong>.
+                        </p>
                     </div>
                 </div>
             </div>

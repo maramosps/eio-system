@@ -465,13 +465,13 @@ async function initExtensionDownload() {
 
     // Set default values based on the latest package
     if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.16 (E.I.O System)';
+    if (extensionVersion) extensionVersion.textContent = '4.4.17 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.16.zip';
+            window.location.href = 'downloads/eio-extension-v4.4.17.zip';
         });
     }
 
@@ -504,7 +504,7 @@ function showInstructionsModal() {
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.16.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.17.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
@@ -2836,9 +2836,9 @@ window.qualifyAllLeads = function () {
 };
 
 // ═══════════════════════════════════════════════════════════
-// v4.4.16 HEARTBEAT SYSTEM - Extension Detection
+// v4.4.17 HEARTBEAT SYSTEM - Extension Detection
 // Envia ping para a extensão a cada 10 segundos
-// Atualiza status de "Não detectada" para "ONLINE (v4.4.16)"
+// Atualiza status de "Não detectada" para "ONLINE (v4.4.17)"
 // Paleta de cores: Verde neon / Purple
 // ═══════════════════════════════════════════════════════════
 
@@ -2865,7 +2865,7 @@ window.qualifyAllLeads = function () {
             // ONLINE - Verde neon com accent purple
             statusEl.innerHTML = `
                 <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;"></span>
-                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.16'})</span>
+                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${version || '4.4.17'})</span>
             `;
             statusEl.style.background = 'rgba(57, 255, 20, 0.1)';
             statusEl.style.borderColor = 'rgba(57, 255, 20, 0.3)';
@@ -2942,7 +2942,7 @@ window.qualifyAllLeads = function () {
     function handleHeartbeatResponse(response) {
         if (response && response.pong === true) {
             extensionOnline = true;
-            extensionVersion = response.version || '4.4.16';
+            extensionVersion = response.version || '4.4.17';
             updateExtensionStatusUI(true, extensionVersion, response.stats);
 
             // Salvar estado para uso em outras partes do dashboard
@@ -3011,6 +3011,6 @@ window.qualifyAllLeads = function () {
     window.addEventListener('beforeunload', stopHeartbeat);
 })();
 
-console.log('E.I.O Dashboard v4.4.16 - Heartbeat System Loaded');
+console.log('E.I.O Dashboard v4.4.17 - Sync Analytics + Hardcoded Safety');
 
 
