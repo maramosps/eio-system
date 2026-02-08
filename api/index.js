@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
                 message: isHealthy
                     ? 'E.I.O System API está pronta para produção'
                     : supabaseStatus.error || `${missingVars.length} variável(eis) de ambiente não configurada(s)`,
-                version: '4.4.18',
+                version: '4.4.19',
                 timestamp: new Date().toISOString(),
                 env_check: envCheck,
                 database: {
@@ -771,7 +771,7 @@ module.exports = async (req, res) => {
         }
 
         // ═══════════════════════════════════════════════════════════
-        // v4.4.18 ACTION LOG ENDPOINT - Zero-Risk Protocol
+        // v4.4.19 ACTION LOG ENDPOINT - Zero-Risk Protocol
         // Recebe logs de ações da extensão para sincronização
         // Retorna status 201 para confirmar sucesso
         // ═══════════════════════════════════════════════════════════

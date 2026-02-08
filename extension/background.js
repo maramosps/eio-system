@@ -1,13 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação ultra-estável - VERSÃO 4.4.18 (SYNC ANALYTICS)
+  Motor de automação ultra-estável - VERSÃO 4.4.19 (SYNC ANALYTICS)
   COM DELAYS INTELIGENTES + HARDCODED SAFETY
   + ACTION LOG MIDDLEWARE + HEARTBEAT + AUTO-FILTERS
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Extension v4.4.18 starting...');
+console.log('E.I.O Extension v4.4.19 starting...');
 
 let extensionState = {
     isRunning: false,
@@ -51,7 +51,7 @@ const BACKEND_URL = 'https://eio-system.vercel.app'; // Production URL
 // Chaves Supabase REMOVIDAS - use a API backend como proxy
 
 // ═══════════════════════════════════════════════════════════
-// v4.4.18 - HELPER FUNCTIONS FOR AUTH
+// v4.4.19 - HELPER FUNCTIONS FOR AUTH
 // ═══════════════════════════════════════════════════════════
 async function getUserId() {
     try {
@@ -152,7 +152,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('[E.I.O Heartbeat] Ping recebido do Dashboard');
             sendResponse({
                 pong: true,
-                version: '4.4.18',
+                version: '4.4.19',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats,
                 timestamp: Date.now()
@@ -220,13 +220,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 queueLength: extensionState.queue.length,
                 stats: extensionState.stats,
                 isProcessing: isProcessing,
-                version: '4.4.18'
+                version: '4.4.19'
             });
             break;
 
         case 'console_log':
             // Recebe logs do content script
             console.log(`[ContentScript ${message.level}] ${message.message}`);
+            break;
+
+        // ═══════════════════════════════════════════════════════════
+        // v4.4.19 - SYNC_AUTH: Recebe Token do Dashboard via Bridge
+        // ═══════════════════════════════════════════════════════════
+        case 'SYNC_AUTH':
+            console.log('[E.I.O Auth] 🔐 Recebendo auth sync do Dashboard...');
+            console.log('[E.I.O Auth] User ID:', message.userId);
+            console.log('[E.I.O Auth] Token presente:', !!message.token);
+
+            // Salvar no chrome.storage.local
+            chrome.storage.local.set({
+                eio_user_id: message.userId,
+                eio_auth_token: message.token,
+                eio_user_email: message.email || null,
+                eio_auth_synced_at: Date.now()
+            }, () => {
+                console.log('[E.I.O Auth] ✅ Auth salvo no storage com sucesso!');
+                sendResponse({ success: true, message: 'Auth synchronized' });
+            });
+            return true; // Async response
+
+        // ═══════════════════════════════════════════════════════════
+        // v4.4.19 - BRIDGE_CONNECTED: Dashboard conectou via Bridge
+        // ═══════════════════════════════════════════════════════════
+        case 'bridge_connected':
+            console.log('[E.I.O Bridge] 🌉 Dashboard conectado via Bridge!');
+            console.log('[E.I.O Bridge] Origin:', message.origin);
+            console.log('[E.I.O Bridge] Extension ID:', message.extensionId);
+            sendResponse({ success: true, version: '4.4.19' });
             break;
     }
     return true;
@@ -741,7 +771,7 @@ async function sendActionLog(actionType, targetUsername, success) {
             target_username: targetUsername.replace('@', ''),
             timestamp: new Date().toISOString(),
             success: success,
-            source: 'extension_v4.4.18'
+            source: 'extension_v4.4.19'
         };
 
         console.log('[E.I.O ActionLog] 📤 Enviando log para API...', payload);
@@ -803,7 +833,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
         console.log('[E.I.O Heartbeat] 💓 Ping recebido do Dashboard');
         sendResponse({
             pong: true,
-            version: '4.4.18',
+            version: '4.4.19',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats,
             queueLength: extensionState.queue.length,
@@ -815,11 +845,11 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
             queueLength: extensionState.queue.length,
             stats: extensionState.stats,
             isProcessing: isProcessing,
-            version: '4.4.18'
+            version: '4.4.19'
         });
     }
 
     return true;
 });
 
-console.log('E.I.O Extension v4.4.18 Ready - Sync Analytics + Hardcoded Safety Active');
+console.log('E.I.O Extension v4.4.19 Ready - Sync Analytics + Hardcoded Safety Active');
