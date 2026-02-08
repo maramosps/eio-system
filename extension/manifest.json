@@ -78,5 +78,13 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' https://*.instagram.com https://*.cdninstagram.com https://*.fbcdn.net https://*.fbsbx.com https://ui-avatars.com data: blob:;"
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://eio-system.vercel.app/*",
+      "http://localhost:3000/*",
+      "http://localhost:5500/*",
+      "http://127.0.0.1:5500/*"
+    ]
   }
 }
