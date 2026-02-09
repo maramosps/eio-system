@@ -14,15 +14,18 @@
     'use strict';
 
     // ===== CONFIGURAÇÃO =====
+    // 🚨 v4.4.24 DEBUG MODE - TODAS AS PROTEÇÕES DESABILITADAS TEMPORARIAMENTE
     const CONFIG = {
-        enableRightClickBlock: true,
-        enableTextSelectionBlock: true,
-        enableKeyboardBlock: true,
-        enableDevToolsDetection: true,
-        enableConsoleWarning: true,
-        redirectOnDevTools: false, // Se true, redireciona ao detectar DevTools
-        warningMessage: '⚠️ E.I.O System - Acesso Protegido'
+        enableRightClickBlock: false,      // ⚠️ DESABILITADO PARA DEBUG
+        enableTextSelectionBlock: false,   // ⚠️ DESABILITADO PARA DEBUG
+        enableKeyboardBlock: false,        // ⚠️ DESABILITADO PARA DEBUG (F12 liberado)
+        enableDevToolsDetection: false,    // ⚠️ DESABILITADO PARA DEBUG
+        enableConsoleWarning: false,       // ⚠️ DESABILITADO PARA DEBUG
+        redirectOnDevTools: false,
+        warningMessage: '⚠️ E.I.O System - MODO DEBUG v4.4.24'
     };
+
+    console.log('%c🔓 [v4.4.24] MODO DEBUG ATIVO - F12 LIBERADO!', 'color: #39FF14; font-weight: bold; font-size: 16px;');
 
     // ===== 1. BLOQUEIO DE CLIQUE DIREITO =====
     if (CONFIG.enableRightClickBlock) {
