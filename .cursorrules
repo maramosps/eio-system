@@ -1,0 +1,448 @@
+# eio.system - Master Agent Rules
+
+Você é o Orquestrador Chefe do eio.system (Engajamento Inteligente Orgânico). Sua missão e diretriz principal é: garantir que cada linha de código para este software de automação no Instagram seja de nível enterprise. Para toda e qualquer mensagem de correção, inclusão de código ou melhoria que eu solicitar, você NÃO deve agir sozinho. Você deve obrigatoriamente identificar, conectar e consultar as "Agent Skills" pertinentes na pasta '.agent/skills/awesome-skills' para garantir que as configurações sigam os padrões de produção mais rigorosos.
+
+
+## PROTOCOLO OBRIGATÓRIO DE EXECUÇÃO
+Sempre que o usuário solicitar uma correção, inclusão ou melhoria no eio.system, você deve:
+1. **Identificar Competências:** Analisar quais skills em `.agent/skills/awesome-skills/skills/` são necessárias.
+2. **Consultar Especialistas:** Antes de responder, "convoque" mentalmente os agentes abaixo para validar a proposta.
+3. **Execução Integrada:** O código gerado deve ser a soma das melhores práticas desses agentes aplicadas ao eio.system.
+
+## MAPA DE AGENTES PRIORITÁRIOS
+- **Core Business (eio.system):** `instagram-automation`, `tiktok-automation`, `computer-use-agents`.
+- **Stack Técnica:** `nextjs-supabase-auth`, `vercel-automation`, `firebase`, `using-neon`.
+- **Qualidade e Segurança:** `code-reviewer`, `frontend-security-coder`, `find-bugs`, `security-auditor`.
+- **Conversão e UI:** `form-cro`, `seo-authority-builder`, `ui-visual-validator`.
+
+## DIRETRIZES ESPECÍFICAS
+- **Extensão Chrome eio.system:** Todo código deve passar pelo `frontend-security-coder` para garantir aprovação na Web Store.
+- **Landing Page:** Melhorias de conversão devem consultar `form-cro`.
+- **Banco de Dados:** Alterações de schema no Supabase exigem consulta ao `database-admin`.
+
+Sempre confirme quais agentes você está "ativando" para o eio.system no início de cada resposta.
+
+
+Segue abaixo relação com todos outros possíveis agentes que poderemos usar em nossos projetos atual e futuros para o eio.system
+
+urity, performance, maintainability |
+
+| `code-reviewer` | Elite code review expert specializing in modern AI-powered code analysis, security vulnerabilities, performance optimization, and production reliability. Mas... | code | code, reviewer, elite, review, specializing, ai, powered, analysis, security, vulnerabilities, performance, optimization |
+
+| `codebase-cleanup-deps-audit` | You are a dependency security expert specializing in vulnerability scanning, license compliance, and supply chain security. Analyze project dependencies for ... | codebase, cleanup, deps, audit | codebase, cleanup, deps, audit, dependency, security, specializing, vulnerability, scanning, license, compliance, supply |
+
+| `computer-use-agents` | Build AI agents that interact with computers like humans do - viewing screens, moving cursors, clicking buttons, and typing text. Covers Anthropic's Computer... | computer, use, agents | computer, use, agents, ai, interact, computers, like, humans, do, viewing, screens, moving |
+
+| `database-admin` | Expert database administrator specializing in modern cloud databases, automation, and reliability engineering. Masters AWS/Azure/GCP database services, Infra... | database, admin | database, admin, administrator, specializing, cloud, databases, automation, reliability, engineering, masters, aws, azure |
+
+| `database-migration` | Execute database migrations across ORMs and platforms with zero-downtime strategies, data transformation, and rollback procedures. Use when migrating databas... | database, migration | database, migration, execute, migrations, orms, platforms, zero, downtime, data, transformation, rollback, procedures |
+
+| `database-migrations-sql-migrations` | SQL database migrations with zero-downtime strategies for PostgreSQL, MySQL, SQL Server | database, sql, migrations, postgresql, mysql, flyway, liquibase, alembic, zero-downtime | database, sql, migrations, postgresql, mysql, flyway, liquibase, alembic, zero-downtime, zero, downtime, server |
+
+| `dependency-management-deps-audit` | You are a dependency security expert specializing in vulnerability scanning, license compliance, and supply chain security. Analyze project dependencies for ... | dependency, deps, audit | dependency, deps, audit, security, specializing, vulnerability, scanning, license, compliance, supply, chain, analyze |
+
+| `deployment-engineer` | Expert deployment engineer specializing in modern CI/CD pipelines, GitOps workflows, and advanced deployment automation. Masters GitHub Actions, ArgoCD/Flux,... | deployment | deployment, engineer, specializing, ci, cd, pipelines, gitops, automation, masters, github, actions, argocd |
+
+| `deployment-pipeline-design` | Design multi-stage CI/CD pipelines with approval gates, security checks, and deployment orchestration. Use when architecting deployment workflows, setting up... | deployment, pipeline | deployment, pipeline, multi, stage, ci, cd, pipelines, approval, gates, security, checks, orchestration | 
+
+| `design-orchestration` | Orchestrates design workflows by routing work through brainstorming, multi-agent review, and execution readiness in the correct order. Prevents premature imp... |  | orchestration, orchestrates, routing, work, through, brainstorming, multi, agent, review, execution, readiness, correct |
+
+| `devops-troubleshooter` | Expert DevOps troubleshooter specializing in rapid incident response, advanced debugging, and modern observability. Masters log analysis, distributed tracing... | devops, troubleshooter | devops, troubleshooter, specializing, rapid, incident, response, debugging, observability, masters, log, analysis, distributed |
+
+| `docker-expert` | Docker containerization expert with deep knowledge of multi-stage builds, image optimization, container security, Docker Compose orchestration, and productio... | docker | docker, containerization, deep, knowledge, multi, stage, image, optimization, container, security, compose, orchestration |
+
+| `dotnet-backend` | Build ASP.NET Core 8+ backend services with EF Core, auth, background jobs, and production API patterns. | dotnet, backend | dotnet, backend, asp, net, core, ef, auth, background, jobs, api |
+
+| `ethical-hacking-methodology` | This skill should be used when the user asks to "learn ethical hacking", "understand penetration testing lifecycle", "perform reconnaissance", "conduct secur... | ethical, hacking, methodology | ethical, hacking, methodology, skill, should, used, user, asks, learn, understand, penetration, testing |
+
+| `file-path-traversal` | This skill should be used when the user asks to "test for directory traversal", "exploit path traversal vulnerabilities", "read arbitrary files through web a... | file, path, traversal | file, path, traversal, testing, skill, should, used, user, asks, test, directory, exploit |
+
+| `find-bugs` | Find bugs, security vulnerabilities, and code quality issues in local branch changes. Use when asked to review changes, find bugs, security review, or audit ... | find, bugs | find, bugs, security, vulnerabilities, code, quality, issues, local, branch, changes, asked, review |
+
+| `firebase` | Firebase gives you a complete backend in minutes - auth, database, storage, functions, hosting. But the ease of setup hides real complexity. Security rules a... | firebase | firebase, gives, complete, backend, minutes, auth, database, storage, functions, hosting, ease, setup |
+
+| `firmware-analyst` | Expert firmware analyst specializing in embedded systems, IoT security, and hardware reverse engineering. Masters firmware extraction, analysis, and vulnerab... | firmware, analyst | firmware, analyst, specializing, embedded, iot, security, hardware, reverse, engineering, masters, extraction, analysis |
+
+| `form-cro` | Optimize any form that is NOT signup or account registration — including lead capture, contact, demo request, application, survey, quote, and checkout forms.... | form, cro | form, cro, optimize, any, signup, account, registration, including, lead, capture, contact, demo |
+
+| `framework-migration-deps-upgrade` | You are a dependency management expert specializing in safe, incremental upgrades of project dependencies. Plan and execute dependency updates with minimal r... | framework, migration, deps, upgrade | framework, migration, deps, upgrade, dependency, specializing, safe, incremental, upgrades, dependencies, plan, execute |
+
+| `frontend-mobile-security-xss-scan` | You are a frontend security specialist focusing on Cross-Site Scripting (XSS) vulnerability detection and prevention. Analyze React, Vue, Angular, and vanill... | frontend, mobile, security, xss, scan | frontend, mobile, security, xss, scan, focusing, cross, site, scripting, vulnerability, detection, prevention |
+
+| `frontend-security-coder` | Expert in secure frontend coding practices specializing in XSS prevention, output sanitization, and client-side security patterns. Use PROACTIVELY for fronte... | frontend, security, coder | frontend, security, coder, secure, coding, specializing, xss, prevention, output, sanitization, client, side |
+
+| `gdpr-data-handling` | Implement GDPR-compliant data handling with consent management, data subject rights, and privacy by design. Use when building systems that process EU persona... | gdpr, data, handling | gdpr, data, handling, compliant, consent, subject, rights, privacy, building, process, eu, personal |
+
+| `graphql-architect` | Master modern GraphQL with federation, performance optimization, and enterprise security. Build scalable schemas, implement advanced caching, and design real... | graphql | graphql, architect, federation, performance, optimization, enterprise, security, scalable, schemas, caching, real, time |       
+
+| `html-injection-testing` | This skill should be used when the user asks to "test for HTML injection", "inject HTML into web pages", "perform HTML injection attacks", "deface web applic... | html, injection | html, injection, testing, skill, should, used, user, asks, test, inject, web, pages |
+
+| `hugging-face-jobs` | This skill should be used when users want to run any workload on Hugging Face Jobs infrastructure. Covers UV scripts, Docker-based jobs, hardware selection, ... | hugging, face, jobs | hugging, face, jobs, skill, should, used, users, want, run, any, workload, infrastructure |
+
+| `hybrid-cloud-architect` | Expert hybrid cloud architect specializing in complex multi-cloud solutions across AWS/Azure/GCP and private clouds (OpenStack/VMware). Masters hybrid connec... | hybrid, cloud | hybrid, cloud, architect, specializing, complex, multi, solutions, aws, azure, gcp, private, clouds |
+
+| `idor-testing` | This skill should be used when the user asks to "test for insecure direct object references," "find IDOR vulnerabilities," "exploit broken access control," "... | idor | idor, vulnerability, testing, skill, should, used, user, asks, test, insecure, direct, object |
+
+| `incident-responder` | Expert SRE incident responder specializing in rapid problem resolution, modern observability, and comprehensive incident management. Masters incident command... | incident, responder | incident, responder, sre, specializing, rapid, problem, resolution, observability, masters, command, blameless, post |
+
+| `incident-response-incident-response` | Use when working with incident response incident response | incident, response | incident, response, working |
+
+| `incident-response-smart-fix` | [Extended thinking: This workflow implements a sophisticated debugging and resolution pipeline that leverages AI-assisted debugging tools and observability p... | incident, response, fix | incident, response, fix, smart, extended, thinking, implements, sophisticated, debugging, resolution, pipeline, leverages |
+
+| `incident-runbook-templates` | Create structured incident response runbooks with step-by-step procedures, escalation paths, and recovery actions. Use when building runbooks, responding to ... | incident, runbook | incident, runbook, structured, response, runbooks, step, procedures, escalation, paths, recovery, actions, building |
+
+| `internal-comms-anthropic` | A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenev... | internal, comms, anthropic | internal, comms, anthropic, set, resources, me, write, all, kinds, communications, formats, my |      
+
+| `internal-comms-community` | A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenev... | internal, comms, community | internal, comms, community, set, resources, me, write, all, kinds, communications, formats, my |      
+
+| `k8s-manifest-generator` | Create production-ready Kubernetes manifests for Deployments, Services, ConfigMaps, and Secrets following best practices and security standards. Use when gen... | k8s, manifest, generator | k8s, manifest, generator, kubernetes, manifests, deployments, configmaps, secrets, following, security, standards, generating |
+
+| `k8s-security-policies` | Implement Kubernetes security policies including NetworkPolicy, PodSecurityPolicy, and RBAC for production-grade security. Use when securing Kubernetes clust... | k8s, security, policies | k8s, security, policies, kubernetes, including, networkpolicy, podsecuritypolicy, rbac, grade, securing, clusters, implementing |
+
+| `kubernetes-architect` | Expert Kubernetes architect specializing in cloud-native infrastructure, advanced GitOps workflows (ArgoCD/Flux), and enterprise container orchestration. Mas... | kubernetes | kubernetes, architect, specializing, cloud, native, infrastructure, gitops, argocd, flux, enterprise, container, orchestration |
+
+| `legal-advisor` | Draft privacy policies, terms of service, disclaimers, and legal notices. Creates GDPR-compliant texts, cookie policies, and data processing agreements. Use ... | legal, advisor | legal, advisor, draft, privacy, policies, terms, disclaimers, notices, creates, gdpr, compliant, texts |
+
+| `linkerd-patterns` | Implement Linkerd service mesh patterns for lightweight, security-focused service mesh deployments. Use when setting up Linkerd, configuring traffic policies... | linkerd | linkerd, mesh, lightweight, security, deployments, setting, up, configuring, traffic, policies, implementing, zero |
+
+| `loki-mode` | Multi-agent autonomous startup system for Claude Code. Triggers on "Loki Mode". Orchestrates 100+ specialized agents across engineering, QA, DevOps, security... | loki, mode | loki, mode, multi, agent, autonomous, startup, claude, code, triggers, orchestrates, 100, specialized |
+
+| `malware-analyst` | Expert malware analyst specializing in defensive malware research, threat intelligence, and incident response. Masters sandbox analysis, behavioral analysis,... | malware, analyst | malware, analyst, specializing, defensive, research, threat, intelligence, incident, response, masters, sandbox, analysis |
+
+| `memory-forensics` | Master memory forensics techniques including memory acquisition, process analysis, and artifact extraction using Volatility and related tools. Use when analy... | memory, forensics | memory, forensics, techniques, including, acquisition, process, analysis, artifact, extraction, volatility, related, analyzing |
+
+| `metasploit-framework` | This skill should be used when the user asks to "use Metasploit for penetration testing", "exploit vulnerabilities with msfconsole", "create payloads with ms... | metasploit, framework | metasploit, framework, skill, should, used, user, asks, penetration, testing, exploit, vulnerabilities, msfconsole |
+
+| `mobile-security-coder` | Expert in secure mobile coding practices specializing in input validation, WebView security, and mobile-specific security patterns. Use PROACTIVELY for mobil... | mobile, security, coder | mobile, security, coder, secure, coding, specializing, input, validation, webview, specific, proactively, implementations |
+
+| `mtls-configuration` | Configure mutual TLS (mTLS) for zero-trust service-to-service communication. Use when implementing zero-trust networking, certificate management, or securing... | mtls, configuration | mtls, configuration, configure, mutual, tls, zero, trust, communication, implementing, networking, certificate, securing |
+
+| `multi-agent-brainstorming` | Use this skill when a design or idea requires higher confidence, risk reduction, or formal review. This skill orchestrates a structured, sequential multi-age... | multi, agent, brainstorming | multi, agent, brainstorming, skill, idea, requires, higher, confidence, risk, reduction, formal, review |
+
+| `network-engineer` | Expert network engineer specializing in modern cloud networking, security architectures, and performance optimization. Masters multi-cloud connectivity, serv... | network | network, engineer, specializing, cloud, networking, security, architectures, performance, optimization, masters, multi, connectivity |
+
+| `nextjs-supabase-auth` | Expert integration of Supabase Auth with Next.js App Router Use when: supabase auth next, authentication next.js, login supabase, auth middleware, protected ... | nextjs, supabase, auth | nextjs, supabase, auth, integration, next, js, app, router, authentication, login, middleware, protected |    
+
+| `nodejs-best-practices` | Node.js development principles and decision-making. Framework selection, async patterns, security, and architecture. Teaches thinking, not copying. | nodejs, best, practices | nodejs, best, practices, node, js, development, principles, decision, making, framework, selection, async |
+
+| `notebooklm` | Use this skill to query your Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Browser automati... | notebooklm | notebooklm, skill, query, google, notebooks, directly, claude, code, source, grounded, citation, backed |
+
+| `observability-engineer` | Build production-ready monitoring, logging, and tracing systems. Implements comprehensive observability strategies, SLI/SLO management, and incident response... | observability | observability, engineer, monitoring, logging, tracing, implements, sli, slo, incident, response, proactively, infrastructure |
+
+| `openapi-spec-generation` | Generate and maintain OpenAPI 3.1 specifications from code, design-first specs, and validation patterns. Use when creating API documentation, generating SDKs... | openapi, spec, generation | openapi, spec, generation, generate, maintain, specifications, code, first, specs, validation, creating, api |
+
+| `payment-integration` | Integrate Stripe, PayPal, and payment processors. Handles checkout flows, subscriptions, webhooks, and PCI compliance. Use PROACTIVELY when implementing paym... | payment, integration | payment, integration, integrate, stripe, paypal, processors, checkout, flows, subscriptions, webhooks, pci, compliance |
+
+| `pci-compliance` | Implement PCI DSS compliance requirements for secure handling of payment card data and payment systems. Use when securing payment processing, achieving PCI c... | pci, compliance | pci, compliance, dss, requirements, secure, handling, payment, card, data, securing, processing, achieving |
+
+| `pentest-checklist` | This skill should be used when the user asks to "plan a penetration test", "create a security assessment checklist", "prepare for penetration testing", "defi... | pentest, checklist | pentest, checklist, skill, should, used, user, asks, plan, penetration, test, security, assessment |
+
+| `plaid-fintech` | Expert patterns for Plaid API integration including Link token flows, transactions sync, identity verification, Auth for ACH, balance checks, webhook handlin... | plaid, fintech | plaid, fintech, api, integration, including, link, token, flows, transactions, sync, identity, verification |
+
+| `popup-cro` | Create and optimize popups, modals, overlays, slide-ins, and banners to increase conversions without harming user experience or brand trust. | popup, cro | popup, cro, optimize, popups, modals, overlays, slide, ins, banners, increase, conversions, without |
+
+| `postmortem-writing` | Write effective blameless postmortems with root cause analysis, timelines, and action items. Use when conducting incident reviews, writing postmortem documen... | postmortem, writing | postmortem, writing, write, effective, blameless, postmortems, root, cause, analysis, timelines, action, items |   
+
+| `quant-analyst` | Build financial models, backtest trading strategies, and analyze market data. Implements risk metrics, portfolio optimization, and statistical arbitrage. Use... | quant, analyst | quant, analyst, financial, models, backtest, trading, analyze, market, data, implements, risk, metrics |
+
+| `red-team-tactics` | Red team tactics principles based on MITRE ATT&CK. Attack phases, detection evasion, reporting. | red, team, tactics | red, team, tactics, principles, mitre, att, ck, attack, phases, detection, evasion, reporting |
+
+| `red-team-tools` | This skill should be used when the user asks to "follow red team methodology", "perform bug bounty hunting", "automate reconnaissance", "hunt for XSS vulnera... | red, team | red, team, methodology, skill, should, used, user, asks, follow, perform, bug, bounty |
+
+| `research-engineer` | An uncompromising Academic Research Engineer. Operates with absolute scientific rigor, objective criticism, and zero flair. Focuses on theoretical correctnes... | research | research, engineer, uncompromising, academic, operates, absolute, scientific, rigor, objective, criticism, zero, flair |       
+
+| `reverse-engineer` | Expert reverse engineer specializing in binary analysis, disassembly, decompilation, and software analysis. Masters IDA Pro, Ghidra, radare2, x64dbg, and mod... | reverse | reverse, engineer, specializing, binary, analysis, disassembly, decompilation, software, masters, ida, pro, ghidra |
+
+| `risk-manager` | Monitor portfolio risk, R-multiples, and position limits. Creates hedging strategies, calculates expectancy, and implements stop-losses. Use PROACTIVELY for ... | risk, manager | risk, manager, monitor, portfolio, multiples, position, limits, creates, hedging, calculates, expectancy, implements |
+
+| `risk-metrics-calculation` | Calculate portfolio risk metrics including VaR, CVaR, Sharpe, Sortino, and drawdown analysis. Use when measuring portfolio risk, implementing risk limits, or... | risk, metrics, calculation | risk, metrics, calculation, calculate, portfolio, including, var, cvar, sharpe, sortino, drawdown, analysis |
+
+| `sast-configuration` | Configure Static Application Security Testing (SAST) tools for automated vulnerability detection in application code. Use when setting up security scanning, ... | sast, configuration | sast, configuration, configure, static, application, security, testing, automated, vulnerability, detection, code, setting |
+
+| `scanning-tools` | This skill should be used when the user asks to "perform vulnerability scanning", "scan networks for open ports", "assess web application security", "scan wi... | scanning | scanning, security, skill, should, used, user, asks, perform, vulnerability, scan, networks, open |
+
+| `secrets-management` | Implement secure secrets management for CI/CD pipelines using Vault, AWS Secrets Manager, or native platform solutions. Use when handling sensitive credentia... | secrets | secrets, secure, ci, cd, pipelines, vault, aws, manager, native, platform, solutions, handling |
+
+| `security-auditor` | Expert security auditor specializing in DevSecOps, comprehensive cybersecurity, and compliance frameworks. Masters vulnerability assessment, threat modeling,... | security, auditor | security, auditor, specializing, devsecops, cybersecurity, compliance, frameworks, masters, vulnerability, assessment, threat, modeling |
+
+| `security-bluebook-builder` | Build security Blue Books for sensitive apps | security, bluebook, builder | security, bluebook, builder, blue, books, sensitive, apps |
+
+| `security-compliance-compliance-check` | You are a compliance expert specializing in regulatory requirements for software systems including GDPR, HIPAA, SOC2, PCI-DSS, and other industry standards. ... | security, compliance, check | security, compliance, check, specializing, regulatory, requirements, software, including, gdpr, hipaa, soc2, pci |
+
+| `security-requirement-extraction` | Derive security requirements from threat models and business context. Use when translating threats into actionable requirements, creating security user stori... | security, requirement, extraction | security, requirement, extraction, derive, requirements, threat, models, business, context, translating, threats, actionable |
+
+| `security-scanning-security-dependencies` | You are a security expert specializing in dependency vulnerability analysis, SBOM generation, and supply chain security. Scan project dependencies across eco... | security, scanning, dependencies | security, scanning, dependencies, specializing, dependency, vulnerability, analysis, sbom, generation, supply, chain, scan |
+
+| `security-scanning-security-hardening` | Coordinate multi-layer security scanning and hardening across application, infrastructure, and compliance controls. | security, scanning, hardening | security, scanning, hardening, coordinate, multi, layer, application, infrastructure, compliance, controls |
+
+| `security-scanning-security-sast` | Static Application Security Testing (SAST) for code vulnerability analysis across multiple languages and frameworks | security, scanning, sast | security, scanning, sast, static, application, testing, code, vulnerability, analysis, multiple, languages, frameworks |
+
+| `seo-authority-builder` | Analyzes content for E-E-A-T signals and suggests improvements to build authority and trust. Identifies missing credibility elements. Use PROACTIVELY for YMY... | seo, authority, builder | seo, authority, builder, analyzes, content, signals, suggests, improvements, trust, identifies, missing, credibility |
+
+| `service-mesh-expert` | Expert service mesh architect specializing in Istio, Linkerd, and cloud-native networking patterns. Masters traffic management, security policies, observabil... | service, mesh | service, mesh, architect, specializing, istio, linkerd, cloud, native, networking, masters, traffic, security |
+
+| `smtp-penetration-testing` | This skill should be used when the user asks to "perform SMTP penetration testing", "enumerate email users", "test for open mail relays", "grab SMTP banners"... | smtp, penetration | smtp, penetration, testing, skill, should, used, user, asks, perform, enumerate, email, users |
+
+| `solidity-security` | Master smart contract security best practices to prevent common vulnerabilities and implement secure Solidity patterns. Use when writing smart contracts, aud... | solidity, security | solidity, security, smart, contract, prevent, common, vulnerabilities, secure, writing, contracts, auditing, existing |
+
+| `sql-injection-testing` | This skill should be used when the user asks to "test for SQL injection vulnerabilities", "perform SQLi attacks", "bypass authentication using SQL injection"... | sql, injection | sql, injection, testing, skill, should, used, user, asks, test, vulnerabilities, perform, sqli |
+
+| `ssh-penetration-testing` | This skill should be used when the user asks to "pentest SSH services", "enumerate SSH configurations", "brute force SSH credentials", "exploit SSH vulnerabi... | ssh, penetration | ssh, penetration, testing, skill, should, used, user, asks, pentest, enumerate, configurations, brute |
+
+| `stride-analysis-patterns` | Apply STRIDE methodology to systematically identify threats. Use when analyzing system security, conducting threat modeling sessions, or creating security do... | stride | stride, analysis, apply, methodology, systematically, identify, threats, analyzing, security, conducting, threat, modeling |
+
+| `stripe-integration` | Implement Stripe payment processing for robust, PCI-compliant payment flows including checkout, subscriptions, and webhooks. Use when integrating Stripe paym... | stripe, integration | stripe, integration, payment, processing, robust, pci, compliant, flows, including, checkout, subscriptions, webhooks |
+
+| `terraform-specialist` | Expert Terraform/OpenTofu specialist mastering advanced IaC automation, state management, and enterprise infrastructure patterns. Handles complex module desi... | terraform | terraform, opentofu, mastering, iac, automation, state, enterprise, infrastructure, complex, module, multi, cloud |        
+
+| `threat-mitigation-mapping` | Map identified threats to appropriate security controls and mitigations. Use when prioritizing security investments, creating remediation plans, or validatin... | threat, mitigation, mapping | threat, mitigation, mapping, map, identified, threats, appropriate, security, controls, mitigations, prioritizing, investments |
+
+| `threat-modeling-expert` | Expert in threat modeling methodologies, security architecture review, and risk assessment. Masters STRIDE, PASTA, attack trees, and security requirement ext... | threat, modeling | threat, modeling, methodologies, security, architecture, review, risk, assessment, masters, stride, pasta, attack |
+
+| `top-web-vulnerabilities` | This skill should be used when the user asks to "identify web application vulnerabilities", "explain common security flaws", "understand vulnerability catego... | top, web, vulnerabilities | top, web, vulnerabilities, 100, reference, skill, should, used, user, asks, identify, application |     
+
+| `twilio-communications` | Build communication features with Twilio: SMS messaging, voice calls, WhatsApp Business API, and user verification (2FA). Covers the full spectrum from simpl... | twilio, communications | twilio, communications, communication, features, sms, messaging, voice, calls, whatsapp, business, api, user |
+
+| `ui-visual-validator` | Rigorous visual validation expert specializing in UI testing, design system compliance, and accessibility verification. Masters screenshot analysis, visual r... | ui, visual, validator | ui, visual, validator, rigorous, validation, specializing, testing, compliance, accessibility, verification, masters, screenshot |
+
+| `using-neon` | Guides and best practices for working with Neon Serverless Postgres. Covers getting started, local development with Neon, choosing a connection method, Neon ... | using, neon | using, neon, guides, working, serverless, postgres, covers, getting, started, local, development, choosing |
+
+| `varlock-claude-skill` | Secure environment variable management ensuring secrets are never exposed in Claude sessions, terminals, logs, or git commits | varlock, claude, skill | varlock, claude, skill, secure, environment, variable, ensuring, secrets, never, exposed, sessions, terminals |
+
+| `vulnerability-scanner` | Advanced vulnerability analysis principles. OWASP 2025, Supply Chain Security, attack surface mapping, risk prioritization. | vulnerability, scanner | vulnerability, scanner, analysis, principles, owasp, 2025, supply, chain, security, attack, surface, mapping |
+
+| `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI", "check accessibility", "audit design", "review UX", or "check my si... | web, guidelines | web, guidelines, review, ui, code, interface, compliance, asked, my, check, accessibility, audit |
+
+| `wordpress-penetration-testing` | This skill should be used when the user asks to "pentest WordPress sites", "scan WordPress for vulnerabilities", "enumerate WordPress users, themes, or plugi... | wordpress, penetration | wordpress, penetration, testing, skill, should, used, user, asks, pentest, sites, scan, vulnerabilities |
+
+| `xss-html-injection` | This skill should be used when the user asks to "test for XSS vulnerabilities", "perform cross-site scripting attacks", "identify HTML injection flaws", "exp... | xss, html, injection | xss, html, injection, cross, site, scripting, testing, skill, should, used, user, asks |
+
+
+
+## testing (23)
+
+
+
+| Skill | Description | Tags | Triggers |
+
+| --- | --- | --- | --- |
+
+| `ab-test-setup` | Structured guide for setting up A/B tests with mandatory gates for hypothesis, metrics, and execution readiness. | ab, setup | ab, setup, test, structured, setting, up, tests, mandatory, gates, hypothesis, metrics, execution |
+
+| `circleci-automation` | Automate CircleCI tasks via Rube MCP (Composio): trigger pipelines, monitor workflows/jobs, retrieve artifacts and test metadata. Always search tools first f... | circleci | circleci, automation, automate, tasks, via, rube, mcp, composio, trigger, pipelines, monitor, jobs |
+
+| `conductor-implement` | Execute tasks from a track's implementation plan following TDD workflow | conductor, implement | conductor, implement, execute, tasks, track, plan, following, tdd |     
+
+| `conductor-revert` | Git-aware undo by logical work unit (track, phase, or task) | conductor, revert | conductor, revert, git, aware, undo, logical, work, unit, track, phase, task |
+
+| `debugger` | Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues. | debugger | debugger, debugging, errors, test, failures, unexpected, behavior, proactively, encountering, any, issues |      
+
+| `dependency-upgrade` | Manage major dependency version upgrades with compatibility analysis, staged rollout, and comprehensive testing. Use when upgrading framework versions, updat... | dependency, upgrade | dependency, upgrade, major, version, upgrades, compatibility, analysis, staged, rollout, testing, upgrading, framework |
+
+| `pentest-commands` | This skill should be used when the user asks to "run pentest commands", "scan with nmap", "use metasploit exploits", "crack passwords with hydra or john", "s... | pentest, commands | pentest, commands, skill, should, used, user, asks, run, scan, nmap, metasploit, exploits |
+
+| `performance-testing-review-multi-agent-review` | Use when working with performance testing review multi agent review | performance, multi, agent | performance, multi, agent, testing, review, working |
+
+| `playwright-skill` | Complete browser automation with Playwright. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots, check res... | playwright, skill | playwright, skill, complete, browser, automation, auto, detects, dev, servers, writes, clean, test |
+
+| `pypict-skill` | Pairwise test generation | pypict, skill | pypict, skill, pairwise, test, generation |
+
+| `screen-reader-testing` | Test web applications with screen readers including VoiceOver, NVDA, and JAWS. Use when validating screen reader compatibility, debugging accessibility issue... | screen, reader | screen, reader, testing, test, web, applications, readers, including, voiceover, nvda, jaws, validating |
+
+| `startup-analyst` | Expert startup business analyst specializing in market sizing, financial modeling, competitive analysis, and strategic planning for early-stage companies. Us... | startup, analyst | startup, analyst, business, specializing, market, sizing, financial, modeling, competitive, analysis, strategic, planning |
+
+| `startup-metrics-framework` | This skill should be used when the user asks about "key startup metrics", "SaaS metrics", "CAC and LTV", "unit economics", "burn multiple", "rule of 40", "ma... | startup, metrics, framework | startup, metrics, framework, skill, should, used, user, asks, about, key, saas, cac |
+
+| `systematic-debugging` | Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes | systematic, debugging | systematic, debugging, encountering, any, bug, test, failure, unexpected, behavior, before, proposing, fixes |     
+
+| `tdd-workflow` | Test-Driven Development workflow principles. RED-GREEN-REFACTOR cycle. | tdd | tdd, test, driven, development, principles, red, green, refactor, cycle |
+
+| `tdd-workflows-tdd-cycle` | Use when working with tdd workflows tdd cycle | tdd, cycle | tdd, cycle, working |
+
+| `tdd-workflows-tdd-green` | Implement the minimal code needed to make failing tests pass in the TDD green phase. | tdd, green | tdd, green, minimal, code, needed, failing, tests, pass, phase | 
+
+| `tdd-workflows-tdd-red` | Generate failing tests for the TDD red phase to define expected behavior and edge cases. | tdd, red | tdd, red, generate, failing, tests, phase, define, expected, behavior, edge, cases |
+
+| `tdd-workflows-tdd-refactor` | Use when working with tdd workflows tdd refactor | tdd, refactor | tdd, refactor, working |      
+
+| `test-driven-development` | Use when implementing any feature or bugfix, before writing implementation code | driven | driven, test, development, implementing, any, feature, bugfix, before, writing, code |
+
+| `test-fixing` | Run tests and systematically fix all failing tests using smart error grouping. Use when user asks to fix failing tests, mentions test failures, runs test sui... | fixing | fixing, test, run, tests, systematically, fix, all, failing, smart, error, grouping, user |
+
+| `unit-testing-test-generate` | Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus. | unit, generate | unit, generate, testing, test, maintainable, tests, languages, strong, coverage, edge, case |        
+
+| `web3-testing` | Test smart contracts comprehensively using Hardhat and Foundry with unit tests, integration tests, and mainnet forking. Use when testing Solidity contracts, ... | web3 | web3, testing, test, smart, contracts, comprehensively, hardhat, foundry, unit, tests, integration, mainnet |
+
+
+
+## workflow (81)
+
+
+
+| Skill | Description | Tags | Triggers |
+
+| --- | --- | --- | --- |
+
+| `activecampaign-automation` | Automate ActiveCampaign tasks via Rube MCP (Composio): manage contacts, tags, list subscriptions, automation enrollment, and tasks. Always search tools first... | activecampaign | activecampaign, automation, automate, tasks, via, rube, mcp, composio, contacts, tags, list, subscriptions |     
+
+| `agent-orchestration-improve-agent` | Systematic improvement of existing agents through performance analysis, prompt engineering, and continuous iteration. | agent, improve | agent, improve, orchestration, systematic, improvement, existing, agents, through, performance, analysis, prompt, engineering |
+
+| `agent-orchestration-multi-agent-optimize` | Optimize multi-agent systems with coordinated profiling, workload distribution, and cost-aware orchestration. Use when improving agent performance, throughpu... | agent, multi, optimize | agent, multi, optimize, orchestration, coordinated, profiling, workload, distribution, cost, aware, improving, performance |
+
+| `airtable-automation` | Automate Airtable tasks via Rube MCP (Composio): records, bases, tables, fields, views. Always search tools first for current schemas. | airtable | airtable, automation, automate, tasks, via, rube, mcp, composio, records, bases, tables, fields |
+
+| `amplitude-automation` | Automate Amplitude tasks via Rube MCP (Composio): events, user activity, cohorts, user identification. Always search tools first for current schemas. | amplitude | amplitude, automation, automate, tasks, via, rube, mcp, composio, events, user, activity, cohorts |
+
+| `asana-automation` | Automate Asana tasks via Rube MCP (Composio): tasks, projects, sections, teams, workspaces. Always search tools first for current schemas. | asana | asana, automation, automate, tasks, via, rube, mcp, composio, sections, teams, workspaces, always |
+
+| `bamboohr-automation` | Automate BambooHR tasks via Rube MCP (Composio): employees, time-off, benefits, dependents, employee updates. Always search tools first for current schemas. | bamboohr | bamboohr, automation, automate, tasks, via, rube, mcp, composio, employees, time, off, benefits |
+
+| `basecamp-automation` | Automate Basecamp project management, to-dos, messages, people, and to-do list organization via Rube MCP (Composio). Always search tools first for current sc... | basecamp | basecamp, automation, automate, dos, messages, people, do, list, organization, via, rube, mcp |
+
+| `billing-automation` | Build automated billing systems for recurring payments, invoicing, subscription lifecycle, and dunning management. Use when implementing subscription billing... | billing | billing, automation, automated, recurring, payments, invoicing, subscription, lifecycle, dunning, implementing, automating, managing |
+
+| `bitbucket-automation` | Automate Bitbucket repositories, pull requests, branches, issues, and workspace management via Rube MCP (Composio). Always search tools first for current sch... | bitbucket | bitbucket, automation, automate, repositories, pull, requests, branches, issues, workspace, via, rube, mcp |
+
+| `brevo-automation` | Automate Brevo (Sendinblue) tasks via Rube MCP (Composio): manage email campaigns, create/edit templates, track senders, and monitor campaign performance. Al... | brevo | brevo, automation, automate, sendinblue, tasks, via, rube, mcp, composio, email, campaigns, edit |
+
+| `cal-com-automation` | Automate Cal.com tasks via Rube MCP (Composio): manage bookings, check availability, configure webhooks, and handle teams. Always search tools first for curr... | cal, com | cal, com, automation, automate, tasks, via, rube, mcp, composio, bookings, check, availability |
+
+| `canva-automation` | Automate Canva tasks via Rube MCP (Composio): designs, exports, folders, brand templates, autofill. Always search tools first for current schemas. | canva | canva, automation, automate, tasks, via, rube, mcp, composio, designs, exports, folders, brand |
+
+| `changelog-automation` | Automate changelog generation from commits, PRs, and releases following Keep a Changelog format. Use when setting up release workflows, generating release no... | changelog | changelog, automation, automate, generation, commits, prs, releases, following, keep, format, setting, up |
+
+| `clickup-automation` | Automate ClickUp project management including tasks, spaces, folders, lists, comments, and team operations via Rube MCP (Composio). Always search tools first... | clickup | clickup, automation, automate, including, tasks, spaces, folders, lists, comments, team, operations, via |
+
+| `close-automation` | Automate Close CRM tasks via Rube MCP (Composio): create leads, manage calls/SMS, handle tasks, and track notes. Always search tools first for current schemas. | close | close, automation, automate, crm, tasks, via, rube, mcp, composio, leads, calls, sms |
+
+| `coda-automation` | Automate Coda tasks via Rube MCP (Composio): manage docs, pages, tables, rows, formulas, permissions, and publishing. Always search tools first for current s... | coda | coda, automation, automate, tasks, via, rube, mcp, composio, docs, pages, tables, rows |
+
+| `conductor-manage` | Manage track lifecycle: archive, restore, delete, rename, and cleanup | conductor, manage | conductor, manage, track, lifecycle, archive, restore, delete, rename, cleanup |
+
+| `conductor-new-track` | Create a new track with specification and phased implementation plan | conductor, new, track | conductor, new, track, specification, phased, plan |
+
+| `conductor-status` | Display project status, active tracks, and next actions | conductor, status | conductor, status, display, active, tracks, next, actions |
+
+| `conductor-validator` | Validates Conductor project artifacts for completeness, consistency, and correctness. Use after setup, when diagnosing issues, or before implementation to ve... | conductor, validator | conductor, validator, validates, artifacts, completeness, consistency, correctness, after, setup, diagnosing, issues, before |
+
+| `confluence-automation` | Automate Confluence page creation, content search, space management, labels, and hierarchy navigation via Rube MCP (Composio). Always search tools first for ... | confluence | confluence, automation, automate, page, creation, content, search, space, labels, hierarchy, navigation, via |
+
+| `convertkit-automation` | Automate ConvertKit (Kit) tasks via Rube MCP (Composio): manage subscribers, tags, broadcasts, and broadcast stats. Always search tools first for current sch... | convertkit | convertkit, automation, automate, kit, tasks, via, rube, mcp, composio, subscribers, tags, broadcasts |
+
+| `datadog-automation` | Automate Datadog tasks via Rube MCP (Composio): query metrics, search logs, manage monitors/dashboards, create events and downtimes. Always search tools firs... | datadog | datadog, automation, automate, tasks, via, rube, mcp, composio, query, metrics, search, logs |
+
+| `discord-automation` | Automate Discord tasks via Rube MCP (Composio): messages, channels, roles, webhooks, reactions. Always search tools first for current schemas. | discord | discord, automation, automate, tasks, via, rube, mcp, composio, messages, channels, roles, webhooks |
+
+| `docusign-automation` | Automate DocuSign tasks via Rube MCP (Composio): templates, envelopes, signatures, document management. Always search tools first for current schemas. | docusign | docusign, automation, automate, tasks, via, rube, mcp, composio, envelopes, signatures, document, always |
+
+| `dropbox-automation` | Automate Dropbox file management, sharing, search, uploads, downloads, and folder operations via Rube MCP (Composio). Always search tools first for current s... | dropbox | dropbox, automation, automate, file, sharing, search, uploads, downloads, folder, operations, via, rube |
+
+| `email-sequence` | When the user wants to create or optimize an email sequence, drip campaign, automated email flow, or lifecycle email program. Also use when the user mentions... | email, sequence | email, sequence, user, wants, optimize, drip, campaign, automated, flow, lifecycle, program, mentions |
+
+| `figma-automation` | Automate Figma tasks via Rube MCP (Composio): files, components, design tokens, comments, exports. Always search tools first for current schemas. | figma | figma, automation, automate, tasks, via, rube, mcp, composio, files, components, tokens, comments |
+
+| `freshdesk-automation` | Automate Freshdesk helpdesk operations including tickets, contacts, companies, notes, and replies via Rube MCP (Composio). Always search tools first for curr... | freshdesk | freshdesk, automation, automate, helpdesk, operations, including, tickets, contacts, companies, notes, replies, via |      
+
+| `full-stack-orchestration-full-stack-feature` | Use when working with full stack orchestration full stack feature | full, stack | full, stack, orchestration, feature, working |
+
+| `git-pushing` | Stage, commit, and push git changes with conventional commit messages. Use when user wants to commit and push changes, mentions pushing to remote, or asks to... | git, pushing | git, pushing, stage, commit, push, changes, conventional, messages, user, wants, mentions, remote |
+
+| `gitlab-automation` | Automate GitLab project management, issues, merge requests, pipelines, branches, and user operations via Rube MCP (Composio). Always search tools first for c... | gitlab | gitlab, automation, automate, issues, merge, requests, pipelines, branches, user, operations, via, rube |
+
+| `gmail-automation` | Automate Gmail tasks via Rube MCP (Composio): send/reply, search, labels, drafts, attachments. Always search tools first for current schemas. | gmail | gmail, automation, automate, tasks, via, rube, mcp, composio, send, reply, search, labels |
+
+| `google-calendar-automation` | Automate Google Calendar events, scheduling, availability checks, and attendee management via Rube MCP (Composio). Create events, find free slots, manage att... | google, calendar | google, calendar, automation, automate, events, scheduling, availability, checks, attendee, via, rube, mcp |  
+
+| `google-drive-automation` | Automate Google Drive file operations (upload, download, search, share, organize) via Rube MCP (Composio). Upload/download files, manage folders, share with ... | google, drive | google, drive, automation, automate, file, operations, upload, download, search, share, organize, via |
+
+| `helpdesk-automation` | Automate HelpDesk tasks via Rube MCP (Composio): list tickets, manage views, use canned responses, and configure custom fields. Always search tools first for... | helpdesk | helpdesk, automation, automate, tasks, via, rube, mcp, composio, list, tickets, views, canned |
+
+| `hubspot-automation` | Automate HubSpot CRM operations (contacts, companies, deals, tickets, properties) via Rube MCP using Composio integration. | hubspot | hubspot, automation, automate, crm, operations, contacts, companies, deals, tickets, properties, via, rube |
+
+| `instagram-automation` | Automate Instagram tasks via Rube MCP (Composio): create posts, carousels, manage media, get insights, and publishing limits. Always search tools first for c... | instagram | instagram, automation, automate, tasks, via, rube, mcp, composio, posts, carousels, media, get |
+
+| `intercom-automation` | Automate Intercom tasks via Rube MCP (Composio): conversations, contacts, companies, segments, admins. Always search tools first for current schemas. | intercom | intercom, automation, automate, tasks, via, rube, mcp, composio, conversations, contacts, companies, segments |
+
+| `jira-automation` | Automate Jira tasks via Rube MCP (Composio): issues, projects, sprints, boards, comments, users. Always search tools first for current schemas. | jira | jira, automation, automate, tasks, via, rube, mcp, composio, issues, sprints, boards, comments |
+
+| `kaizen` | Guide for continuous improvement, error proofing, and standardization. Use this skill when the user wants to improve code quality, refactor, or discuss proce... | kaizen | kaizen, continuous, improvement, error, proofing, standardization, skill, user, wants, improve, code, quality |
+
+| `klaviyo-automation` | Automate Klaviyo tasks via Rube MCP (Composio): manage email/SMS campaigns, inspect campaign messages, track tags, and monitor send jobs. Always search tools... | klaviyo | klaviyo, automation, automate, tasks, via, rube, mcp, composio, email, sms, campaigns, inspect |
+
+| `linear-automation` | Automate Linear tasks via Rube MCP (Composio): issues, projects, cycles, teams, labels. Always search tools first for current schemas. | linear | linear, automation, automate, tasks, via, rube, mcp, composio, issues, cycles, teams, labels |
+
+| `linkedin-automation` | Automate LinkedIn tasks via Rube MCP (Composio): create posts, manage profile, company info, comments, and image uploads. Always search tools first for curre... | linkedin | linkedin, automation, automate, tasks, via, rube, mcp, composio, posts, profile, company, info |
+
+| `make-automation` | Automate Make (Integromat) tasks via Rube MCP (Composio): operations, enums, language and timezone lookups. Always search tools first for current schemas. | make | make, automation, automate, integromat, tasks, via, rube, mcp, composio, operations, enums, language |
+
+| `mermaid-expert` | Create Mermaid diagrams for flowcharts, sequences, ERDs, and architectures. Masters syntax for all diagram types and styling. Use PROACTIVELY for visual docu... | mermaid | mermaid, diagrams, flowcharts, sequences, erds, architectures, masters, syntax, all, diagram, types, styling |
+
+| `microsoft-teams-automation` | Automate Microsoft Teams tasks via Rube MCP (Composio): send messages, manage channels, create meetings, handle chats, and search messages. Always search too... | microsoft, teams | microsoft, teams, automation, automate, tasks, via, rube, mcp, composio, send, messages, channels |
+
+| `miro-automation` | Automate Miro tasks via Rube MCP (Composio): boards, items, sticky notes, frames, sharing, connectors. Always search tools first for current schemas. | miro | miro, automation, automate, tasks, via, rube, mcp, composio, boards, items, sticky, notes |
+
+| `mixpanel-automation` | Automate Mixpanel tasks via Rube MCP (Composio): events, segmentation, funnels, cohorts, user profiles, JQL queries. Always search tools first for current sc... | mixpanel | mixpanel, automation, automate, tasks, via, rube, mcp, composio, events, segmentation, funnels, cohorts |
+
+| `monday-automation` | Automate Monday.com work management including boards, items, columns, groups, subitems, and updates via Rube MCP (Composio). Always search tools first for cu... | monday | monday, automation, automate, com, work, including, boards, items, columns, groups, subitems, updates |
+
+| `notion-automation` | Automate Notion tasks via Rube MCP (Composio): pages, databases, blocks, comments, users. Always search tools first for current schemas. | notion | notion, automation, automate, tasks, via, rube, mcp, composio, pages, databases, blocks, comments |
+
+| `one-drive-automation` | Automate OneDrive file management, search, uploads, downloads, sharing, permissions, and folder operations via Rube MCP (Composio). Always search tools first... | one, drive | one, drive, automation, automate, onedrive, file, search, uploads, downloads, sharing, permissions, folder |
+
+| `outlook-automation` | Automate Outlook tasks via Rube MCP (Composio): emails, calendar, contacts, folders, attachments. Always search tools first for current schemas. | outlook | outlook, automation, automate, tasks, via, rube, mcp, composio, emails, calendar, contacts, folders |
+
+| `outlook-calendar-automation` | Automate Outlook Calendar tasks via Rube MCP (Composio): create events, manage attendees, find meeting times, and handle invitations. Always search tools fir... | outlook, calendar | outlook, calendar, automation, automate, tasks, via, rube, mcp, composio, events, attendees, find |
+
+| `pagerduty-automation` | Automate PagerDuty tasks via Rube MCP (Composio): manage incidents, services, schedules, escalation policies, and on-call rotations. Always search tools firs... | pagerduty | pagerduty, automation, automate, tasks, via, rube, mcp, composio, incidents, schedules, escalation, policies |
+
+| `pdf-official` | Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs ... | pdf, official | pdf, official, manipulation, toolkit, extracting, text, tables, creating, new, pdfs, merging, splitting |
+
+| `posthog-automation` | Automate PostHog tasks via Rube MCP (Composio): events, feature flags, projects, user profiles, annotations. Always search tools first for current schemas. | posthog | posthog, automation, automate, tasks, via, rube, mcp, composio, events, feature, flags, user |
+
+| `postmark-automation` | Automate Postmark email delivery tasks via Rube MCP (Composio): send templated emails, manage templates, monitor delivery stats and bounces. Always search to... | postmark | postmark, automation, automate, email, delivery, tasks, via, rube, mcp, composio, send, templated |
+
+| `reddit-automation` | Automate Reddit tasks via Rube MCP (Composio): search subreddits, create posts, manage comments, and browse top content. Always search tools first for curren... | reddit | reddit, automation, automate, tasks, via, rube, mcp, composio, search, subreddits, posts, comments |
+
+| `render-automation` | Automate Render tasks via Rube MCP (Composio): services, deployments, projects. Always search tools first for current schemas. | render | render, automation, automate, tasks, via, rube, mcp, composio, deployments, always, search, first |
+
+| `salesforce-automation` | Automate Salesforce tasks via Rube MCP (Composio): leads, contacts, accounts, opportunities, SOQL queries. Always search tools first for current schemas. | salesforce | salesforce, automation, automate, tasks, via, rube, mcp, composio, leads, contacts, accounts, opportunities |
+
+| `segment-automation` | Automate Segment tasks via Rube MCP (Composio): track events, identify users, manage groups, page views, aliases, batch operations. Always search tools first... | segment | segment, automation, automate, tasks, via, rube, mcp, composio, track, events, identify, users |
+
+| `sentry-automation` | Automate Sentry tasks via Rube MCP (Composio): manage issues/events, configure alerts, track releases, monitor projects and teams. Always search tools first ... | sentry | sentry, automation, automate, tasks, via, rube, mcp, composio, issues, events, configure, alerts |
+
+| `shopify-automation` | Automate Shopify tasks via Rube MCP (Composio): products, orders, customers, inventory, collections. Always search tools first for current schemas. | shopify | shopify, automation, automate, tasks, via, rube, mcp, composio, products, orders, customers, inventory |
+
+| `skill-creator` | This skill should be used when the user asks to create a new skill, build a skill, make a custom skill, develop a CLI skill, or wants to extend the CLI with ... | automation, scaffolding, skill-creation, meta-skill | automation, scaffolding, skill-creation, meta-skill, skill, creator, should, used, user, asks, new, custom |
+
+| `square-automation` | Automate Square tasks via Rube MCP (Composio): payments, orders, invoices, locations. Always search tools first for current schemas. | square | square, automation, automate, tasks, via, rube, mcp, composio, payments, orders, invoices, locations |
+
+| `stripe-automation` | Automate Stripe tasks via Rube MCP (Composio): customers, charges, subscriptions, invoices, products, refunds. Always search tools first for current schemas. | stripe | stripe, automation, automate, tasks, via, rube, mcp, composio, customers, charges, subscriptions, invoices |
+
+| `team-collaboration-issue` | You are a GitHub issue resolution expert specializing in systematic bug investigation, feature implementation, and collaborative development workflows. Your ... | team, collaboration, issue | team, collaboration, issue, github, resolution, specializing, systematic, bug, investigation, feature, collaborative, development |
+
+| `telegram-automation` | Automate Telegram tasks via Rube MCP (Composio): send messages, manage chats, share photos/documents, and handle bot commands. Always search tools first for ... | telegram | telegram, automation, automate, tasks, via, rube, mcp, composio, send, messages, chats, share |
+
+| `tiktok-automation` | Automate TikTok tasks via Rube MCP (Composio): upload/publish videos, post photos, manage content, and view user profiles/stats. Always search tools first fo... | tiktok | tiktok, automation, automate, tasks, via, rube, mcp, composio, upload, publish, videos, post |
+
+| `todoist-automation` | Automate Todoist task management, projects, sections, filtering, and bulk operations via Rube MCP (Composio). Always search tools first for current schemas. | todoist | todoist, automation, automate, task, sections, filtering, bulk, operations, via, rube, mcp, composio |
+
+| `track-management` | Use this skill when creating, managing, or working with Conductor tracks - the logical work units for features, bugs, and refactors. Applies to spec.md, plan... | track | track, skill, creating, managing, working, conductor, tracks, logical, work, units, features, bugs |
+
+| `trello-automation` | Automate Trello boards, cards, and workflows via Rube MCP (Composio). Create cards, manage lists, assign members, and search across boards programmatically. | trello | trello, automation, automate, boards, cards, via, rube, mcp, composio, lists, assign, members |
+
+| `twitter-automation` | Automate Twitter/X tasks via Rube MCP (Composio): posts, search, users, bookmarks, lists, media. Always search tools first for current schemas. | twitter | twitter, automation, automate, tasks, via, rube, mcp, composio, posts, search, users, bookmarks |
+
+| `vercel-automation` | Automate Vercel tasks via Rube MCP (Composio): manage deployments, domains, DNS, env vars, projects, and teams. Always search tools first for current schemas. | vercel | vercel, automation, automate, tasks, via, rube, mcp, composio, deployments, domains, dns, env |
+
+| `webflow-automation` | Automate Webflow CMS collections, site publishing, page management, asset uploads, and ecommerce orders via Rube MCP (Composio). Always search tools first fo... | webflow | webflow, automation, automate, cms, collections, site, publishing, page, asset, uploads, ecommerce, orders |
+
+| `wrike-automation` | Automate Wrike project management via Rube MCP (Composio): create tasks/folders, manage projects, assign work, and track progress. Always search tools first ... | wrike | wrike, automation, automate, via, rube, mcp, composio, tasks, folders, assign, work, track |
+
+| `zendesk-automation` | Automate Zendesk tasks via Rube MCP (Composio): tickets, users, organizations, replies. Always search tools first for current schemas. | zendesk | zendesk, automation, automate, tasks, via, rube, mcp, composio, tickets, users, organizations, replies |
+
+| `zoho-crm-automation` | Automate Zoho CRM tasks via Rube MCP (Composio): create/update records, search contacts, manage leads, and convert leads. Always search tools first for curre... | zoho, crm | zoho, crm, automation, automate, tasks, via, rube, mcp, composio, update, records, search |
+
+| `zoom-automation` | Automate Zoom meeting creation, management, recordings, webinars, and participant tracking via Rube MCP (Composio). Always search tools first for current sch... | zoom | zoom, automation, automate, meeting, creation, recordings, webinars, participant, tracking, via, rube, mcp |
+
+PS C:\Users\user> 

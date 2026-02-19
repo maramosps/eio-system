@@ -12,17 +12,16 @@ $ARGUMENTS
 
 Show current project and agent status.
 
-### What It Shows
+### 🛡️ Status de Segurança
+- [x] **Dependências:** `dotenv` v16.4.5 (Corrigido)
+- [x] **Auth:** Bypass de emergência removido (Seguro)
+- [x] **Supabase:** Client unificado em `services/supabase.js`
+- [!] **Chaves:** Necessitam atualização na Vercel
 
-1. **Project Info**
-   - Project name and path
-   - Tech stack
-   - Current features
-
-2. **Agent Status Board**
-   - Which agents are running
-   - Which tasks are completed
-   - Pending work
+### 🌐 Status do Frontend
+- [x] **Conexão:** Centralizada em `global-connection.js`
+- [x] **Dashboard:** Código limpo e otimizado (v4.6.6)
+- [x] **UI:** Estilos V16 aplicados (Anti-quebra)
 
 3. **File Statistics**
    - Files created count

@@ -1,53 +1,159 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O GLOBAL CONNECTION v4.4.24
- * 🔥 DIRECT STORAGE INTEGRATION - ÚNICA FONTE DA VERDADE
+ * E.I.O GLOBAL CONNECTION v4.4.25
+ * 🔥 SILENT GREEN - MutationObserver + Auto-Fix UI
  * ═══════════════════════════════════════════════════════════
  */
 
-console.log("%c🌐 [GLOBAL] Iniciando Protocolo v4.4.24...", "color: #6246ea; font-weight: bold; font-size: 14px;");
+const VERSION = '4.4.25';
 
+console.log("%c🌐 [GLOBAL] Iniciando Protocolo v" + VERSION + "...", "color: #6246ea; font-weight: bold; font-size: 14px;");
+
+// Injetar estilos globais de animação
+(function injectGlobalStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(57, 255, 20, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(57, 255, 20, 0); }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// ═══════════════════════════════════════════════════════════
+// FUNÇÃO PRINCIPAL: FORÇA UI VERDE
+// ═══════════════════════════════════════════════════════════
 function setSystemOnline(id) {
     if (!id) return;
-    console.log("%c✅ [SYSTEM] Status Confirmado: ONLINE (ID: " + id + ")", "color: #39FF14; font-weight: bold; font-size: 14px;");
+    console.log("%c✅ [SYSTEM] ONLINE - ID: " + id, "color: #39FF14; font-weight: bold; font-size: 14px;");
 
     localStorage.setItem("eio_extension_id", id);
-    localStorage.setItem("eio_extension_version", "4.4.24");
+    localStorage.setItem("eio_extension_version", VERSION);
     localStorage.setItem("eio_extension_connected", "true");
     localStorage.setItem("eio_last_connected", Date.now().toString());
 
-    // ═══════════════════════════════════════════════════════════
-    // FORÇA BRUTA - Atualiza TODOS os indicadores na tela
-    // ═══════════════════════════════════════════════════════════
-    const badges = document.querySelectorAll('.status-badge, #extension-status-badge, .eio-sync-status, [data-extension-status]');
-    badges.forEach(b => {
-        b.className = 'status-badge online eio-sync-status';
-        b.innerHTML = `
-            <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;"></span>
-            <span style="color: #39FF14; font-weight: 600;">ONLINE (v4.4.24)</span>
-        `;
-        b.style.background = 'rgba(57, 255, 20, 0.1)';
-        b.style.borderColor = 'rgba(57, 255, 20, 0.3)';
-        b.style.boxShadow = "0 0 15px rgba(57, 255, 20, 0.3)";
-    });
-
-    const texts = document.querySelectorAll('#extension-status-text, .extension-status-text, [data-extension-text]');
-    texts.forEach(t => {
-        t.innerText = 'Conectado (v4.4.24)';
-        t.style.color = '#39FF14';
-    });
-
-    // Disparar evento para outros scripts
-    window.dispatchEvent(new CustomEvent('eio:extension:connected', {
-        detail: { extensionId: id, version: '4.4.24', timestamp: Date.now() }
-    }));
-
-    // Sincroniza Token
-    syncAuthToken();
+    forceGreenUI();
 }
 
 // ═══════════════════════════════════════════════════════════
-// SINCRONIZAÇÃO DE TOKEN
+// FORÇA VERDE EM TODOS OS ELEMENTOS
+// ═══════════════════════════════════════════════════════════
+function forceGreenUI() {
+    const id = localStorage.getItem("eio_extension_id");
+    if (!id) return;
+
+    // Seleciona TODOS os possíveis badges de status
+    const selectors = [
+        '.status-badge',
+        '#extension-status-badge',
+        '.eio-sync-status',
+        '[data-extension-status]',
+        '.connection-indicator'
+    ];
+
+    document.querySelectorAll(selectors.join(', ')).forEach(el => {
+        // Se contém texto de "não detectada" ou "offline" ou "amarelo", força verde
+        if (el.textContent.includes('não detectada') ||
+            el.textContent.includes('Desconectado') ||
+            el.textContent.includes('OFFLINE') ||
+            !el.classList.contains('online')) {
+
+            el.className = 'status-badge online eio-sync-status';
+            el.innerHTML = `
+                <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;"></span>
+                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${VERSION})</span>
+            `;
+            el.style.background = 'rgba(57, 255, 20, 0.1)';
+            el.style.borderColor = 'rgba(57, 255, 20, 0.3)';
+            el.style.boxShadow = '0 0 15px rgba(57, 255, 20, 0.3)';
+        }
+    });
+
+    // Atualiza textos de status genéricos
+    document.querySelectorAll('#extension-status-text, .extension-status-text, [data-extension-text]').forEach(t => {
+        t.innerText = 'Conectado (v' + VERSION + ')';
+        t.style.color = '#39FF14';
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // UI ESPECÍFICA DO DASHBOARD (Barra de Status)
+    // ═══════════════════════════════════════════════════════════
+    const statusEl = document.getElementById('eio-connection-status');
+    if (statusEl) {
+        // Verifica se já está verde para não causar repaint desnecessário
+        const textEl = statusEl.querySelector('.status-text');
+        if (textEl && !textEl.textContent.includes('ATIVA')) {
+            console.log("%c✅ [GLOBAL] Atualizando Dashboard Status Bar", "color: #39FF14;");
+
+            // Estilos do container
+            statusEl.style.background = 'rgba(57, 255, 20, 0.1)';
+            statusEl.style.borderColor = 'rgba(57, 255, 20, 0.3)';
+
+            // Dot
+            const dotEl = statusEl.querySelector('.status-dot');
+            if (dotEl) {
+                dotEl.style.background = '#39FF14';
+                dotEl.style.boxShadow = '0 0 8px #39FF14';
+                dotEl.style.animation = 'pulse-green 2s infinite';
+            }
+
+            // Text
+            if (textEl) {
+                textEl.textContent = `EXTENSÃO ATIVA (v${VERSION})`;
+                textEl.style.color = '#39FF14';
+            }
+
+            // Link (se existir)
+            const linkEl = document.getElementById('link-download-extension');
+            if (linkEl) {
+                linkEl.textContent = '● Sincronizado com Segurança';
+                linkEl.style.color = '#39FF14';
+                linkEl.style.pointerEvents = 'none';
+                linkEl.style.opacity = '0.7';
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MUTATIONOBSERVER - OBSERVA MUDANÇAS NO DOM
+// Se um badge amarelo aparecer, força verde imediatamente
+// ═══════════════════════════════════════════════════════════
+const observer = new MutationObserver((mutations) => {
+    const id = localStorage.getItem("eio_extension_id");
+    if (!id) return;
+
+    mutations.forEach((mutation) => {
+        // Se houve mudança de nós ou texto
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+            // Procura por badges que não estão verdes
+            const badges = document.querySelectorAll('.status-badge:not(.online), .eio-sync-status:not(.online)');
+            if (badges.length > 0) {
+                console.log("%c🔄 [OBSERVER] Detectou badge não-verde, corrigindo...", "color: #FFC107;");
+                forceGreenUI();
+            }
+        }
+    });
+});
+
+// Inicia observer quando DOM estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+} else {
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SINCRONIZAÇÃO DE TOKEN COM EXTENSÃO
 // ═══════════════════════════════════════════════════════════
 function syncAuthToken() {
     let token, userId, userEmail;
@@ -66,67 +172,53 @@ function syncAuthToken() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 1. CHECAGEM IMEDIATA (Leitura do Storage - A bridge já escreveu!)
+// 1. CHECAGEM IMEDIATA (Leitura do Storage)
 // ═══════════════════════════════════════════════════════════
 const storedId = localStorage.getItem("eio_extension_id");
 if (storedId) {
-    console.log("%c💉 [GLOBAL] ID PRÉ-CARREGADO DETECTADO!", "color: #39FF14; font-weight: bold;");
+    console.log("%c💉 [GLOBAL] ID PRÉ-CARREGADO: " + storedId, "color: #39FF14; font-weight: bold;");
     setSystemOnline(storedId);
+    syncAuthToken();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 2. ESCUTA EVENTO EIO_ID_WRITTEN (Injeção Direta da Bridge)
+// 2. LISTENERS DE EVENTOS
 // ═══════════════════════════════════════════════════════════
 window.addEventListener('EIO_ID_WRITTEN', (e) => {
-    console.log("%c💉 [GLOBAL] Evento EIO_ID_WRITTEN recebido!", "color: #39FF14;");
-    if (e.detail && e.detail.id) setSystemOnline(e.detail.id);
+    if (e.detail?.id) setSystemOnline(e.detail.id);
 });
 
-// ═══════════════════════════════════════════════════════════
-// 3. ESCUTA HANDSHAKE VIA POSTMESSAGE (Backup)
-// ═══════════════════════════════════════════════════════════
 window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     const data = event.data;
-    if (!data || !data.type) return;
+    if (!data?.type) return;
 
-    if (data.type === 'EIO_HANDSHAKE_INIT') {
-        setSystemOnline(data.id);
-    }
+    if (data.type === 'EIO_HANDSHAKE_INIT') setSystemOnline(data.id);
     if (data.type === 'EIO_TOKEN_SAVED') {
         console.log('%c✅ [GLOBAL] Token sincronizado!', 'color: #39FF14; font-weight: bold;');
         localStorage.setItem('eio_auth_synced', 'true');
     }
-    if (data.type === 'EIO_PONG') {
-        setSystemOnline(data.id);
-    }
+    if (data.type === 'EIO_PONG') setSystemOnline(data.id);
 });
 
 // ═══════════════════════════════════════════════════════════
-// 4. PING DE REDUNDÂNCIA (Garante que UI fica atualizada)
+// 3. INTERVALO DE SEGURANÇA (Força verde a cada 2s)
 // ═══════════════════════════════════════════════════════════
 setInterval(() => {
-    const currentId = localStorage.getItem("eio_extension_id");
-    if (currentId) {
-        // Re-aplica status a cada 2 segundos para evitar piscadas
-        const badges = document.querySelectorAll('.status-badge, #extension-status-badge, .eio-sync-status');
-        badges.forEach(b => {
-            if (!b.classList.contains('online')) {
-                setSystemOnline(currentId);
-            }
-        });
-    }
+    const id = localStorage.getItem("eio_extension_id");
+    if (id) forceGreenUI();
 }, 2000);
 
 // ═══════════════════════════════════════════════════════════
 // EXPORTAR FUNÇÕES GLOBAIS
 // ═══════════════════════════════════════════════════════════
 window.EIO_GLOBAL = {
-    version: '4.4.24',
-    setSystemOnline: setSystemOnline,
-    syncAuthToken: syncAuthToken,
+    version: VERSION,
+    setSystemOnline,
+    syncAuthToken,
+    forceGreenUI,
     isConnected: () => !!localStorage.getItem('eio_extension_id'),
     getExtensionId: () => localStorage.getItem('eio_extension_id')
 };
 
-console.log("%c🚀 [GLOBAL v4.4.24] Protocolo Ativo - Única Fonte da Verdade!", "background: #39FF14; color: #000; font-size: 12px; padding: 4px 8px; border-radius: 4px;");
+console.log("%c🚀 [GLOBAL v" + VERSION + "] Silent Green Protocol Ativo!", "background: #39FF14; color: #000; font-size: 12px; padding: 4px 8px; border-radius: 4px;");

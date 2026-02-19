@@ -3,36 +3,13 @@
 // A lógica de conexão foi movida para js/global-connection.js
 // Este arquivo apenas escuta eventos do sistema global
 // ═══════════════════════════════════════════════════════════
-(function initDashboardConnection() {
-    console.log('%c[Dashboard] v4.4.24 - Usando Global Connection', 'color: #6246ea;');
-
-    // Escuta o evento global de conexão
-    window.addEventListener('eio:extension:connected', (event) => {
-        console.log('%c[Dashboard] 🌉 Conexão detectada pelo Global Connection!', 'color: #39FF14;');
-        console.log('[Dashboard] Extension ID:', event.detail.extensionId);
-        console.log('[Dashboard] Version:', event.detail.version);
-
-        // Atualizar UI específica do Dashboard (se necessário além do global)
-        const badge = document.getElementById('extension-status-badge') ||
-            document.querySelector('.eio-sync-status');
-        if (badge) {
-            badge.className = 'status-badge online eio-sync-status';
-            badge.style.background = 'rgba(57, 255, 20, 0.1)';
-            badge.style.borderColor = 'rgba(57, 255, 20, 0.3)';
-            badge.style.boxShadow = '0 0 15px rgba(57, 255, 20, 0.2)';
-            badge.innerHTML = `
-                <span class="eio-sync-dot" style="background: #39FF14; box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;"></span>
-                <span style="color: #39FF14; font-weight: 600;">ONLINE (v${event.detail.version})</span>
-            `;
-        }
-
-        const statusText = document.getElementById('extension-status-text');
-        if (statusText) {
-            statusText.innerText = 'Conectado (v' + event.detail.version + ')';
-            statusText.style.color = '#39FF14';
-        }
-    });
-})();
+// ═══════════════════════════════════════════════════════════
+// v4.4.26 - GLOBAL CONNECTION INTEGRATION (ROBUST UI)
+// ═══════════════════════════════════════════════════════════
+// (function initDashboardConnection() { ... }) REMOVIDO EM v4.6.6
+// A lógica de conexão foi centralizada em js/global-connection.js
+// para garantir consistência e evitar race conditions.
+console.log('✅ [Dashboard] Lógica de conexão delegada para global-connection.js');
 
 // Dashboard functionality
 document.addEventListener('DOMContentLoaded', () => {
@@ -469,9 +446,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchDashboardData() {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
 
     try {
+        if (!token) {
+            console.warn('[Dashboard] Token ausente. Abortando fetch.');
+            return;
+        }
+
         const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
         const response = await fetch(`${API_URL}/analytics/dashboard`, {
             headers: {
@@ -500,14 +482,22 @@ async function initExtensionDownload() {
     const extensionVersion = document.getElementById('extensionVersion');
 
     // Set default values based on the latest package
-    if (extensionSize) extensionSize.textContent = '1.7 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.4.24 (E.I.O System)';
+    if (extensionSize) extensionSize.textContent = '1.8 MB';
+    if (extensionVersion) extensionVersion.textContent = '4.6.5 (E.I.O System)';
 
     // Download button - Simple direct download
     if (btnDownload) {
+        btnDownload.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Baixar Extensão v4.6.5 (.zip)
+        `;
         btnDownload.addEventListener('click', () => {
             // Direct navigation to update file
-            window.location.href = 'downloads/eio-extension-v4.4.24.zip';
+            window.location.href = 'downloads/eio-system-v4-6-5.zip';
         });
     }
 
@@ -536,11 +526,20 @@ function showInstructionsModal() {
                         ✅ <strong>Compatível com:</strong> Google Chrome, Microsoft Edge, Brave, Opera e outros navegadores baseados em Chromium.
                     </p>
                 </div>
+
+                <div style="margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+                    <h4 style="color: #ff0055; margin-bottom: 10px;">🔥 Novidades da Versão 4.6.5 (Leitura Obrigatória)</h4>
+                    <ul style="color: #ddd; line-height: 1.6; list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px;">📊 <strong>Sincronização Inteligente de Stats:</strong> Agora seus seguidores só são atualizados no dashboard se houver mudança real, economizando recursos.</li>
+                        <li style="margin-bottom: 8px;">🤖 <strong>Humanização por Erro de Digitação:</strong> O sistema agora simula "erros humanos" ao digitar mensagens e as corrige, tornando a automação indetectável.</li>
+                        <li style="margin-bottom: 8px; color: #4CAF50;">💡 <strong>Primeiro Passo:</strong> Após instalar, <strong>navegue até o seu PRÓPRIO perfil</strong> no Instagram para ativar a primeira sincronização.</li>
+                    </ul>
+                </div>
                 
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension-v4.4.24.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-system-v4-6-5.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>
@@ -628,7 +627,7 @@ document.head.appendChild(style);
 // ═══════════════════════════════════════════════════════════
 
 async function initInstagramAccountsManagement() {
-    const token = localStorage.getItem('eio_token');
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
     if (!token) return;
 
     const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
@@ -642,10 +641,13 @@ async function initInstagramAccountsManagement() {
 
     // Load accounts on page load
     await loadInstagramAccounts();
+
+    // Auto-refresh stats every 30s
+    setInterval(() => loadInstagramAccounts(), 30000);
 }
 
 async function loadInstagramAccounts() {
-    const token = localStorage.getItem('eio_token');
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
     if (!token) return;
 
     const accountsList = document.getElementById('accountsList');
@@ -668,6 +670,72 @@ async function loadInstagramAccounts() {
         }
 
         const data = await response.json();
+
+        // ═══════════════════════════════════════════════════════════
+        // v4.6.5 - STATS SYNC UI FIX: Atualiza Dashboard com dados reais
+        // ═══════════════════════════════════════════════════════════
+        if (data.accounts && data.accounts.length > 0) {
+            // Encontrar conta ativa ou usar a primeira
+            const mainAccount = data.accounts.find(acc => acc.status === 'active') || data.accounts[0];
+
+            if (mainAccount) {
+                console.log('[Dashboard Stats] Atualizando com conta:', mainAccount.instagram_handle);
+
+                // Helper para formatar números
+                const formatNum = (num) => {
+                    if (num === undefined || num === null) return '0';
+                    if (num > 1000000) return (num / 1000000).toFixed(1) + 'M';
+                    if (num > 1000) return (num / 1000).toFixed(1) + 'k';
+                    return num.toString();
+                };
+
+                // 1. SEGUIDORES
+                const elFollowers = document.getElementById('statFollowers');
+                if (elFollowers) {
+                    elFollowers.textContent = formatNum(mainAccount.followers_count);
+                    const elLabel = elFollowers.parentElement.querySelector('.eio-stat-label');
+                    if (elLabel) elLabel.textContent = 'Seguidores';
+                    const elChange = document.getElementById('statFollowersChange');
+                    if (elChange) elChange.innerHTML = '<span style="color:#4CAF50">● Sincronizado</span>';
+                }
+
+                // 2. SEGUINDO (Repurposed statLikes)
+                const elFollowing = document.getElementById('statLikes');
+                if (elFollowing) {
+                    elFollowing.textContent = formatNum(mainAccount.following_count);
+                    const elLabel = elFollowing.parentElement.querySelector('.eio-stat-label');
+                    if (elLabel) elLabel.textContent = 'Seguindo';
+
+                    // Update Icon to User/Following icon
+                    const iconContainer = elFollowing.parentElement.querySelector('.eio-stat-icon');
+                    if (iconContainer) {
+                        iconContainer.className = 'eio-stat-icon eio-stat-icon-purple';
+                        iconContainer.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>';
+                    }
+
+                    const elChange = document.getElementById('statLikesChange');
+                    if (elChange) elChange.innerHTML = '<span style="color:#aaa">Pessoas que você segue</span>';
+                }
+
+                // 3. MEDIA/POSTS (Repurposed statComments)
+                const elPosts = document.getElementById('statComments');
+                if (elPosts) {
+                    elPosts.textContent = formatNum(mainAccount.media_count);
+                    const elLabel = elPosts.parentElement.querySelector('.eio-stat-label');
+                    if (elLabel) elLabel.textContent = 'Publicações';
+
+                    // Update Icon to Image/Grid icon
+                    const iconContainer = elPosts.parentElement.querySelector('.eio-stat-icon');
+                    if (iconContainer) {
+                        iconContainer.className = 'eio-stat-icon eio-stat-icon-cyan';
+                        iconContainer.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>';
+                    }
+
+                    const elChange = document.getElementById('statCommentsChange');
+                    if (elChange) elChange.innerHTML = '<span style="color:#aaa">Total de posts</span>';
+                }
+            }
+        }
 
         if (accountsCount) {
             accountsCount.textContent = data.count || 0;
@@ -788,7 +856,7 @@ function showAddAccountModal() {
 }
 
 async function addInstagramAccount(modal) {
-    const token = localStorage.getItem('eio_token');
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
     if (!token) return;
 
     const input = modal.querySelector('#newInstagramHandle');
@@ -843,7 +911,7 @@ async function removeInstagramAccount(accountId) {
         return;
     }
 
-    const token = localStorage.getItem('eio_token');
+    const token = localStorage.getItem('eio_token') || localStorage.getItem('accessToken');
     if (!token) return;
 
     try {
@@ -2355,6 +2423,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // v4.7.0 - FUNÇÃO AUXILIAR PARA FOTO DE PERFIL COM FALLBACK
+    // ═══════════════════════════════════════════════════════════
+    /**
+     * Generate HTML for profile photo with fallback
+     * Checks multiple field names: profilePic, profile_pic, avatar, profile_pic_url
+     * @param {object} lead - Lead object with profile data
+     * @returns {string} HTML string for profile photo
+     */
+    function getProfilePhotoHTML(lead) {
+        // Check all possible field names for profile photo
+        const photoUrl = lead.profilePic ||
+            lead.profile_pic ||
+            lead.avatar ||
+            lead.profile_pic_url ||
+            '';
+
+        // Get username for fallback initial
+        const username = lead.username || lead.user || lead.instagram_handle || '';
+        const fullName = lead.fullName || lead.name || lead.full_name || '';
+        const initial = (fullName.charAt(0) || username.charAt(0) || '?').toUpperCase();
+
+        // Generate a consistent color based on username
+        const colors = ['#6246ea', '#f09433', '#e6683c', '#dc2743', '#cc2366', '#bc1888', '#2ecc71', '#3498db'];
+        const colorIndex = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+        const bgColor = colors[colorIndex];
+
+        // Debug log para ver o que está sendo recebido
+        console.log(`[Dashboard] Lead: ${username}, PhotoURL: ${photoUrl ? photoUrl.substring(0, 50) + '...' : 'SEM FOTO'}`, lead);
+
+        if (photoUrl && photoUrl.trim() !== '') {
+            // Has photo URL - use img tag with onerror fallback
+            return `
+                <img src="${photoUrl}" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid ${bgColor};"
+                     alt="${fullName || username}">
+                <div style="width: 40px; height: 40px; background: ${bgColor}; border-radius: 50%; display: none; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px;">${initial}</div>
+            `;
+        } else {
+            // No photo URL - show initial directly
+            return `
+                <div style="width: 40px; height: 40px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px;">${initial}</div>
+            `;
+        }
+    }
+
     // Função para renderizar resultados do explorador
     function renderExplorerResults(leads, contactOnly) {
         let filtered = leads;
@@ -2386,10 +2501,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="padding: 15px;"><input type="checkbox" class="lead-checkbox"></td>
                     <td style="padding: 15px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${lead.profilePic || ''}" 
-                                 onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
-                                 style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                            <div style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-radius: 50%; display: none;"></div>
+                            ${getProfilePhotoHTML(lead)}
                             <div>
                                 <div style="font-weight: bold; color: #fff;">${lead.fullName || lead.name || 'Sem nome'}</div>
                                 <div style="font-size: 0.85rem; color: #aaa;">@${lead.username || lead.user}</div>
@@ -2876,7 +2988,8 @@ window.qualifyAllLeads = function () {
 // A conexão agora é gerenciada EXCLUSIVAMENTE pelo
 // js/global-connection.js que é a ÚNICA FONTE DA VERDADE
 // ═══════════════════════════════════════════════════════════
+// FIM (dashboard-v462.js limpo e validado)
+// ═══════════════════════════════════════════════════════════
 
-// O Dashboard apenas escuta eventos, NÃO gerencia status
-console.log('E.I.O Dashboard v4.4.24 - Usando Global Connection como única fonte da verdade');
+
 

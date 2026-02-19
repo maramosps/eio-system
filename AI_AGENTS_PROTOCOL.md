@@ -59,3 +59,26 @@ Sempre que uma tarefa complexa for solicitada, assuma a persona de **LEAD ARCHIT
 
 * **Meta:** Sync Analytics + Segurança Zero-Risk + Correção de Download.
 * **Comando de Ativação:** Ao iniciar qualquer tarefa, leia este arquivo primeiro.
+
+---
+
+## 🧬 4. EXTENSÃO DE PROTOCOLO: SKILLS DE ELITE
+
+Além dos agentes estruturais, o sistema agora integra as seguintes capacidades modulares:
+
+### 🧠 Automação Avançada e Inteligência
+
+* **instagram-automation:** Especialista em fluxos de interação e coleta de métricas orgânicas.
+* **computer-use-agents:** Simulação de comportamento humano em nível de interface (cliques e visão de tela).
+
+### 🏗️ Infraestrutura e Conectividade (Dashboard)
+
+* **nextjs-supabase-auth:** Protocolo mestre para vinculação segura entre Dashboard e Extensão via Supabase.
+* **vercel-automation:** Gerenciamento de deploys e sincronização de variáveis de ambiente.
+
+### 🛡️ Garantia de Qualidade e Estabilidade
+
+* **code-reviewer & find-bugs:** Auditoria em tempo real para eliminar erros fatais de runtime na extensão.
+* **frontend-security-coder:** Proteção de dados e sanitização de scripts injetados.
+
+> 🔴 **DIRETRIZ PRIORITÁRIA:** O **Connectivity Engineer** DEVE utilizar a skill `nextjs-supabase-auth` para resolver qualquer falha de vínculo entre o Dashboard e a Extensão.

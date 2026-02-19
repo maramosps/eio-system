@@ -1,3 +1,7 @@
+/*
+ * E.I.O API - Backend Service
+ * Version: 4.6.5
+ */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -50,7 +54,7 @@ module.exports = async (req, res) => {
                 message: isHealthy
                     ? 'E.I.O System API está pronta para produção'
                     : supabaseStatus.error || `${missingVars.length} variável(eis) de ambiente não configurada(s)`,
-                version: '4.4.23',
+                version: '4.6.5',
                 timestamp: new Date().toISOString(),
                 env_check: envCheck,
                 database: {
@@ -132,21 +136,8 @@ module.exports = async (req, res) => {
 
             const { email, password } = req.body || {};
 
-            // 🚨 EMERGENCY BYPASS: Permitir login direto para o dono (devido a falha de chaves de serviço) 🚨
-            if (email === 'maramosps@gmail.com') {
-                console.log('⚠️ Emergency login bypass for:', email);
-                const mockUserId = '92c27d1c-e160-4a3a-a577-032b6befce05'; // ID real do banco
-                const token = jwt.sign(
-                    { userId: mockUserId, email: email, role: 'admin' },
-                    jwtSecret,
-                    { expiresIn: '30d' }
-                );
-                return res.json({
-                    success: true,
-                    token,
-                    user: { id: mockUserId, name: 'Admin', email: email, role: 'admin' }
-                });
-            }
+            // 🚨 EMERGENCY BYPASS: REMOVIDO POR SEGURANÇA 🚨
+            // Para restaurar acesso de emergência, use variáveis de ambiente ou script direto no banco.
 
             if (!email || !password) {
                 return res.status(400).json({ message: 'Email e senha são obrigatórios' });
@@ -604,8 +595,112 @@ module.exports = async (req, res) => {
         }
 
         // ═══════════════════════════════════════════════════════════
-        // NOVAS ROTAS PARA EXTENSÃO
+        // ATUALIZAR ESTATÍSTICAS DA CONTA (Followers, Following, etc)
         // ═══════════════════════════════════════════════════════════
+        if ((path === '/api/v1/instagram/accounts/stats' || pathFromQuery === 'v1/instagram/accounts/stats') && method === 'POST') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            // 1. Validação Obrigatória do Token JWT
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ success: false, message: 'Token de autenticação obrigatório' });
+            }
+
+            let userId = null;
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                userId = decoded.userId;
+            } catch (err) {
+                return res.status(401).json({ success: false, message: 'Token inválido ou expirado' });
+            }
+
+            const { instagram_handle, followers_count, following_count, media_count, profile_pic_url } = req.body;
+
+            if (!instagram_handle) {
+                return res.status(400).json({ success: false, message: 'Handle é obrigatório' });
+            }
+
+            const normalizedHandle = instagram_handle.replace('@', '').toLowerCase().trim();
+
+            try {
+                // 2. Lógica de Segurança e Upsert Manual
+                // Primeiro, verifica de quem é a conta (se existir)
+                const { data: existingAccount, error: findError } = await supabase
+                    .from('instagram_accounts')
+                    .select('id, user_id')
+                    .eq('instagram_handle', normalizedHandle)
+                    .single();
+
+                if (findError && findError.code !== 'PGRST116') { // Ignora erro "Row not found"
+                    throw findError;
+                }
+
+                // Dados a serem atualizados/inseridos
+                const statsData = {
+                    last_sync: new Date().toISOString()
+                };
+                if (followers_count !== undefined) statsData.followers_count = parseInt(followers_count);
+                if (following_count !== undefined) statsData.following_count = parseInt(following_count);
+                if (media_count !== undefined) statsData.media_count = parseInt(media_count);
+                if (profile_pic_url) statsData.profile_pic_url = profile_pic_url;
+
+                if (existingAccount) {
+                    // Cenário A: Conta já existe
+                    if (existingAccount.user_id !== userId) {
+                        // CRÍTICO: Tenta atualizar conta de outro usuário
+                        console.warn(`[Security] User ${userId} tentou atualizar conta ${normalizedHandle} que pertence a ${existingAccount.user_id}`);
+                        return res.status(403).json({
+                            success: false,
+                            message: 'Esta conta pertence a outro usuário e não pode ser modificada por você.'
+                        });
+                    }
+
+                    // Usuário é o dono, pode atualizar (Service Role permite bypass de RLS se necessário, mas aqui é via API)
+                    const { error: updateError } = await supabase
+                        .from('instagram_accounts')
+                        .update(statsData)
+                        .eq('id', existingAccount.id);
+
+                    if (updateError) throw updateError;
+
+                    return res.json({
+                        success: true,
+                        message: 'Estatísticas atualizadas com sucesso',
+                        data: statsData
+                    });
+
+                } else {
+                    // Cenário B: Conta não existe, criar nova vinculada ao solicitante
+                    const newAccountData = {
+                        user_id: userId,
+                        instagram_handle: normalizedHandle,
+                        status: 'active',
+                        connected_at: new Date().toISOString(),
+                        ...statsData
+                    };
+
+                    const { error: insertError } = await supabase
+                        .from('instagram_accounts')
+                        .insert([newAccountData]);
+
+                    if (insertError) throw insertError;
+
+                    return res.json({
+                        success: true,
+                        message: 'Conta criada e sincronizada com sucesso',
+                        data: newAccountData
+                    });
+                }
+
+            } catch (error) {
+                console.error('[API Stats Error]', error);
+                return res.status(500).json({ success: false, message: 'Erro interno ao sincronizar estatísticas' });
+            }
+        }
+
 
         // Sincronização de Leads (CRM)
         if ((path === '/api/v1/leads/batch' || pathFromQuery === 'v1/leads/batch') && method === 'POST') {
@@ -647,6 +742,71 @@ module.exports = async (req, res) => {
             }
         }
 
+        // Check Reciprocity & DM Automation Trigger (v4.6)
+        if ((path === '/api/v1/instagram/check-reciprocity' || pathFromQuery === 'v1/instagram/check-reciprocity') && method === 'GET') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) return res.status(401).json({ success: false, message: 'Token obrigatório' });
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                const userId = decoded.userId;
+                const { target_handle } = req.query;
+
+                if (!target_handle) {
+                    return res.status(400).json({ success: false, message: 'Handle alvo obrigatório' });
+                }
+
+                const cleanTarget = target_handle.replace('@', '').toLowerCase();
+
+                // 1. Verificar Duplicidade via ACTION_LOGS (Mais preciso)
+                // Verifica se já existe um log de DM para este usuário
+                const { data: existingLog, error: logError } = await supabase
+                    .from('action_logs')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .in('action_type', ['dm', 'dm_welcome', 'dm_sent'])
+                    .eq('target_username', cleanTarget)
+                    .limit(1);
+
+                if (existingLog && existingLog.length > 0) {
+                    return res.json({
+                        success: false,
+                        reason: 'already_sent',
+                        message: 'DM já enviada anteriormente para este usuário'
+                    });
+                }
+
+                // 2. Obter Template de Mensagem (Configurado no User Settings ou Padrão)
+                // Tenta buscar configurações do usuário
+                let messageTemplate = "Olá {{nome}}, obrigado por seguir! 🚀"; // Default
+
+                const { data: userSettings } = await supabase
+                    .from('user_settings')
+                    .select('dm_template')
+                    .eq('user_id', userId)
+                    .single();
+
+                if (userSettings && userSettings.dm_template) {
+                    messageTemplate = userSettings.dm_template;
+                }
+
+                // 3. Instruir a extensão a verificar a reciprocidade
+                // A API não tem acesso direto ao grafo do Instagram, então delega a verificação final
+                // mas autoriza o envio se a verificação local passar.
+                return res.json({
+                    success: true,
+                    check_reciprocity: true,
+                    message_template: messageTemplate,
+                    instruction: "Verify if user follows back. If yes, send DM and log 'dm_sent'."
+                });
+
+            } catch (err) {
+                console.error('[API Check-Reciprocity Error]', err);
+                return res.status(500).json({ success: false, error: err.message });
+            }
+        }
+
         // Analytics Dashboard
         if ((path === '/api/v1/analytics/dashboard' || pathFromQuery === 'v1/analytics/dashboard') && method === 'GET') {
             const authHeader = req.headers['authorization'];
@@ -655,6 +815,16 @@ module.exports = async (req, res) => {
             try {
                 const token = authHeader.replace('Bearer ', '');
                 const decoded = jwt.verify(token, jwtSecret);
+
+                // VERIFICAÇÃO DE SEGURANÇA (Database Rescue)
+                if (!supabase) {
+                    console.error('[API Analytics] ❌ Supabase/Database connection missing');
+                    return res.status(503).json({
+                        success: false,
+                        message: 'Database unavailable. Environment variables might be missing.',
+                        code: 'DB_CONNECTION_ERROR'
+                    });
+                }
 
                 // Buscar logs do usuário
                 const { data: logs, error } = await supabase

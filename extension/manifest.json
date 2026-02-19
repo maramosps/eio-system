@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "E.I.O System",
-  "version": "4.4.24",
-  "description": "Engajamento Inteligente Orgânico - Sistema profissional completo de automação para Instagram.  ",
+  "version": "4.6.5",
+  "description": "Engajamento Inteligente Orgânico - Sistema profissional completo de automação para Instagram.",
   "permissions": [
     "activeTab",
     "tabs",
@@ -17,7 +17,10 @@
     "https://*.instagram.com/*",
     "https://i.instagram.com/*",
     "https://www.instagram.com/*",
-    "https://eio-system.vercel.app/*"
+    "https://eio-system.vercel.app/*",
+    "http://localhost:5500/*",
+    "http://127.0.0.1:5500/*",
+    "http://localhost:3000/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -43,7 +46,7 @@
         "http://localhost:3000/*"
       ],
       "js": [
-        "bridge.js"
+        "bridge-v462.js"
       ],
       "run_at": "document_start"
     }

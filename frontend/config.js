@@ -10,10 +10,11 @@ const isProduction = window.location.hostname !== 'localhost' && window.location
 // 📡 API CONFIGURATION
 // ═══════════════════════════════════════════════════════════
 
-// URL da API baseada no ambiente
-const API_BASE_URL = isProduction
-    ? '/api/v1'
-    : 'http://localhost:3000/api/v1';
+// URL da API baseada no ambiente (Global)
+window.API_BASE_URL = window.API_BASE_URL || (isProduction ? 'https://eio-system.vercel.app/api/v1' : 'http://localhost:3000/api/v1');
+
+
+// const API_BASE_URL removed
 
 // URL do WebSocket
 const WS_URL = isProduction
@@ -37,7 +38,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 window.EIO_CONFIG = {
     // API
-    API_BASE_URL,
+    API_BASE_URL: window.API_BASE_URL,
     WS_URL,
     isProduction,
 
@@ -46,7 +47,7 @@ window.EIO_CONFIG = {
     SUPABASE_ANON_KEY,
 
     // Versão do sistema (sincronizada com manifest.json)
-    VERSION: '4.4.5',
+    VERSION: '4.6.4',
 
     // Limites padrão
     LIMITS: {
