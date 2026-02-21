@@ -1739,8 +1739,19 @@ async function prepareAndStartAutomation(selectedActions) {
     }, (response) => {
         if (response?.success) {
             addLog('success', `✅ Fila criada: ${queue.length} contas`);
-            // Auto start
-            startAutomation();
+
+            // 🔥 CORREÇÃO CRÍTICA: Não podemos chamar startAutomation() local, 
+            // senão ele RECRIARIA a fila inteira assumindo 'follow'.
+            // Temos que apenas avisar o painel para processar a fila que acabamos de setar!
+            chrome.runtime.sendMessage({ action: 'startAutomation' }, (resp) => {
+                if (resp?.success) {
+                    addLog('success', `▶️ Automação (${selectedActions.join('+')}) iniciada!`);
+                    updateAutomationUI('running');
+                    alert('⚡ Automação Iniciada!\n\nImportante: Mantenha a aba do Instagram aberta enquanto a extensão roda.');
+                } else {
+                    alert('Erro: ' + (resp?.message || 'Falha ao iniciar motor'));
+                }
+            });
         }
     });
 }

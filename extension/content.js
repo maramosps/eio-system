@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.3 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.7.4 Initializing - RECIPROCITY MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -2249,7 +2249,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.3 Ready!');
+console.log('E.I.O Content Script v4.7.4 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2363,7 +2363,7 @@ window.addEventListener('message', async (event) => {
         window.postMessage({
             type: 'EIO_PONG',
             extensionId: chrome.runtime.id,
-            version: '4.7.3'
+            version: '4.7.4'
         }, '*');
         return;
     }
@@ -2682,6 +2682,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.3 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.7.4 - Auto popup dismiss enabled!');
 
 
