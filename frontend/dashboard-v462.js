@@ -484,7 +484,7 @@ async function initExtensionDownload() {
     // ═══════════════════════════════════════════════════════════
     // VERSÃO DINÂMICA: Lê do manifest via fetch para nunca ficar hardcoded
     // ═══════════════════════════════════════════════════════════
-    let currentVersion = '4.7.0'; // Fallback
+    let currentVersion = '4.7.1'; // Fallback
     try {
         // Tentar ler versão de um endpoint ou arquivo de versão
         const versionResp = await fetch('downloads/version.json').catch(() => null);
@@ -557,7 +557,7 @@ function showInstructionsModal() {
                 </div>
 
                 <div style="margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
-                    <h4 style="color: #ff0055; margin-bottom: 10px;">🔥 Novidades da Versão 4.7.0 (Leitura Obrigatória)</h4>
+                    <h4 style="color: #ff0055; margin-bottom: 10px;">🔥 Novidades da Versão 4.7.1 (Leitura Obrigatória)</h4>
                     <ul style="color: #ddd; line-height: 1.6; list-style: none; padding: 0;">
                         <li style="margin-bottom: 8px;">📊 <strong>Sincronização Inteligente de Stats:</strong> Agora seus seguidores só são atualizados no dashboard se houver mudança real, economizando recursos.</li>
                         <li style="margin-bottom: 8px;">🤖 <strong>Humanização por Erro de Digitação:</strong> O sistema agora simula "erros humanos" ao digitar mensagens e as corrige, tornando a automação indetectável.</li>

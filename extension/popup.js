@@ -743,39 +743,47 @@ function loadImage(imgElement) {
 
     if (!imageUrl) return;
 
-    // Adiciona classe de loading para animação
+    // Adiciona classe de loading
     imgElement.classList.add('lazy-loading');
     imgElement.classList.remove('lazy-image');
+    imgElement.removeAttribute('data-src');
 
-    // Cria uma nova imagem para pré-carregar
-    const tempImg = new Image();
-    tempImg.referrerPolicy = 'no-referrer';
+    // ═══════════════════════════════════════════════════════════
+    // v4.7.0 FIX DEFINITIVO: Proxy via background.js
+    // extension_pages (popup.html no iframe) tem CSP restritivo
+    // que bloqueia imagens externas do fbcdn.net.
+    // SOLUÇÃO: Enviar URL para o background.js, que faz fetch
+    // como service worker (sem CSP para fetch), converte para
+    // data: URL e retorna para o popup.
+    // ═══════════════════════════════════════════════════════════
 
-    tempImg.onload = function () {
-        // Quando a imagem carrega, define o src real
-        imgElement.src = imageUrl;
-        imgElement.removeAttribute('data-src');
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('lazy-loaded');
-        loadedImageCount++;
-        // console.log(`[E.I.O] ✅ Imagem carregada: ${loadedImageCount}`);
-    };
+    chrome.runtime.sendMessage(
+        { type: 'proxyImage', url: imageUrl },
+        function (response) {
+            if (chrome.runtime.lastError) {
+                showPlaceholder(imgElement);
+                return;
+            }
 
-    tempImg.onerror = function () {
-        console.warn('[E.I.O] ⚠️ Erro ao carregar imagem:', imageUrl);
-        // Mostrar placeholder em caso de erro
-        imgElement.removeAttribute('data-src');
-        imgElement.classList.remove('lazy-loading', 'lazy-image');
-        imgElement.style.display = 'none';
-        // Mostrar o placeholder de inicial se existir
-        const placeholder = imgElement.nextElementSibling;
-        if (placeholder && placeholder.classList.contains('card-placeholder')) {
-            placeholder.style.display = 'flex';
+            if (response && response.dataUrl) {
+                imgElement.src = response.dataUrl;
+                imgElement.classList.remove('lazy-loading');
+                imgElement.classList.add('lazy-loaded');
+                loadedImageCount++;
+            } else {
+                showPlaceholder(imgElement);
+            }
         }
-    };
+    );
+}
 
-    // Inicia o carregamento da imagem
-    tempImg.src = imageUrl;
+function showPlaceholder(imgElement) {
+    imgElement.classList.remove('lazy-loading', 'lazy-image');
+    imgElement.style.display = 'none';
+    const placeholder = imgElement.nextElementSibling;
+    if (placeholder && placeholder.classList.contains('card-placeholder')) {
+        placeholder.style.display = 'flex';
+    }
 }
 
 /**

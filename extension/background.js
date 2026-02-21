@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.0 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.1 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -420,11 +420,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.0',
+                pong: true, version: '4.7.1',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
             break;
+
+        case 'proxyImage':
+            // Proxy de imagem do CDN do Instagram para contornar CSP restrito do Manifest V3
+            fetch(message.url, { referrerPolicy: 'no-referrer' })
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = function () {
+                        sendResponse({ dataUrl: reader.result });
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(err => {
+                    console.error('[E.I.O] Falha no proxyImage:', message.url, err);
+                    sendResponse({ error: err.message });
+                });
+            return true; // Keep message channel open for async response
 
         case 'setQueue':
             extensionState.queue = message.queue || [];
@@ -467,7 +484,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.0' });
+            sendResponse({ success: true, version: '4.7.1' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -923,7 +940,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.0',
+            pong: true, version: '4.7.1',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });
