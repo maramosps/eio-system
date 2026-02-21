@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.1 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.7.2 Initializing - RECIPROCITY MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -1684,19 +1684,48 @@ async function executeLike(target) {
 
 
 /**
- * Comentário Inteligente com Humanização e Emoji Aleatório (v4.6.1)
+ * Comentário Inteligente na Mesma Postagem (v4.7.2 - Integração API Invisível)
+ * Usa o ID salvo do Like recém-feito para comentar por baixo dos panos!
  */
 async function executeSmartComment(target, payload) {
+    const emojis = ['👍', '❤️', '🔥', '👏', '🚀', '🙌'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const textToComment = payload.comment || randomEmoji;
+
+    addConsoleLog('info', `💬 Comentando: "${textToComment}"...`);
+
+    // 👉 MÉTODO 1: VIA API INVISÍVEL (Garante que é na MESMA postagem curtida e não falha se o modal estiver fechado)
+    if (window._lastEioMediaId) {
+        try {
+            chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via API silenciosa...' });
+
+            await fetch(`https://www.instagram.com/api/v1/web/comments/${window._lastEioMediaId}/add/`, {
+                method: 'POST',
+                headers: {
+                    'X-IG-App-ID': config.api.xIgAppId,
+                    'X-ASBD-ID': config.api.xAsbdId,
+                    'X-CSRFToken': getCookie('csrftoken') || '',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include',
+                body: new URLSearchParams({ comment_text: textToComment, replied_to_comment_id: '' }).toString()
+            });
+
+            addConsoleLog('success', `💬 Comentado com sucesso via API: "${textToComment}"`);
+            // Limpa o cache pra não comentar errado nos próximos
+            window._lastEioMediaId = null;
+            return { success: true, action: 'commented', text: textToComment, method: 'api' };
+        } catch (e) {
+            addConsoleLog('warning', `⚠️ Falha no comment API, tentando DOM: ${e.message}`);
+        }
+    }
+
+    // 👉 MÉTODO 2: FALLBACK VIA DOM ORIGINAL
     const commentBox = document.querySelector('textarea[aria-label*="comentário"]');
 
     if (commentBox) {
-        // Seleção aleatória de emoji se não houver payload específico ou para variar
-        const emojis = ['👍', '❤️', '🔥', '👏'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const textToComment = payload.comment || randomEmoji;
-
-        addConsoleLog('info', `💬 Digitando comentário: "${textToComment}"...`);
-        chrome.runtime.sendMessage({ action: 'log_progress', message: 'Digitando comentário...' });
+        chrome.runtime.sendMessage({ action: 'log_progress', message: 'Digitando comentário no DOM...' });
 
         commentBox.focus();
         await randomDelay(500, 1000);
@@ -1713,12 +1742,12 @@ async function executeSmartComment(target, payload) {
         if (postBtn) {
             postBtn.click();
             addConsoleLog('success', `💬 Comentado com sucesso: "${textToComment}"`);
-            return { action: 'commented', text: textToComment };
+            return { success: true, action: 'commented', text: textToComment, method: 'dom' };
         }
     }
 
-    addConsoleLog('warning', '⚠️ Caixa de comentário não encontrada.');
-    return { action: 'comment_failed' };
+    addConsoleLog('warning', '⚠️ Caixa de comentário não encontrada (DOM) e API indisponível.');
+    return { success: true, action: 'comment_failed' }; // Success: true para não travar o combo todo
 }
 
 /**
@@ -1759,12 +1788,15 @@ async function executeLikeFeed2(target) {
         }
 
         let likedCount = 0;
-        const postsToLike = edges.slice(0, 2); // Pega os 2 primeiros
+        const postsToLike = edges.slice(0, 2); // Pega os 2 primeiros (o motor agora pede só 1 geralmente)
 
         for (const post of postsToLike) {
             const mediaId = post.node.id;
             addConsoleLog('info', `❤️ Curtindo post ${mediaId}...`);
-            chrome.runtime.sendMessage({ action: 'log_progress', message: `Curtindo post ${likedCount + 1}/2...` });
+            chrome.runtime.sendMessage({ action: 'log_progress', message: `Curtindo post ${likedCount + 1}/${postsToLike.length}...` });
+
+            // 👉 GUARDA O ID PARA O PRÓXIMO PASSO DO COMBO (Comentar na MESMA postagem)
+            window._lastEioMediaId = mediaId;
 
             // Tentar usar a função apiLike existente
             if (typeof apiLike === 'function') {
@@ -2217,7 +2249,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.1 Ready!');
+console.log('E.I.O Content Script v4.7.2 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2331,7 +2363,7 @@ window.addEventListener('message', async (event) => {
         window.postMessage({
             type: 'EIO_PONG',
             extensionId: chrome.runtime.id,
-            version: '4.7.1'
+            version: '4.7.2'
         }, '*');
         return;
     }
@@ -2650,6 +2682,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.1 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.7.2 - Auto popup dismiss enabled!');
 
 

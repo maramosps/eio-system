@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.1 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.2 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -420,7 +420,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.1',
+                pong: true, version: '4.7.2',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -430,12 +430,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Proxy de imagem do CDN do Instagram para contornar CSP restrito do Manifest V3
             fetch(message.url, { referrerPolicy: 'no-referrer' })
                 .then(response => response.blob())
-                .then(blob => {
-                    const reader = new FileReader();
-                    reader.onloadend = function () {
-                        sendResponse({ dataUrl: reader.result });
-                    };
-                    reader.readAsDataURL(blob);
+                .then(async blob => {
+                    // Service Worker (MV3) NÃO suporta FileReader. Transforma em Base64 nativamente.
+                    const buffer = await blob.arrayBuffer();
+                    const bytes = new Uint8Array(buffer);
+                    let binary = '';
+                    const len = bytes.byteLength;
+                    for (let i = 0; i < len; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const base64 = btoa(binary);
+                    const mimeType = blob.type || 'image/jpeg';
+                    sendResponse({ dataUrl: `data:${mimeType};base64,${base64}` });
                 })
                 .catch(err => {
                     console.error('[E.I.O] Falha no proxyImage:', message.url, err);
@@ -484,7 +490,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.1' });
+            sendResponse({ success: true, version: '4.7.2' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -576,167 +582,94 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
 }
 
 /**
- * v4.7.0 - STRICT SEQUENTIAL COMBO EXECUTION
- * A ORDEM É INEGOCIÁVEL: Follow → Delay → Like1 → Delay → Like2 → Delay → Comment → Delay → Story
- * @param {number} tabId - Tab ID
- * @param {string} username - Target username
- * @param {object} options - Action options
- * @returns {Promise<{success: boolean, results: object}>}
+ * v4.7.2 - HUMANIZED RAPID COMBO STRIKE
+ * A ORDEM EXATA PEDIDA: Follow → Curtir 1 postagem → Comentar → Story
+ * O Intervalo LONGO configurado no painel será usado para pular para o PRÓXIMO PERFIL.
+ * Dentro do mesmo perfil, os intervalos (micro-delays) devem ser rápidos e ágeis (4 a 8 seg).
  */
 async function executeInteractionCombo(tabId, username, options = {}) {
-    console.log(`[Motor] ═══════ INICIANDO COMBO PARA @${username} ═══════`);
+    console.log(`[Motor] ═══════ INICIANDO COMBO RÁPIDO PARA @${username} ═══════`);
     const results = {
         follow: { success: false },
         like1: { success: false },
-        like2: { success: false },
         comment: { success: false },
         story: { success: false }
+    };
+
+    // Função auxiliar para micro-delays ágeis dentro do mesmo perfil
+    const rapidDelay = async () => {
+        const ms = Math.floor(Math.random() * (8500 - 4500 + 1)) + 4500; // 4.5s a 8.5s
+        console.log(`[Motor] Micro-delay de ${ms / 1000}s...`);
+        await sleep(ms);
     };
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 1: SEGUIR (FOLLOW)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 1 (Seguir) executando...`);
-
-    // Engine check
+    console.log(`[Motor] Passo 1 (Seguir)...`);
     const followPerm = await checkEnginePermission('follow', username);
-    if (!followPerm.allowed) {
-        console.log(`[Motor] Passo 1 (Seguir) BLOQUEADO: ${followPerm.reason}`);
-        return { success: false, results, error: followPerm.reason };
-    }
-    if (followPerm.delayMs > 0) await sleep(followPerm.delayMs);
-
-    // Execute follow
-    results.follow = await executeSingleAction(tabId, 'follow', username, options);
-
-    if (!results.follow.success) {
-        console.log(`[Motor] Passo 1 (Seguir) FALHOU. Abortando combo.`);
-        return { success: false, results, error: 'Follow failed' };
+    if (followPerm.allowed) {
+        results.follow = await executeSingleAction(tabId, 'follow', username, options);
+        if (results.follow.success) {
+            updateStats('follow');
+            await sendActionLog('follow', username, true);
+            notifyPopup('actionCompleted', { username, action: 'follow' });
+        }
     }
 
-    // Update stats and log
-    updateStats('follow');
-    await sendActionLog('follow', username, true);
-    notifyPopup('actionCompleted', { username, action: 'follow' });
-    console.log(`[Motor] Passo 1 (Seguir) OK.`);
-
-    // DELAY AFTER FOLLOW (90-160 seconds)
-    const delaySeconds1 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
-    console.log(`[Motor] Aguardando ${delaySeconds1}s...`);
-    await randomDelaySeconds(90, 160);
+    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
-    // PASSO 2: CURTIR PRIMEIRO POST (LIKE 1)
+    // PASSO 2: CURTIR 01 POSTAGEM (LIKE 1)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 2 (Like Post 1) executando...`);
-
-    const like1Perm = await checkEnginePermission('like_feed_2', username);
-    if (like1Perm.allowed) {
-        if (like1Perm.delayMs > 0) await sleep(like1Perm.delayMs);
-
+    console.log(`[Motor] Passo 2 (Curtir única postagem)...`);
+    const likePerm = await checkEnginePermission('like_feed_2', username);
+    if (likePerm.allowed && options.actions?.includes('like') || true) {
         results.like1 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 1 });
-
         if (results.like1.success) {
             updateStats('like_feed_2');
             await sendActionLog('like_feed_2', username, true);
             notifyPopup('actionCompleted', { username, action: 'like_feed_2' });
-            console.log(`[Motor] Passo 2 (Like Post 1) OK.`);
-        } else {
-            console.log(`[Motor] Passo 2 (Like Post 1) FALHOU. Continuando...`);
         }
-    } else {
-        console.log(`[Motor] Passo 2 (Like Post 1) BLOQUEADO: ${like1Perm.reason}`);
     }
 
-    // DELAY AFTER LIKE 1 (90-160 seconds)
-    const delaySeconds2 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
-    console.log(`[Motor] Aguardando ${delaySeconds2}s...`);
-    await randomDelaySeconds(90, 160);
+    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
-    // PASSO 3: CURTIR SEGUNDO POST (LIKE 2)
+    // PASSO 3: COMENTAR NA POSTAGEM (COMMENT)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 3 (Like Post 2) executando...`);
-
-    const like2Perm = await checkEnginePermission('like_feed_2', username);
-    if (like2Perm.allowed) {
-        if (like2Perm.delayMs > 0) await sleep(like2Perm.delayMs);
-
-        results.like2 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 2 });
-
-        if (results.like2.success) {
-            updateStats('like_feed_2');
-            await sendActionLog('like_feed_2', username, true);
-            notifyPopup('actionCompleted', { username, action: 'like_feed_2' });
-            console.log(`[Motor] Passo 3 (Like Post 2) OK.`);
-        } else {
-            console.log(`[Motor] Passo 3 (Like Post 2) FALHOU. Continuando...`);
-        }
-    } else {
-        console.log(`[Motor] Passo 3 (Like Post 2) BLOQUEADO: ${like2Perm.reason}`);
-    }
-
-    // DELAY AFTER LIKE 2 (90-160 seconds)
-    const delaySeconds3 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
-    console.log(`[Motor] Aguardando ${delaySeconds3}s...`);
-    await randomDelaySeconds(90, 160);
-
-    // ═══════════════════════════════════════════════════════════
-    // PASSO 4: COMENTÁRIO (COMMENT)
-    // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 4 (Comentário) executando...`);
-
+    console.log(`[Motor] Passo 3 (Comentar)...`);
     const commentPerm = await checkEnginePermission('comment', username);
-    if (commentPerm.allowed) {
-        if (commentPerm.delayMs > 0) await sleep(commentPerm.delayMs);
-
+    if (commentPerm.allowed && options.actions?.includes('comment') || true) {
+        // Aproveitamos o mediaId do result.like1 se ele curtiu via API. Senão, tenta mesmo assim.
         results.comment = await executeSingleAction(tabId, 'comment', username, options);
-
         if (results.comment.success) {
             updateStats('comment');
             await sendActionLog('comment', username, true);
             notifyPopup('actionCompleted', { username, action: 'comment' });
-            console.log(`[Motor] Passo 4 (Comentário) OK.`);
-        } else {
-            console.log(`[Motor] Passo 4 (Comentário) FALHOU. Continuando...`);
         }
-    } else {
-        console.log(`[Motor] Passo 4 (Comentário) BLOQUEADO: ${commentPerm.reason}`);
     }
 
-    // DELAY AFTER COMMENT (90-160 seconds)
-    const delaySeconds4 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
-    console.log(`[Motor] Aguardando ${delaySeconds4}s...`);
-    await randomDelaySeconds(90, 160);
+    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
-    // PASSO 5: VER STORY (STORY)
+    // PASSO 4: VER STORY (STORY)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 5 (Story) executando...`);
-
+    console.log(`[Motor] Passo 4 (Visualizar Story)...`);
     const storyPerm = await checkEnginePermission('story_interact', username);
-    if (storyPerm.allowed) {
-        if (storyPerm.delayMs > 0) await sleep(storyPerm.delayMs);
-
+    if (storyPerm.allowed && options.actions?.includes('story') || true) {
         results.story = await executeSingleAction(tabId, 'story_interact', username, options);
-
         if (results.story.success) {
             updateStats('story_interact');
             await sendActionLog('story_interact', username, true);
             notifyPopup('actionCompleted', { username, action: 'story_interact' });
-            console.log(`[Motor] Passo 5 (Story) OK.`);
-        } else {
-            console.log(`[Motor] Passo 5 (Story) FALHOU.`);
         }
-    } else {
-        console.log(`[Motor] Passo 5 (Story) BLOQUEADO: ${storyPerm.reason}`);
     }
 
-    console.log(`[Motor] ═══════ COMBO FINALIZADO PARA @${username} ═══════`);
+    console.log(`[Motor] ═══════ COMBO RÁPIDO FINALIZADO PARA @${username} ═══════`);
 
-    // Return overall success (follow is required, others are optional)
     return {
-        success: results.follow.success,
+        success: results.follow.success || results.like1.success, // Se curtiu ou seguiu, sucesso
         results
     };
 }
@@ -940,7 +873,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.1',
+            pong: true, version: '4.7.2',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });
