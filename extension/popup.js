@@ -689,35 +689,49 @@ function handleImagePreload(container) {
     // Reset contador
     loadedImageCount = 0;
 
-    // Configuração do observer
-    // Usar o container scrollável como root para funcionar no popup do Chrome
-    const scrollRoot = container.closest('.eio-accounts-grid-container') || container.closest('.eio-main-scroll') || null;
-    const observerOptions = {
-        root: scrollRoot,
-        rootMargin: '100px 0px 100px 0px', // Carrega 100px antes de aparecer
-        threshold: 0 // Dispara assim que qualquer pixel estiver visível
-    };
-
-    // Criar novo IntersectionObserver
-    imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            // Se a imagem está intersectando (visível ou próxima)
-            if (entry.isIntersecting) {
-                loadImage(entry.target);
-                observer.unobserve(entry.target); // Para de observar esta imagem
-            }
-        });
-    }, observerOptions);
-
-    // Observar todas as imagens lazy
+    // Pegar todas as imagens com data-src
     const lazyImages = container.querySelectorAll('img.igBotQueueAcctProfilePicture[data-src]');
-    lazyImages.forEach(img => {
-        if (img.hasAttribute('data-src')) {
-            imageObserver.observe(img);
+
+    // ═══════════════════════════════════════════════════════════
+    // v4.6.9 FIX: Carregar as primeiras 50 fotos IMEDIATAMENTE
+    // O IntersectionObserver pode falhar no contexto fullscreen/iframe
+    // ═══════════════════════════════════════════════════════════
+    const IMMEDIATE_LOAD_COUNT = 50;
+
+    lazyImages.forEach((img, index) => {
+        if (index < IMMEDIATE_LOAD_COUNT) {
+            // Carregar imediatamente — sem esperar IntersectionObserver
+            loadImage(img);
         }
     });
 
-    console.log(`[E.I.O] 📸 Lazy loading iniciado para ${lazyImages.length} imagens`);
+    // Para as imagens restantes (> 50), usar IntersectionObserver
+    if (lazyImages.length > IMMEDIATE_LOAD_COUNT) {
+        const scrollRoot = container.closest('.eio-accounts-grid-container') || null;
+        const observerOptions = {
+            root: scrollRoot,
+            rootMargin: '200px 0px 200px 0px',
+            threshold: 0
+        };
+
+        imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadImage(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observar apenas as imagens que NÃO foram carregadas imediatamente
+        lazyImages.forEach((img, index) => {
+            if (index >= IMMEDIATE_LOAD_COUNT && img.hasAttribute('data-src')) {
+                imageObserver.observe(img);
+            }
+        });
+    }
+
+    console.log(`[E.I.O] 📸 ${Math.min(lazyImages.length, IMMEDIATE_LOAD_COUNT)} fotos carregando imediatamente, ${Math.max(0, lazyImages.length - IMMEDIATE_LOAD_COUNT)} em lazy loading`);
 }
 
 /**
