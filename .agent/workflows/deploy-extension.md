@@ -2,49 +2,72 @@
 description: Workflow para empacotar e preparar a Extensão E.I.O para publicação (Web Store).
 ---
 
-# 📦 Deploy da Extensão E.I.O
+# Deploy da Extensão E.I.O
 
-Este workflow guia o processo de empacotamento, versão e preparação para upload na Chrome Web Store.
+Este workflow executa o release completo: incrementa a versão, atualiza todos os arquivos, empacota o ZIP e faz o deploy.
 
-## 1. Verificação Prévia
+## Pré-Requisitos
 
-Antes de empacotar, garanta que:
+- Node.js >= 18
+- `archiver` instalado (`npm install`)
+- Vercel CLI instalado globalmente (`npm i -g vercel`)
+- Estar logado no Vercel (`vercel login`)
 
-- O `manifest.json` está com a versão correta.
-- Não há erros de lint/sintaxe nos arquivos JS.
-- As credenciais de API (Supabase) estão configuradas para produção (se aplicável).
+## Passos do Deploy Completo
 
-## 2. Empacotamento Automático
+### 1. Bump de versão + empacotamento
 
-O projeto possui scripts automatizados para gerar o arquivo `.zip` pronto para envio.
+// turbo
+```bash
+cd c:\Users\user\Desktop\eio-sistema-completo && node release.js patch
+```
 
-### Opção A: Script Node.js (Recomendado)
+Isso irá:
+- Incrementar a versão (ex: 4.6.8 → 4.6.9)
+- Atualizar todos os arquivos (manifest.json, background.js, content.js, dashboard-v462.js, etc.)
+- Verificar a sintaxe de todos os JS
+- Gerar `version.json` para o download dinâmico
+- Empacotar em `frontend/downloads/eio-extension-v{VERSION}.zip`
 
-Este script atualiza automaticamente a versão no manifesto e gera o ZIP com nome formatado.
+### 2. Commit e push para o GitHub
 
 ```bash
-npm run package
+cd c:\Users\user\Desktop\eio-sistema-completo && git add -A && git commit -m "release: v$(node -p "require('./extension/manifest.json').version")" && git push
 ```
 
-### Opção B: PowerShell (Avançado)
+### 3. Deploy para produção na Vercel
 
-Script completo que também gera backups e logs.
-
-```powershell
-./package-extension.ps1
+```bash
+cd c:\Users\user\Desktop\eio-sistema-completo && vercel --prod
 ```
 
-## 3. Validação do Pacote
+### 4. Verificar deploy
 
-Após gerar o ZIP (verifique na pasta raiz algo como `eio-extension-vX.X.X.zip`):
+Acesse a URL do deploy e verifique:
+- Dashboard carrega corretamente
+- Botão de download mostra a versão atualizada
+- O download do ZIP tem o nome com versão (ex: `eio-extension-v4.6.9.zip`)
 
-1. Abra `chrome://extensions` no navegador.
-2. Ative o "Modo do desenvolvedor".
-3. Arraste o ZIP gerado para dentro da janela para testar se ele instala corretamente.
+### 5. Atualizar extensão no Chrome
 
-## 4. Publicação
+1. Abra `chrome://extensions/`
+2. **Remova** a extensão antiga
+3. Clique em "Carregar sem compactação"
+4. Selecione a pasta `extension/` do projeto
 
-1. Acesse o [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/dev/dashboard).
-2. Selecione o item **E.I.O System**.
-3. Vá em "Pacote" > "Enviar novo pacote".
-4. Faça upload do arquivo ZIP gerado.
+## Comandos Rápidos
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run release` | Bump patch + empacotar |
+| `npm run release:minor` | Bump minor + empacotar |
+| `npm run release:major` | Bump major + empacotar |
+| `npm run release:deploy` | Bump patch + empacotar + deploy Vercel |
+| `node release.js patch` | Mesmo que `npm run release` |
+
+## Notas
+
+- O `version.json` é gerado automaticamente pelo release script
+- O dashboard lê o `version.json` para mostrar a versão correta no botão de download
+- O ZIP versionado E o genérico são gerados (o genérico é fallback)
+- Sempre verifique a sintaxe antes do deploy (o script faz isso automaticamente)

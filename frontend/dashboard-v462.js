@@ -481,11 +481,26 @@ async function initExtensionDownload() {
     const extensionSize = document.getElementById('extensionSize');
     const extensionVersion = document.getElementById('extensionVersion');
 
-    // Set default values based on the latest package
-    if (extensionSize) extensionSize.textContent = '1.8 MB';
-    if (extensionVersion) extensionVersion.textContent = '4.6.5 (E.I.O System)';
+    // ═══════════════════════════════════════════════════════════
+    // VERSÃO DINÂMICA: Lê do manifest via fetch para nunca ficar hardcoded
+    // ═══════════════════════════════════════════════════════════
+    let currentVersion = '4.6.9'; // Fallback
+    try {
+        // Tentar ler versão de um endpoint ou arquivo de versão
+        const versionResp = await fetch('downloads/version.json').catch(() => null);
+        if (versionResp && versionResp.ok) {
+            const versionData = await versionResp.json();
+            currentVersion = versionData.version || currentVersion;
+        }
+    } catch (e) {
+        console.warn('[E.I.O] Usando versão fallback:', currentVersion);
+    }
 
-    // Download button - Simple direct download
+    // Set version info
+    if (extensionSize) extensionSize.textContent = '1.8 MB';
+    if (extensionVersion) extensionVersion.textContent = `${currentVersion} (E.I.O System)`;
+
+    // Download button - Com versão no nome do arquivo
     if (btnDownload) {
         btnDownload.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
@@ -493,11 +508,25 @@ async function initExtensionDownload() {
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Baixar Extensão v4.6.5 (.zip)
+            Baixar Extensão v${currentVersion} (.zip)
         `;
         btnDownload.addEventListener('click', () => {
-            // Direct navigation to update file
-            window.location.href = 'downloads/eio-system-v4-6-5.zip';
+            // ═══════════════════════════════════════════════════════════
+            // DOWNLOAD COM VERSÃO NO NOME DO ARQUIVO
+            // Usa anchor download para forçar o nome correto no navegador
+            // ═══════════════════════════════════════════════════════════
+            const versionedFilename = `eio-extension-v${currentVersion}.zip`;
+            const downloadUrl = `downloads/${versionedFilename}`;
+
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = versionedFilename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            console.log(`[E.I.O] 📥 Download iniciado: ${versionedFilename}`);
         });
     }
 
@@ -528,7 +557,7 @@ function showInstructionsModal() {
                 </div>
 
                 <div style="margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
-                    <h4 style="color: #ff0055; margin-bottom: 10px;">🔥 Novidades da Versão 4.6.5 (Leitura Obrigatória)</h4>
+                    <h4 style="color: #ff0055; margin-bottom: 10px;">🔥 Novidades da Versão 4.6.9 (Leitura Obrigatória)</h4>
                     <ul style="color: #ddd; line-height: 1.6; list-style: none; padding: 0;">
                         <li style="margin-bottom: 8px;">📊 <strong>Sincronização Inteligente de Stats:</strong> Agora seus seguidores só são atualizados no dashboard se houver mudança real, economizando recursos.</li>
                         <li style="margin-bottom: 8px;">🤖 <strong>Humanização por Erro de Digitação:</strong> O sistema agora simula "erros humanos" ao digitar mensagens e as corrige, tornando a automação indetectável.</li>
@@ -539,7 +568,7 @@ function showInstructionsModal() {
                 <div style="margin-bottom: 25px;">
                     <h4 style="color: #6246ea; margin-bottom: 10px;">🎯 Passo 1: Extrair o Arquivo</h4>
                     <p style="color: #aaa; line-height: 1.6;">
-                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-system-v4-6-5.zip</code> 
+                        Após o download, localize o arquivo <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">eio-extension.zip</code> 
                         na pasta de Downloads. <strong>Clique com botão direito → Extrair Tudo</strong> para uma nova pasta.
                     </p>
                 </div>

@@ -690,9 +690,11 @@ function handleImagePreload(container) {
     loadedImageCount = 0;
 
     // Configuração do observer
+    // Usar o container scrollável como root para funcionar no popup do Chrome
+    const scrollRoot = container.closest('.eio-accounts-grid-container') || container.closest('.eio-main-scroll') || null;
     const observerOptions = {
-        root: null, // viewport
-        rootMargin: '0px 0px 50px 0px', // Carrega 50px antes de aparecer na viewport
+        root: scrollRoot,
+        rootMargin: '100px 0px 100px 0px', // Carrega 100px antes de aparecer
         threshold: 0 // Dispara assim que qualquer pixel estiver visível
     };
 
@@ -733,6 +735,7 @@ function loadImage(imgElement) {
 
     // Cria uma nova imagem para pré-carregar
     const tempImg = new Image();
+    tempImg.referrerPolicy = 'no-referrer';
 
     tempImg.onload = function () {
         // Quando a imagem carrega, define o src real
@@ -813,12 +816,10 @@ function renderAccountsTable() {
             // Se tem URL de avatar e a opção está ativada
             if (showProfilePics && acc.avatar && acc.avatar.length > 5) {
                 // Lazy Loading: usa data-src e classe para IntersectionObserver
-                // Adicionei classe 'profile-avatar' como solicitado no prompt, mantendo as outras para compatibilidade
                 avatarHtml = `<img data-src="${acc.avatar}" 
                                    class="card-avatar igBotQueueAcctProfilePicture profile-avatar lazy-image" 
                                    alt="${cleanUsername}" 
                                    referrerpolicy="no-referrer" 
-                                   crossorigin="anonymous" 
                                    style="display: block;"
                                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                               <div class="card-placeholder" style="display:none;">${initial}</div>`;

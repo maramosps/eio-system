@@ -227,10 +227,10 @@
 /* ===== CONTAINER PRINCIPAL INJETADO ===== */
 #eio-main-container {
     position: fixed;
-    top: 15px;
-    right: 1%;
-    width: 98%;
-    height: 96%;
+    top: 8px;
+    right: 8px;
+    width: 380px;
+    height: calc(100vh - 16px);
     background: #111118;
     border-radius: 16px;
     z-index: 99999999;

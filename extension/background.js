@@ -1,4 +1,4 @@
-/*
+﻿/*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
   Motor de automação — VERSÃO 4.6.5
@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.6.5 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.6.9 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -420,7 +420,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.6.5',
+                pong: true, version: '4.6.9',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -467,7 +467,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.6.5' });
+            sendResponse({ success: true, version: '4.6.9' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -549,9 +549,9 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
                 comment: options.commentMessage || "Top! 👏"
             }
         });
-        return { 
-            success: result?.success || result?.meta?.success || false, 
-            error: result?.error 
+        return {
+            success: result?.success || result?.meta?.success || false,
+            error: result?.error
         };
     } catch (e) {
         return { success: false, error: e.message };
@@ -575,12 +575,12 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         comment: { success: false },
         story: { success: false }
     };
-    
+
     // ═══════════════════════════════════════════════════════════
     // PASSO 1: SEGUIR (FOLLOW)
     // ═══════════════════════════════════════════════════════════
     console.log(`[Motor] Passo 1 (Seguir) executando...`);
-    
+
     // Engine check
     const followPerm = await checkEnginePermission('follow', username);
     if (!followPerm.allowed) {
@@ -588,37 +588,37 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         return { success: false, results, error: followPerm.reason };
     }
     if (followPerm.delayMs > 0) await sleep(followPerm.delayMs);
-    
+
     // Execute follow
     results.follow = await executeSingleAction(tabId, 'follow', username, options);
-    
+
     if (!results.follow.success) {
         console.log(`[Motor] Passo 1 (Seguir) FALHOU. Abortando combo.`);
         return { success: false, results, error: 'Follow failed' };
     }
-    
+
     // Update stats and log
     updateStats('follow');
     await sendActionLog('follow', username, true);
     notifyPopup('actionCompleted', { username, action: 'follow' });
     console.log(`[Motor] Passo 1 (Seguir) OK.`);
-    
+
     // DELAY AFTER FOLLOW (90-160 seconds)
     const delaySeconds1 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
     console.log(`[Motor] Aguardando ${delaySeconds1}s...`);
     await randomDelaySeconds(90, 160);
-    
+
     // ═══════════════════════════════════════════════════════════
     // PASSO 2: CURTIR PRIMEIRO POST (LIKE 1)
     // ═══════════════════════════════════════════════════════════
     console.log(`[Motor] Passo 2 (Like Post 1) executando...`);
-    
+
     const like1Perm = await checkEnginePermission('like_feed_2', username);
     if (like1Perm.allowed) {
         if (like1Perm.delayMs > 0) await sleep(like1Perm.delayMs);
-        
+
         results.like1 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 1 });
-        
+
         if (results.like1.success) {
             updateStats('like_feed_2');
             await sendActionLog('like_feed_2', username, true);
@@ -630,23 +630,23 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     } else {
         console.log(`[Motor] Passo 2 (Like Post 1) BLOQUEADO: ${like1Perm.reason}`);
     }
-    
+
     // DELAY AFTER LIKE 1 (90-160 seconds)
     const delaySeconds2 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
     console.log(`[Motor] Aguardando ${delaySeconds2}s...`);
     await randomDelaySeconds(90, 160);
-    
+
     // ═══════════════════════════════════════════════════════════
     // PASSO 3: CURTIR SEGUNDO POST (LIKE 2)
     // ═══════════════════════════════════════════════════════════
     console.log(`[Motor] Passo 3 (Like Post 2) executando...`);
-    
+
     const like2Perm = await checkEnginePermission('like_feed_2', username);
     if (like2Perm.allowed) {
         if (like2Perm.delayMs > 0) await sleep(like2Perm.delayMs);
-        
+
         results.like2 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 2 });
-        
+
         if (results.like2.success) {
             updateStats('like_feed_2');
             await sendActionLog('like_feed_2', username, true);
@@ -658,23 +658,23 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     } else {
         console.log(`[Motor] Passo 3 (Like Post 2) BLOQUEADO: ${like2Perm.reason}`);
     }
-    
+
     // DELAY AFTER LIKE 2 (90-160 seconds)
     const delaySeconds3 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
     console.log(`[Motor] Aguardando ${delaySeconds3}s...`);
     await randomDelaySeconds(90, 160);
-    
+
     // ═══════════════════════════════════════════════════════════
     // PASSO 4: COMENTÁRIO (COMMENT)
     // ═══════════════════════════════════════════════════════════
     console.log(`[Motor] Passo 4 (Comentário) executando...`);
-    
+
     const commentPerm = await checkEnginePermission('comment', username);
     if (commentPerm.allowed) {
         if (commentPerm.delayMs > 0) await sleep(commentPerm.delayMs);
-        
+
         results.comment = await executeSingleAction(tabId, 'comment', username, options);
-        
+
         if (results.comment.success) {
             updateStats('comment');
             await sendActionLog('comment', username, true);
@@ -686,23 +686,23 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     } else {
         console.log(`[Motor] Passo 4 (Comentário) BLOQUEADO: ${commentPerm.reason}`);
     }
-    
+
     // DELAY AFTER COMMENT (90-160 seconds)
     const delaySeconds4 = Math.floor(Math.random() * (160 - 90 + 1)) + 90;
     console.log(`[Motor] Aguardando ${delaySeconds4}s...`);
     await randomDelaySeconds(90, 160);
-    
+
     // ═══════════════════════════════════════════════════════════
     // PASSO 5: VER STORY (STORY)
     // ═══════════════════════════════════════════════════════════
     console.log(`[Motor] Passo 5 (Story) executando...`);
-    
+
     const storyPerm = await checkEnginePermission('story_interact', username);
     if (storyPerm.allowed) {
         if (storyPerm.delayMs > 0) await sleep(storyPerm.delayMs);
-        
+
         results.story = await executeSingleAction(tabId, 'story_interact', username, options);
-        
+
         if (results.story.success) {
             updateStats('story_interact');
             await sendActionLog('story_interact', username, true);
@@ -714,13 +714,13 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     } else {
         console.log(`[Motor] Passo 5 (Story) BLOQUEADO: ${storyPerm.reason}`);
     }
-    
+
     console.log(`[Motor] ═══════ COMBO FINALIZADO PARA @${username} ═══════`);
-    
+
     // Return overall success (follow is required, others are optional)
-    return { 
-        success: results.follow.success, 
-        results 
+    return {
+        success: results.follow.success,
+        results
     };
 }
 
@@ -747,9 +747,12 @@ async function processQueue() {
 
         logAction('info', `🎯 [${processedCount}/${totalQueueSize}] Processando @${item.username}...`);
 
-        // Determinar se usa sequência combo ou ações do item
-        const useCombo = extensionState.currentActionType === 'combo_v4_6' || !item.actions;
-        
+        // Ativar sequência COMBO quando múltiplas ações selecionadas ou tipo explícito
+        // follow+like+comment+story (actionType com '+') = combo sequencial com intervalos 90-160s
+        const useCombo = extensionState.currentActionType === 'combo_v4_6' ||
+            extensionState.currentActionType?.includes('+') ||
+            (item.actions && item.actions.length > 1);
+
         let actionSuccess = false;
 
         if (useCombo) {
@@ -757,19 +760,19 @@ async function processQueue() {
             // v4.7.0: USAR NOVA FUNÇÃO SEQUENCIAL ESTRITA
             // ═══════════════════════════════════════════════════════════
             const comboResult = await executeInteractionCombo(
-                tabId, 
-                item.username, 
+                tabId,
+                item.username,
                 item.options || extensionState.currentOptions
             );
             actionSuccess = comboResult.success;
-            
+
             if (!actionSuccess) {
                 logAction('warning', `⚠️ Combo falhou para @${item.username}: ${comboResult.error}`);
             }
         } else {
             // Ação única (não-combo)
             const actionType = item.actions?.[0] || extensionState.currentActionType;
-            
+
             logAction('info', `🚀 Executando ${actionType} em @${item.username}...`);
 
             const perm = await checkEnginePermission(actionType, item.username);
@@ -777,9 +780,9 @@ async function processQueue() {
                 logAction('warning', `⛔ Bloqueado pelo Engine: ${perm.reason}`);
             } else {
                 if (perm.delayMs > 0) await sleep(perm.delayMs);
-                
+
                 const execResult = await executeSingleAction(tabId, actionType, item.username, item.options || extensionState.currentOptions);
-                
+
                 if (execResult.success) {
                     updateStats(actionType);
                     await sendActionLog(actionType, item.username, true);
@@ -920,218 +923,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.6.5',
-            status: extensionState.isRunning ? 'running' : 'idle',
-            stats: extensionState.stats
-        });
-    } else if (message.type === 'EIO_GET_STATUS') {
-        sendResponse({
-            isRunning: extensionState.isRunning,
-            queueLength: extensionState.queue.length,
-            stats: extensionState.stats
-        });
-    }
-    return true;
-});
-    if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
-        sendResponse({
-            pong: true, version: '4.6.5',
-            status: extensionState.isRunning ? 'running' : 'idle',
-            stats: extensionState.stats
-        });
-    } else if (message.type === 'EIO_GET_STATUS') {
-        sendResponse({
-            isRunning: extensionState.isRunning,
-            queueLength: extensionState.queue.length,
-            stats: extensionState.stats
-        });
-    }
-    return true;
-});
-
-            // ═══════════════════════════════════════════════════════════
-            // v4.7.0: USAR NOVA FUNÇÃO SEQUENCIAL ESTRITA
-            // ═══════════════════════════════════════════════════════════
-            const comboResult = await executeInteractionCombo(
-                tabId, 
-                item.username, 
-                item.options || extensionState.currentOptions
-            );
-            actionSuccess = comboResult.success;
-            
-            if (!actionSuccess) {
-                logAction('warning', `⚠️ Combo falhou para @${item.username}: ${comboResult.error}`);
-            }
-        } else {
-            // Ação única (não-combo)
-            const actionType = item.actions?.[0] || extensionState.currentActionType;
-            
-            logAction('info', `🚀 Executando ${actionType} em @${item.username}...`);
-
-            const perm = await checkEnginePermission(actionType, item.username);
-            if (!perm.allowed) {
-                logAction('warning', `⛔ Bloqueado pelo Engine: ${perm.reason}`);
-            } else {
-                if (perm.delayMs > 0) await sleep(perm.delayMs);
-                
-                const execResult = await executeSingleAction(tabId, actionType, item.username, item.options || extensionState.currentOptions);
-                
-                if (execResult.success) {
-                    updateStats(actionType);
-                    await sendActionLog(actionType, item.username, true);
-                    notifyPopup('actionCompleted', { username: item.username, action: 'success' });
-                    actionSuccess = true;
-                } else {
-                    logAction('warning', `⚠️ Falha em ${actionType}: ${execResult.error}`);
-                }
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // FIM DO COMBO — PULAR IMEDIATAMENTE PARA PRÓXIMO PERFIL
-        // ═══════════════════════════════════════════════════════════
-        extensionState.queue.shift(); // Remove permanentemente
-        extensionState.currentComboIndex = 0;
-        extensionState.currentComboUsername = null;
-        processedCount++;
-        await saveState();
-
-        if (actionSuccess && useCombo) {
-            // v4.6.5: Agendar auditoria de follow-back (25 min)
-            // DM SÓ será enviada se passar nos 2 checks da auditoria
-            chrome.alarms.create(`check_followback_${item.username}`, {
-                delayInMinutes: DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES
-            });
-            logAction('success', `✅ Combo finalizado para @${item.username}. Auditoria agendada para daqui a ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
-        }
-
-        // v4.6.5: Fluxo Contínuo — pular IMEDIATAMENTE para o próximo perfil
-        if (extensionState.isRunning && extensionState.queue.length > 0) {
-            isProcessing = false;
-            extensionState.nextRunTimestamp = Date.now() + DELAY_CONFIG.BETWEEN_PROFILES;
-            logAction('info', `⏳ Próximo perfil em ${DELAY_CONFIG.BETWEEN_PROFILES / 1000}s...`);
-
-            processingTimeout = setTimeout(() => {
-                extensionState.nextRunTimestamp = null;
-                processQueue();
-            }, DELAY_CONFIG.BETWEEN_PROFILES);
-        } else {
-            isProcessing = false;
-            if (extensionState.queue.length === 0) processQueue(); // Re-check para finalizar
-        }
-
-    } catch (error) {
-        console.error('[E.I.O Motor] Erro Fatal:', error);
-        logAction('error', `❌ Erro: ${error.message}`);
-        isProcessing = false;
-        if (extensionState.isRunning) {
-            processingTimeout = setTimeout(() => processQueue(), 10000);
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════
-
-async function ensureValidTab() {
-    let tabId = extensionState.activeTabId;
-    try {
-        if (tabId) {
-            const tab = await chrome.tabs.get(tabId);
-            if (tab?.url?.includes('instagram.com')) return tabId;
-        }
-    } catch (e) { }
-
-    const tabs = await chrome.tabs.query({ url: "*://*.instagram.com/*" });
-    if (tabs.length > 0) {
-        extensionState.activeTabId = tabs[0].id;
-        return tabs[0].id;
-    }
-    return null;
-}
-
-async function sendMessageWithRetry(tabId, message, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await chrome.tabs.sendMessage(tabId, message);
-        } catch (error) {
-            if (i < retries - 1) {
-                if (error.message.includes('context invalidated')) {
-                    const newId = await ensureValidTab();
-                    if (newId) tabId = newId;
-                }
-                await sleep(2000);
-            }
-        }
-    }
-    throw new Error('Falha comunicação com Instagram');
-}
-
-function updateStats(type) {
-    extensionState.stats.totalActionsToday++;
-    if (type === 'follow') extensionState.stats.followsToday++;
-    if (type === 'like' || type === 'like_feed_2') extensionState.stats.likesToday++;
-    if (type === 'comment') extensionState.stats.commentsToday++;
-    if (type === 'story_interact') extensionState.stats.storiesLikedToday++;
-    if (type === 'unfollow') extensionState.stats.unfollowsToday++;
-    notifyPopup('statsUpdate', { stats: extensionState.stats });
-}
-
-function logAction(level, message) {
-    console.log(`[E.I.O ${level.toUpperCase()}] ${message}`);
-    notifyPopup('consoleMessage', { level, message, timestamp: new Date().toISOString() });
-}
-
-function notifyPopup(type, data) {
-    chrome.runtime.sendMessage({ type, ...data }).catch(() => { });
-}
-
-function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-}
-
-// INITIALIZATION
-loadState().then(() => console.log('[E.I.O Engine] Estado recuperado'));
-// Se havia automação em andamento, retomar
-if (extensionState.isRunning && extensionState.queue.length > 0) {
-    console.log('[E.I.O] Retomando automação anterior...');
-    setTimeout(() => processQueue(), 2000);
-}
-
-// ═══════════════════════════════════════════════════════════
-// v4.6.5 - EXTERNAL MESSAGE LISTENER (Dashboard Heartbeat)
-// ═══════════════════════════════════════════════════════════
-chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
-    const allowedOrigins = [
-        'https://eio-system.vercel.app',
-        'http://localhost:3000',
-        'http://localhost:5500',
-        'http://127.0.0.1:5500'
-    ];
-
-    if (!allowedOrigins.some(origin => sender.origin?.startsWith(origin) || sender.url?.startsWith(origin))) {
-        return; // Silently ignore unauthorized
-    }
-
-    if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
-        sendResponse({
-            pong: true, version: '4.6.5',
-            status: extensionState.isRunning ? 'running' : 'idle',
-            stats: extensionState.stats
-        });
-    } else if (message.type === 'EIO_GET_STATUS') {
-        sendResponse({
-            isRunning: extensionState.isRunning,
-            queueLength: extensionState.queue.length,
-            stats: extensionState.stats
-        });
-    }
-    return true;
-});
-    if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
-        sendResponse({
-            pong: true, version: '4.6.5',
+            pong: true, version: '4.6.9',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });

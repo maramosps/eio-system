@@ -8,6 +8,10 @@
     "scripts": {
         "package": "node package-extension-auto.js",
         "zip": "node create_zip.js",
+        "release": "node release.js patch",
+        "release:minor": "node release.js minor",
+        "release:major": "node release.js major",
+        "release:deploy": "node release.js patch && vercel --prod",
         "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy-automatico.ps1"
     },
     "dependencies": {

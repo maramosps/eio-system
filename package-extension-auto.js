@@ -7,7 +7,9 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const VERSION = '4.4.24';
+// Lê versão diretamente do manifest.json para evitar dessincronia
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'extension', 'manifest.json'), 'utf8'));
+const VERSION = manifest.version;
 const EXTENSION_DIR = path.join(__dirname, 'extension');
 const OUTPUT_DIR = path.join(__dirname, 'frontend', 'downloads');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, `eio-extension-v${VERSION}.zip`);

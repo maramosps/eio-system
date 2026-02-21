@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.6.5 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.6.9 Initializing - RECIPROCITY MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -2092,7 +2092,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             executeInstagramAction(message.payload).then(sendResponse);
             return true;
 
-        // v4.6.5 - CHECK FOLLOW-BACK via API (chamado pelo background)
+        // v4.6.9 - CHECK FOLLOW-BACK via API (chamado pelo background)
         case 'check_followback':
             (async () => {
                 try {
@@ -2217,7 +2217,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.6.5 Ready!');
+console.log('E.I.O Content Script v4.6.9 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2331,7 +2331,7 @@ window.addEventListener('message', async (event) => {
         window.postMessage({
             type: 'EIO_PONG',
             extensionId: chrome.runtime.id,
-            version: '4.6.5'
+            version: '4.6.9'
         }, '*');
         return;
     }
@@ -2650,69 +2650,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.6.5 - Auto popup dismiss enabled!');
-
-        return true;
-    }
-
-    // Tentar fechar dialogs genéricos
-    const dialogs = document.querySelectorAll('div[role="dialog"]');
-    for (const dialog of dialogs) {
-        // Verificar se é um popup de notificação/promoção (não modal de seguidores)
-        const isNotificationPopup =
-            dialog.textContent?.includes('notificações') ||
-            dialog.textContent?.includes('notifications') ||
-            dialog.textContent?.includes('Ativar') ||
-            dialog.textContent?.includes('Turn on');
-
-        if (isNotificationPopup) {
-            const closeBtn = dialog.querySelector('button[aria-label="Fechar"], button[aria-label="Close"]');
-            if (closeBtn) {
-                console.log('[E.I.O] 🔕 Fechando dialog de promoção...');
-                closeBtn.click();
-                addConsoleLog('info', '🔕 Dialog promocional fechado automaticamente');
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-/**
- * Observador de mutações para detectar novos popups
- */
-let popupObserver = null;
-
-function startPopupObserver() {
-    if (popupObserver) return; // Já está rodando
-
-    popupObserver = new MutationObserver(async (mutations) => {
-        for (const mutation of mutations) {
-            if (mutation.addedNodes.length > 0) {
-                // Aguardar um pouco para o popup renderizar completamente
-                await new Promise(r => setTimeout(r, 500));
-                await dismissInstagramPopups();
-            }
-        }
-    });
-
-    popupObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    console.log('[E.I.O] 👁️ Observador de popups iniciado');
-}
-
-// Iniciar observador de popups
-startPopupObserver();
-
-// Executar verificação inicial após carregamento
-setTimeout(async () => {
-    await dismissInstagramPopups();
-}, 2000);
-
-console.log('E.I.O Content Script v4.6.5 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.6.9 - Auto popup dismiss enabled!');
 
 
