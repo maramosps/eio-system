@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.2 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.3 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -420,7 +420,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.2',
+                pong: true, version: '4.7.3',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -490,7 +490,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.2' });
+            sendResponse({ success: true, version: '4.7.3' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -572,9 +572,13 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
                 comment: options.commentMessage || "Top! 👏"
             }
         });
+
+        // Se a meta-resposta do Content Script indicou falha explícita, captura a falha
+        const isSuccess = result?.meta !== undefined ? result.meta.success : (result?.success || false);
+
         return {
-            success: result?.success || result?.meta?.success || false,
-            error: result?.error
+            success: isSuccess,
+            error: result?.meta?.error || result?.error || 'Erro desconhecido'
         };
     } catch (e) {
         return { success: false, error: e.message };
@@ -582,10 +586,8 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
 }
 
 /**
- * v4.7.2 - HUMANIZED RAPID COMBO STRIKE
- * A ORDEM EXATA PEDIDA: Follow → Curtir 1 postagem → Comentar → Story
- * O Intervalo LONGO configurado no painel será usado para pular para o PRÓXIMO PERFIL.
- * Dentro do mesmo perfil, os intervalos (micro-delays) devem ser rápidos e ágeis (4 a 8 seg).
+ * v4.7.2 - HUMANIZED RAPID COMBO STRIKE (CORREÇÃO DE ORDEM E ABORTOS)
+ * O Motor agora respeita exatamente as flags do painel e aborta se o Follow falhar.
  */
 async function executeInteractionCombo(tabId, username, options = {}) {
     console.log(`[Motor] ═══════ INICIANDO COMBO RÁPIDO PARA @${username} ═══════`);
@@ -595,6 +597,10 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         comment: { success: false },
         story: { success: false }
     };
+
+    const actionsToRun = options.selectedActions || [];
+    // Garante compatibilidade se for vazio, assume tudo
+    const isComboAll = actionsToRun.length === 0;
 
     // Função auxiliar para micro-delays ágeis dentro do mesmo perfil
     const rapidDelay = async () => {
@@ -606,70 +612,82 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     // ═══════════════════════════════════════════════════════════
     // PASSO 1: SEGUIR (FOLLOW)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 1 (Seguir)...`);
-    const followPerm = await checkEnginePermission('follow', username);
-    if (followPerm.allowed) {
-        results.follow = await executeSingleAction(tabId, 'follow', username, options);
-        if (results.follow.success) {
-            updateStats('follow');
-            await sendActionLog('follow', username, true);
-            notifyPopup('actionCompleted', { username, action: 'follow' });
+    if (isComboAll || actionsToRun.includes('follow')) {
+        console.log(`[Motor] Passo 1 (Seguir)...`);
+        const followPerm = await checkEnginePermission('follow', username);
+        if (followPerm.allowed) {
+            results.follow = await executeSingleAction(tabId, 'follow', username, options);
+            if (results.follow.success) {
+                updateStats('follow');
+                await sendActionLog('follow', username, true);
+                notifyPopup('actionCompleted', { username, action: 'follow' });
+            } else {
+                console.log(`[Motor] ⛔ Follow falhou. Abortando restante do combo para proteger perfil.`);
+                return { success: false, results, error: 'Follow_Failed' };
+            }
         }
+        await rapidDelay();
     }
-
-    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 2: CURTIR 01 POSTAGEM (LIKE 1)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 2 (Curtir única postagem)...`);
-    const likePerm = await checkEnginePermission('like_feed_2', username);
-    if (likePerm.allowed && options.actions?.includes('like') || true) {
-        results.like1 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 1 });
-        if (results.like1.success) {
-            updateStats('like_feed_2');
-            await sendActionLog('like_feed_2', username, true);
-            notifyPopup('actionCompleted', { username, action: 'like_feed_2' });
+    if (isComboAll || actionsToRun.includes('like')) {
+        console.log(`[Motor] Passo 2 (Curtir única postagem)...`);
+        const likePerm = await checkEnginePermission('like_feed_2', username);
+        if (likePerm.allowed) {
+            results.like1 = await executeSingleAction(tabId, 'like_feed_2', username, { ...options, postIndex: 1 });
+            if (results.like1.success) {
+                updateStats('like_feed_2');
+                await sendActionLog('like_feed_2', username, true);
+                notifyPopup('actionCompleted', { username, action: 'like_feed_2' });
+            }
         }
+        await rapidDelay();
     }
-
-    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 3: COMENTAR NA POSTAGEM (COMMENT)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 3 (Comentar)...`);
-    const commentPerm = await checkEnginePermission('comment', username);
-    if (commentPerm.allowed && options.actions?.includes('comment') || true) {
-        // Aproveitamos o mediaId do result.like1 se ele curtiu via API. Senão, tenta mesmo assim.
-        results.comment = await executeSingleAction(tabId, 'comment', username, options);
-        if (results.comment.success) {
-            updateStats('comment');
-            await sendActionLog('comment', username, true);
-            notifyPopup('actionCompleted', { username, action: 'comment' });
+    // SÓ comenta se o LIKE foi executado e bem-sucedido (pois precisamos do ID do post que acabamos de curtir)
+    if (isComboAll || actionsToRun.includes('comment')) {
+        console.log(`[Motor] Passo 3 (Comentar)...`);
+        if (results.like1.success || !actionsToRun.includes('like')) {
+            const commentPerm = await checkEnginePermission('comment', username);
+            if (commentPerm.allowed) {
+                results.comment = await executeSingleAction(tabId, 'comment', username, options);
+                if (results.comment.success) {
+                    updateStats('comment');
+                    await sendActionLog('comment', username, true);
+                    notifyPopup('actionCompleted', { username, action: 'comment' });
+                }
+            }
+            await rapidDelay();
+        } else {
+            console.log(`[Motor] Passo 3 Pulado (Like falhou, sem ID de postagem para comentar).`);
         }
     }
-
-    await rapidDelay();
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 4: VER STORY (STORY)
     // ═══════════════════════════════════════════════════════════
-    console.log(`[Motor] Passo 4 (Visualizar Story)...`);
-    const storyPerm = await checkEnginePermission('story_interact', username);
-    if (storyPerm.allowed && options.actions?.includes('story') || true) {
-        results.story = await executeSingleAction(tabId, 'story_interact', username, options);
-        if (results.story.success) {
-            updateStats('story_interact');
-            await sendActionLog('story_interact', username, true);
-            notifyPopup('actionCompleted', { username, action: 'story_interact' });
+    if (isComboAll || actionsToRun.includes('story') || actionsToRun.includes('viewStory')) {
+        console.log(`[Motor] Passo 4 (Visualizar Story)...`);
+        const storyPerm = await checkEnginePermission('story_interact', username);
+        if (storyPerm.allowed) {
+            results.story = await executeSingleAction(tabId, 'story_interact', username, options);
+            if (results.story.success) {
+                updateStats('story_interact');
+                await sendActionLog('story_interact', username, true);
+                notifyPopup('actionCompleted', { username, action: 'story_interact' });
+            }
         }
     }
 
     console.log(`[Motor] ═══════ COMBO RÁPIDO FINALIZADO PARA @${username} ═══════`);
 
     return {
-        success: results.follow.success || results.like1.success, // Se curtiu ou seguiu, sucesso
+        success: results.follow.success || results.like1.success, // Se curtiu ou seguiu, consideramos a roda motriz vitoriosa
         results
     };
 }
@@ -709,10 +727,14 @@ async function processQueue() {
             // ═══════════════════════════════════════════════════════════
             // v4.7.0: USAR NOVA FUNÇÃO SEQUENCIAL ESTRITA
             // ═══════════════════════════════════════════════════════════
+            // Injetamos as actions solicitadas no options
+            const comboOptions = item.options || extensionState.currentOptions || {};
+            comboOptions.selectedActions = item.actions;
+
             const comboResult = await executeInteractionCombo(
                 tabId,
                 item.username,
-                item.options || extensionState.currentOptions
+                comboOptions
             );
             actionSuccess = comboResult.success;
 
@@ -873,7 +895,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.2',
+            pong: true, version: '4.7.3',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });
