@@ -36,6 +36,8 @@ let extensionState = {
     currentComboUsername: null
 };
 
+let isFilaRodando = false;
+
 // ═══════════════════════════════════════════════════════════
 // DELAYS FIXOS E SEGUROS - NÃO CONFIGURÁVEIS
 // ═══════════════════════════════════════════════════════════
@@ -115,15 +117,20 @@ async function sendActionLog(actionType, targetProfile, success) {
         const token = await getAuthToken();
         const instagramHandle = await getInstagramHandle();
 
-        if (!userId || !token) return;
+        if (!userId || !token) {
+            console.error('[E.I.O API] ❌ sendActionLog abortado — userId:', userId, 'token:', !!token);
+            return;
+        }
 
+        // Usar /api/v1/actions (rota que EXISTE no backend e faz dupla escrita: action_logs + logs)
         const payload = {
             user_id: userId,
-            instagram_handle: instagramHandle || 'unknown',
             action_type: actionType,
-            target_profile: targetProfile,
+            target_username: targetProfile,
             success: success,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            source: 'extension',
+            metadata: { instagram_handle: instagramHandle }
         };
 
         const response = await fetch(`${BACKEND_URL}/api/v1/actions`, {
@@ -135,11 +142,14 @@ async function sendActionLog(actionType, targetProfile, success) {
             body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-            console.log('[E.I.O API] 📤 Log enviado com sucesso');
+        if (!response.ok) {
+            const errBody = await response.text().catch(() => '(sem corpo)');
+            console.error('ERRO API DASHBOARD [/api/v1/actions]:', response.status, errBody);
+        } else {
+            console.log('[E.I.O API] 📤 Log enviado com sucesso via /api/v1/actions');
         }
     } catch (error) {
-        console.error('[E.I.O API] ❌ Falha no envio de log:', error.message);
+        console.error('ERRO API DASHBOARD [/api/v1/actions] CATCH:', error.message);
     }
 }
 
@@ -412,7 +422,11 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // MESSAGE HANDLER (CENTRAL)
 // ═══════════════════════════════════════════════════════════
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+if (self.eioMessageHandler) {
+    chrome.runtime.onMessage.removeListener(self.eioMessageHandler);
+}
+
+self.eioMessageHandler = (message, sender, sendResponse) => {
     const action = message.action || message.type;
     console.log('[E.I.O Msg]', action);
 
@@ -466,6 +480,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'pauseAutomation':
         case 'stopAutomation':
             extensionState.isRunning = false;
+            isFilaRodando = false;
             extensionState.nextRunTimestamp = null;
             if (processingTimeout) clearTimeout(processingTimeout);
             saveState();
@@ -519,7 +534,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
     }
     return true;
-});
+};
+chrome.runtime.onMessage.addListener(self.eioMessageHandler);
 
 // ═══════════════════════════════════════════════════════════
 // AUTOMATION ENGINE
@@ -531,16 +547,23 @@ let totalQueueSize = 0;
 let processedCount = 0;
 
 async function handleStartAutomation(sendResponse) {
+    if (extensionState.isRunning || isFilaRodando) {
+        console.log('[Motor] ⚠️ Tentativa de iniciar recusada: Já está rodando.');
+        if (sendResponse) sendResponse({ success: false, message: 'Já está rodando' });
+        return;
+    }
+
     const tabs = await chrome.tabs.query({ url: "*://*.instagram.com/*" });
     const instagramTab = tabs.find(t => t.active) || tabs[0];
 
     if (!instagramTab) {
-        sendResponse({ success: false, message: 'Abra o Instagram primeiro!' });
+        if (sendResponse) sendResponse({ success: false, message: 'Abra o Instagram primeiro!' });
         return;
     }
 
     extensionState.activeTabId = instagramTab.id;
     extensionState.isRunning = true;
+    isFilaRodando = true;
     isProcessing = false;
     saveState();
 
@@ -575,6 +598,21 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
 
         // Se a meta-resposta do Content Script indicou falha explícita, captura a falha
         const isSuccess = result?.meta !== undefined ? result.meta.success : (result?.success || false);
+
+        if (isSuccess) {
+            const exactTimestamp = new Date().toISOString();
+            const actionNames = {
+                'follow': '👥 Seguiu', 'like_feed_2': '❤️ Curtiu post de',
+                'comment': '💬 Comentou no post de', 'story_interact': '👁️ Viu Story de'
+            };
+            const label = actionNames[actionType] || `✅ Executou ${actionType} em`;
+            chrome.runtime.sendMessage({
+                type: 'consoleMessage',
+                level: 'success',
+                message: `${label} @${username}`,
+                timestamp: exactTimestamp
+            }).catch(() => { });
+        }
 
         return {
             success: isSuccess,
@@ -697,6 +735,7 @@ async function processQueue() {
 
     if (extensionState.queue.length === 0) {
         extensionState.isRunning = false;
+        isFilaRodando = false;
         notifyPopup('automationStopped', { message: 'Fila concluída!' });
         logAction('success', '✅ Fila concluída!');
         saveState();
@@ -704,8 +743,10 @@ async function processQueue() {
     }
 
     isProcessing = true;
-    processedCount++;
-    notifyPopup('progressUpdate', { current: processedCount, total: totalQueueSize });
+
+    // PREVIEW do número atual (sem incrementar ainda)
+    const currentNumber = processedCount + 1;
+    notifyPopup('progressUpdate', { current: currentNumber, total: totalQueueSize });
 
     try {
         let tabId = await ensureValidTab();
@@ -713,10 +754,8 @@ async function processQueue() {
 
         const item = extensionState.queue[0]; // Peek (não remove ainda)
 
-        logAction('info', `🎯 [${processedCount}/${totalQueueSize}] Processando @${item.username}...`);
+        logAction('info', `🎯 [${currentNumber}/${totalQueueSize}] Processando @${item.username}...`);
 
-        // Ativar sequência COMBO quando múltiplas ações selecionadas ou tipo explícito
-        // follow+like+comment+story (actionType com '+') = combo sequencial com intervalos 90-160s
         const useCombo = extensionState.currentActionType === 'combo_v4_6' ||
             extensionState.currentActionType?.includes('+') ||
             (item.actions && item.actions.length > 1);
@@ -724,10 +763,6 @@ async function processQueue() {
         let actionSuccess = false;
 
         if (useCombo) {
-            // ═══════════════════════════════════════════════════════════
-            // v4.7.0: USAR NOVA FUNÇÃO SEQUENCIAL ESTRITA
-            // ═══════════════════════════════════════════════════════════
-            // Injetamos as actions solicitadas no options
             const comboOptions = item.options || extensionState.currentOptions || {};
             comboOptions.selectedActions = item.actions;
 
@@ -742,7 +777,6 @@ async function processQueue() {
                 logAction('warning', `⚠️ Combo falhou para @${item.username}: ${comboResult.error}`);
             }
         } else {
-            // Ação única (não-combo)
             const actionType = item.actions?.[0] || extensionState.currentActionType;
 
             logAction('info', `🚀 Executando ${actionType} em @${item.username}...`);
@@ -767,39 +801,42 @@ async function processQueue() {
         }
 
         // ═══════════════════════════════════════════════════════════
-        // FIM DO COMBO — PULAR IMEDIATAMENTE PARA PRÓXIMO PERFIL
+        // ITEM PROCESSADO — Remover da fila e incrementar AQUI (ÚNICO LUGAR)
         // ═══════════════════════════════════════════════════════════
-        extensionState.queue.shift(); // Remove permanentemente
+        extensionState.queue.shift();
+        processedCount++; // ← ÚNICO processedCount++ DE TODO O ARQUIVO
         extensionState.currentComboIndex = 0;
         extensionState.currentComboUsername = null;
-        processedCount++;
         await saveState();
 
         if (actionSuccess && useCombo) {
-            // v4.6.5: Agendar auditoria de follow-back (25 min)
-            // DM SÓ será enviada se passar nos 2 checks da auditoria
             chrome.alarms.create(`check_followback_${item.username}`, {
                 delayInMinutes: DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES
             });
-            logAction('success', `✅ Combo finalizado para @${item.username}. Auditoria agendada para daqui a ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
+            logAction('info', `📋 Auditoria de follow-back agendada para @${item.username} em ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
         }
 
-        // v4.6.5: Fluxo Contínuo — pular IMEDIATAMENTE para o próximo perfil
+        // Próximo perfil
         if (extensionState.isRunning && extensionState.queue.length > 0) {
-            isProcessing = false;
             extensionState.nextRunTimestamp = Date.now() + DELAY_CONFIG.BETWEEN_PROFILES;
             logAction('info', `⏳ Próximo perfil em ${DELAY_CONFIG.BETWEEN_PROFILES / 1000}s...`);
 
             processingTimeout = setTimeout(() => {
                 extensionState.nextRunTimestamp = null;
+                isProcessing = false;
                 processQueue();
             }, DELAY_CONFIG.BETWEEN_PROFILES);
         } else {
             isProcessing = false;
-            if (extensionState.queue.length === 0) processQueue(); // Re-check para finalizar
+            if (extensionState.queue.length === 0) processQueue();
         }
 
     } catch (error) {
+        if (error.message === 'AbortError') {
+            logAction('warning', `⏸️ Automação parada pelo usuário.`);
+            isProcessing = false;
+            return;
+        }
         console.error('[E.I.O Motor] Erro Fatal:', error);
         logAction('error', `❌ Erro: ${error.message}`);
         isProcessing = false;
@@ -867,7 +904,21 @@ function notifyPopup(type, data) {
 }
 
 function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
+    return new Promise((resolve, reject) => {
+        let elapsed = 0;
+        const interval = ms > 500 ? 500 : ms;
+        const timer = setInterval(() => {
+            if (!extensionState.isRunning) {
+                clearInterval(timer);
+                return reject(new Error('AbortError'));
+            }
+            elapsed += interval;
+            if (elapsed >= ms) {
+                clearInterval(timer);
+                resolve();
+            }
+        }, interval);
+    });
 }
 
 // INITIALIZATION

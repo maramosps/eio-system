@@ -742,6 +742,41 @@ module.exports = async (req, res) => {
             }
         }
 
+        // Atualizar Status de Lead (CRM)
+        if ((path === '/api/v1/crm/update-status' || pathFromQuery === 'v1/crm/update-status') && method === 'POST') {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ success: false, message: 'Token não fornecido' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+                const { instagram_username, status, last_action, updated_at } = req.body;
+
+                if (!instagram_username) {
+                    return res.status(400).json({ success: false, message: 'username obrigatório' });
+                }
+
+                // Atualizar lead no Supabase
+                const { error } = await supabase
+                    .from('leads')
+                    .update({
+                        status: status || 'updated',
+                        updated_at: updated_at || new Date().toISOString()
+                    })
+                    .eq('user_id', decoded.userId)
+                    .eq('username', instagram_username);
+
+                if (error) throw error;
+
+                return res.json({ success: true, message: 'Status atualizado com sucesso' });
+            } catch (err) {
+                console.error('Update status error:', err);
+                return res.status(401).json({ success: false, message: 'Token inválido ou erro no banco' });
+            }
+        }
+
         // Check Reciprocity & DM Automation Trigger (v4.6)
         if ((path === '/api/v1/instagram/check-reciprocity' || pathFromQuery === 'v1/instagram/check-reciprocity') && method === 'GET') {
             const authHeader = req.headers['authorization'];
@@ -990,7 +1025,7 @@ module.exports = async (req, res) => {
                 }]);
 
                 if (error) {
-                    console.error('[API /api/v1/actions] ❌ Erro ao inserir:', error);
+                    console.error('[API /api/v1/actions] ❌ Erro ao inserir na action_logs:', error);
                     return res.status(500).json({
                         success: false,
                         message: 'Erro ao salvar log de ação',
@@ -998,7 +1033,21 @@ module.exports = async (req, res) => {
                     });
                 }
 
-                console.log('[API /api/v1/actions] ✅ Log sincronizado:', action_type, '@' + target_username);
+                // ADICIONAR DUPLA ESCRITA NA TABELA 'logs' (COMPATIBILIDADE DASHBOARD v4)
+                try {
+                    await supabase.from('logs').insert([{
+                        user_id: userId || null,
+                        level: success !== false ? 'success' : 'error',
+                        action: action_type.toLowerCase(),
+                        message: `${action_type.toUpperCase()} em @${target_username.replace('@', '')}`,
+                        meta: { username: target_username.replace('@', ''), status: success !== false ? 'success' : 'failed', source: source || 'extension' },
+                        created_at: timestamp || new Date().toISOString()
+                    }]);
+                } catch (logsErr) {
+                    console.error('[API /api/v1/actions] ⚠️ Falha na escrita dupla (tabela logs):', logsErr);
+                }
+
+                console.log('[API /api/v1/actions] ✅ Log sincronizado nas duas tabelas:', action_type, '@' + target_username);
 
                 // Retorna 201 Created para confirmar sincronização
                 return res.status(201).json({
@@ -1013,6 +1062,65 @@ module.exports = async (req, res) => {
                     message: 'Erro interno',
                     error: err.message
                 });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // ALIAS: /api/v1/analytics/log → Mesma lógica que /api/v1/actions
+        // Para compatibilidade com versões anteriores da extensão
+        // ═══════════════════════════════════════════════════════════
+        if ((path === '/api/v1/analytics/log' || pathFromQuery === 'v1/analytics/log') && method === 'POST') {
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
+            }
+
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ success: false, message: 'Token obrigatório' });
+            }
+
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = jwt.verify(token, jwtSecret);
+
+                const { action, action_type, target, target_username, result, success: actionSuccess, timestamp, metadata } = req.body;
+                const finalActionType = (action_type || action || 'unknown').toLowerCase();
+                const finalTarget = (target_username || target || 'unknown').replace('@', '');
+                const isSuccess = actionSuccess !== undefined ? actionSuccess : (result === 'success');
+
+                // Escrita na tabela action_logs
+                await supabase.from('action_logs').insert([{
+                    user_id: decoded.userId,
+                    action_type: finalActionType,
+                    target_username: finalTarget,
+                    success: isSuccess,
+                    details: {
+                        source: 'extension',
+                        metadata: metadata || {},
+                        original_timestamp: timestamp || new Date().toISOString()
+                    },
+                    created_at: new Date().toISOString()
+                }]);
+
+                // Dupla escrita na tabela logs (Dashboard lê daqui)
+                await supabase.from('logs').insert([{
+                    user_id: decoded.userId,
+                    level: isSuccess ? 'success' : 'error',
+                    action: finalActionType,
+                    message: `${finalActionType.toUpperCase()} em @${finalTarget}`,
+                    meta: { username: finalTarget, status: isSuccess ? 'success' : 'failed', ...(metadata || {}) },
+                    created_at: timestamp || new Date().toISOString()
+                }]);
+
+                console.log(`[API /analytics/log] ✅ Alias OK: ${finalActionType} -> @${finalTarget}`);
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'Log sincronizado via alias analytics/log'
+                });
+            } catch (err) {
+                console.error('[API /analytics/log] ❌ Erro:', err.message);
+                return res.status(401).json({ success: false, message: 'Token inválido ou erro interno' });
             }
         }
 

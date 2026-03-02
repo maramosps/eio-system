@@ -93,34 +93,62 @@ const EIO_BACKEND = {
     async logAction(action, target, result = 'success', metadata = {}) {
         const token = await this.getToken();
         if (!token) {
-            console.log('[E.I.O Analytics] Sem token, ação não será registrada');
-            return { success: false };
+            console.error('[E.I.O Analytics] ❌ Sem token — ação NÃO será registrada. Verifique login.');
+            return { success: false, error: 'no_token' };
         }
 
+        const timestamp = new Date().toISOString();
+        const payload1 = {
+            action_type: action,
+            target_username: target,
+            success: result === 'success',
+            timestamp: timestamp,
+            source: 'extension'
+        };
+        const payload2 = {
+            action: action,
+            result: { username: target, status: result, ...metadata },
+            timestamp: timestamp
+        };
+
+        // 1. Gravar no sistema Zero-Risk (action_logs)
         try {
-            const response = await fetch(`${this.API_URL}/analytics/log`, {
+            const res1 = await fetch(`${this.API_URL}/actions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload1)
+            });
+            if (!res1.ok) {
+                const errBody = await res1.text().catch(() => '(sem corpo)');
+                console.error('ERRO API DASHBOARD [/actions]:', res1.status, errBody);
+            } else {
+                console.log(`[E.I.O Analytics] ✅ /actions OK: ${action} -> @${target}`);
+            }
+        } catch (err1) {
+            console.error('ERRO API DASHBOARD [/actions] CATCH:', err1.message);
+        }
+
+        // 2. Gravar na tabela 'logs' legada (Dashboard lê daqui)
+        try {
+            const res2 = await fetch(`${this.API_URL}/executions/log`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    action: action,
-                    target: target,
-                    result: result,
-                    timestamp: new Date().toISOString(),
-                    metadata: metadata
-                })
+                body: JSON.stringify(payload2)
             });
-
-            if (response.ok) {
-                console.log(`[E.I.O Analytics] ✅ Ação registrada: ${action} -> @${target}`);
-                return { success: true };
+            if (!res2.ok) {
+                const errBody = await res2.text().catch(() => '(sem corpo)');
+                console.error('ERRO API DASHBOARD [/executions/log]:', res2.status, errBody);
+                return { success: false, status: res2.status, error: errBody };
             }
-        } catch (error) {
-            console.error('[E.I.O Analytics] Erro ao registrar ação:', error);
+            console.log(`[E.I.O Analytics] ✅ /executions/log OK: ${action} -> @${target}`);
+            return { success: true };
+        } catch (err2) {
+            console.error('ERRO API DASHBOARD [/executions/log] CATCH:', err2.message);
+            return { success: false, error: err2.message };
         }
-        return { success: false };
     },
 
     /**
@@ -130,7 +158,10 @@ const EIO_BACKEND = {
      */
     async updateLeadStatus(username, status, action = null) {
         const token = await this.getToken();
-        if (!token) return { success: false };
+        if (!token) {
+            console.error('[E.I.O CRM] ❌ Sem token — updateLeadStatus abortado');
+            return { success: false, error: 'no_token' };
+        }
 
         try {
             const response = await fetch(`${this.API_URL}/crm/update-status`, {
@@ -147,10 +178,17 @@ const EIO_BACKEND = {
                 })
             });
 
-            return { success: response.ok };
+            if (!response.ok) {
+                const errBody = await response.text().catch(() => '(sem corpo)');
+                console.error('ERRO API DASHBOARD [/crm/update-status]:', response.status, errBody);
+                return { success: false, status: response.status, error: errBody };
+            }
+
+            console.log(`[E.I.O CRM] ✅ Status atualizado para @${username}: ${status}`);
+            return { success: true };
         } catch (error) {
-            console.error('[E.I.O CRM] Erro ao atualizar status:', error);
-            return { success: false };
+            console.error('ERRO API DASHBOARD [/crm/update-status] CATCH:', error.message);
+            return { success: false, error: error.message };
         }
     },
 
