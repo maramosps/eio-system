@@ -88,137 +88,140 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Detect current Instagram profile
     detectCurrentProfile();
 
-    // Listen for messages from background
-    chrome.runtime.onMessage.addListener((message) => {
-        // Extraction progress - Use ONLY loadingModal (unified UI)
-        if (message.action === 'extraction_progress') {
-            const limit = message.total || parseInt(document.getElementById('queueLimit')?.value) || 100;
-            const count = message.count || 0;
+    // Listen for messages from background (Singleton guard to prevent duplicate listeners)
+    if (!window._eioListenerAttached) {
+        window._eioListenerAttached = true;
+        chrome.runtime.onMessage.addListener((message) => {
+            // Extraction progress - Use ONLY loadingModal (unified UI)
+            if (message.action === 'extraction_progress') {
+                const limit = message.total || parseInt(document.getElementById('queueLimit')?.value) || 100;
+                const count = message.count || 0;
 
-            // Use LoadingManager to show progress in the main modal (image 3 with rocket)
-            LoadingManager.updateProgress(count, limit, `Coletando perfis (${count} de ${limit})...`);
+                // Use LoadingManager to show progress in the main modal (image 3 with rocket)
+                LoadingManager.updateProgress(count, limit, `Coletando perfis (${count} de ${limit})...`);
 
-            if (message.completed) {
-                LoadingManager.updateProgress(limit, limit, 'Finalizando...');
-                setTimeout(() => {
-                    LoadingManager.hide();
-                }, 1000);
-            }
-        }
-
-        // Progress update (X/Y em execução)
-        if (message.type === 'progressUpdate') {
-            const current = message.current || 0;
-            const total = message.total || 0;
-            const progressEl = document.getElementById('queueProgress');
-            if (progressEl) {
-                progressEl.textContent = `${current}/${total}`;
-            }
-            console.log(`[E.I.O] Progresso: ${current}/${total}`);
-        }
-
-        // Stats update
-        if (message.type === 'statsUpdate') {
-            if (message.stats) {
-                document.getElementById('actionsToday').textContent = message.stats.totalActionsToday || 0;
-            }
-        }
-
-        // Console message / log
-        if (message.type === 'consoleMessage') {
-            addLog(message.level, message.message);
-        }
-
-        // Action completed - update stamp on account card
-        if (message.type === 'actionCompleted') {
-            // Normalizar username (remover @ se existir)
-            const rawUsername = message.username || '';
-            const cleanUsername = rawUsername.replace(/^@+/, '').toLowerCase();
-            const action = message.action; // 'followed', 'unfollowed', 'liked', 'requested', 'error'
-
-            console.log(`[STAMP] Atualizando stamp para @${cleanUsername}: ${action}`);
-
-            // ═══════════════════════════════════════════════════════════
-            // REGISTRAR AÇÃO NO ANALYTICS/DASHBOARD
-            // ═══════════════════════════════════════════════════════════
-            if (window.EIO_BACKEND && action !== 'error') {
-                EIO_BACKEND.logAction(action, cleanUsername, 'success', {
-                    source: 'extension',
-                    timestamp: new Date().toISOString()
-                }).then(result => {
-                    if (result.success) {
-                        console.log(`[Analytics] ✅ Ação registrada: ${action} -> @${cleanUsername}`);
-                    }
-                }).catch(err => console.log('Analytics error:', err));
-
-                // Também atualizar status do lead no CRM
-                EIO_BACKEND.updateLeadStatus(cleanUsername, action, action);
+                if (message.completed) {
+                    LoadingManager.updateProgress(limit, limit, 'Finalizando...');
+                    setTimeout(() => {
+                        LoadingManager.hide();
+                    }, 1000);
+                }
             }
 
-            // Update account status
-            const account = AppState.accounts.find(a => {
-                const accUsername = (a.username || '').replace(/^@+/, '').toLowerCase();
-                return accUsername === cleanUsername;
-            });
+            // Progress update (X/Y em execução)
+            if (message.type === 'progressUpdate') {
+                const current = message.current || 0;
+                const total = message.total || 0;
+                const progressEl = document.getElementById('queueProgress');
+                if (progressEl) {
+                    progressEl.textContent = `${current}/${total}`;
+                }
+                console.log(`[E.I.O] Progresso: ${current}/${total}`);
+            }
 
-            if (account) {
-                account.status = action;
-                console.log(`[STAMP] Status atualizado para @${cleanUsername}: ${action}`);
+            // Stats update
+            if (message.type === 'statsUpdate') {
+                if (message.stats) {
+                    document.getElementById('actionsToday').textContent = message.stats.totalActionsToday || 0;
+                }
+            }
 
-                // Atualizar o card diretamente no DOM (mais rápido que re-render total)
-                const card = document.querySelector(`.eio-account-card[data-username="${account.username}"]`);
-                if (card) {
-                    // Remover stamp antigo
-                    const oldStamp = card.querySelector('.card-stamp');
-                    if (oldStamp) oldStamp.remove();
+            // Console message / log
+            if (message.type === 'consoleMessage') {
+                addLog(message.level, message.message);
+            }
 
-                    // Adicionar novo stamp
-                    const stampDiv = card.querySelector('div[style*="position: relative"]') || card.querySelector('.card-info')?.previousElementSibling;
-                    if (stampDiv) {
-                        let stampClass = 'stamp-green';
-                        let stampText = 'FOLLOWED';
+            // Action completed - update stamp on account card
+            if (message.type === 'actionCompleted') {
+                // Normalizar username (remover @ se existir)
+                const rawUsername = message.username || '';
+                const cleanUsername = rawUsername.replace(/^@+/, '').toLowerCase();
+                const action = message.action; // 'followed', 'unfollowed', 'liked', 'requested', 'error'
 
-                        if (action === 'requested') { stampClass = 'stamp-blue'; stampText = 'REQUESTED'; }
-                        else if (action === 'unfollowed') { stampClass = 'stamp-red'; stampText = 'UNFOLLOWED'; }
-                        else if (action === 'liked') { stampClass = 'stamp-pink'; stampText = 'LIKED'; }
-                        else if (action === 'error') { stampClass = 'stamp-orange'; stampText = 'ERROR'; }
+                console.log(`[STAMP] Atualizando stamp para @${cleanUsername}: ${action}`);
 
-                        const newStamp = document.createElement('div');
-                        newStamp.className = `card-stamp ${stampClass}`;
-                        newStamp.textContent = stampText;
-                        stampDiv.appendChild(newStamp);
+                // ═══════════════════════════════════════════════════════════
+                // REGISTRAR AÇÃO NO ANALYTICS/DASHBOARD
+                // ═══════════════════════════════════════════════════════════
+                if (window.EIO_BACKEND && action !== 'error') {
+                    EIO_BACKEND.logAction(action, cleanUsername, 'success', {
+                        source: 'extension',
+                        timestamp: new Date().toISOString()
+                    }).then(result => {
+                        if (result.success) {
+                            console.log(`[Analytics] ✅ Ação registrada: ${action} -> @${cleanUsername}`);
+                        }
+                    }).catch(err => console.log('Analytics error:', err));
+
+                    // Também atualizar status do lead no CRM
+                    EIO_BACKEND.updateLeadStatus(cleanUsername, action, action);
+                }
+
+                // Update account status
+                const account = AppState.accounts.find(a => {
+                    const accUsername = (a.username || '').replace(/^@+/, '').toLowerCase();
+                    return accUsername === cleanUsername;
+                });
+
+                if (account) {
+                    account.status = action;
+                    console.log(`[STAMP] Status atualizado para @${cleanUsername}: ${action}`);
+
+                    // Atualizar o card diretamente no DOM (mais rápido que re-render total)
+                    const card = document.querySelector(`.eio-account-card[data-username="${account.username}"]`);
+                    if (card) {
+                        // Remover stamp antigo
+                        const oldStamp = card.querySelector('.card-stamp');
+                        if (oldStamp) oldStamp.remove();
+
+                        // Adicionar novo stamp
+                        const stampDiv = card.querySelector('div[style*="position: relative"]') || card.querySelector('.card-info')?.previousElementSibling;
+                        if (stampDiv) {
+                            let stampClass = 'stamp-green';
+                            let stampText = 'FOLLOWED';
+
+                            if (action === 'requested') { stampClass = 'stamp-blue'; stampText = 'REQUESTED'; }
+                            else if (action === 'unfollowed') { stampClass = 'stamp-red'; stampText = 'UNFOLLOWED'; }
+                            else if (action === 'liked') { stampClass = 'stamp-pink'; stampText = 'LIKED'; }
+                            else if (action === 'error') { stampClass = 'stamp-orange'; stampText = 'ERROR'; }
+
+                            const newStamp = document.createElement('div');
+                            newStamp.className = `card-stamp ${stampClass}`;
+                            newStamp.textContent = stampText;
+                            stampDiv.appendChild(newStamp);
+                        }
                     }
                 }
             }
-        }
 
-        // Automation status updates
-        if (message.type === 'automationStarted') {
-            document.getElementById('automationStatusText').textContent = 'Rodando';
-            document.getElementById('automationStatusDot').classList.add('running');
-        }
-        if (message.type === 'automationPaused') {
-            document.getElementById('automationStatusText').textContent = 'Pausado';
-            document.getElementById('automationStatusDot').classList.remove('running');
-            document.getElementById('automationStatusDot').classList.add('paused');
-        }
-        if (message.type === 'automationStopped') {
-            document.getElementById('automationStatusText').textContent = 'Parado';
-            document.getElementById('automationStatusDot').classList.remove('running', 'paused');
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // EXTRACTION COMPLETE - Receber dados da auto-extração
-        // ═══════════════════════════════════════════════════════════
-        if (message.action === 'extraction_complete') {
-            console.log(`[E.I.O] 📥 Extração completa recebida: ${message.count} perfis`);
-
-            if (message.accounts && message.accounts.length > 0) {
-                addLog('success', `✅ ${message.count} perfis extraídos de @${message.target}`);
-                processLoadedAccounts(message.accounts);
+            // Automation status updates
+            if (message.type === 'automationStarted') {
+                document.getElementById('automationStatusText').textContent = 'Rodando';
+                document.getElementById('automationStatusDot').classList.add('running');
             }
-        }
-    });
+            if (message.type === 'automationPaused') {
+                document.getElementById('automationStatusText').textContent = 'Pausado';
+                document.getElementById('automationStatusDot').classList.remove('running');
+                document.getElementById('automationStatusDot').classList.add('paused');
+            }
+            if (message.type === 'automationStopped') {
+                document.getElementById('automationStatusText').textContent = 'Parado';
+                document.getElementById('automationStatusDot').classList.remove('running', 'paused');
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // EXTRACTION COMPLETE - Receber dados da auto-extração
+            // ═══════════════════════════════════════════════════════════
+            if (message.action === 'extraction_complete') {
+                console.log(`[E.I.O] 📥 Extração completa recebida: ${message.count} perfis`);
+
+                if (message.accounts && message.accounts.length > 0) {
+                    addLog('success', `✅ ${message.count} perfis extraídos de @${message.target}`);
+                    processLoadedAccounts(message.accounts);
+                }
+            }
+        });
+    } // end singleton guard
 });
 
 // ═══════════════════════════════════════════════════════════

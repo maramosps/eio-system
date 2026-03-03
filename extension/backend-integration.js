@@ -10,11 +10,19 @@ const EIO_BACKEND = {
 
     /**
      * Obter token de autenticação do storage
+     * Verifica múltiplas fontes: eio_token (login popup), eioLicenseData, eioUserData
      */
     async getToken() {
         return new Promise((resolve) => {
-            chrome.storage.local.get(['eioLicenseData', 'eioUserData'], (result) => {
-                const token = result.eioLicenseData?.token || result.eioUserData?.token || null;
+            chrome.storage.local.get(['eio_token', 'eioLicenseData', 'eioUserData'], (result) => {
+                // Priority: eio_token (set by popup login) > eioLicenseData > eioUserData
+                const token = result.eio_token
+                    || result.eioLicenseData?.token
+                    || result.eioUserData?.token
+                    || null;
+                if (!token) {
+                    console.warn('[E.I.O Backend] ⚠️ Nenhum token encontrado no storage. Chaves verificadas: eio_token, eioLicenseData, eioUserData');
+                }
                 resolve(token);
             });
         });
