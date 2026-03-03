@@ -30,12 +30,14 @@ const licenseRoutes = require('./src/routes/license.routes');
 const leadRoutes = require('./src/routes/lead.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const userRoutes = require('./src/routes/user.routes');
+const analyticsRoutes = require('./src/routes/analytics.routes');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/license', licenseRoutes);
 app.use('/api/v1/leads', leadRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Rota raiz
 app.get('/', (req, res) => {

@@ -51,14 +51,29 @@ function renderActivityTable(logs) {
         return;
     }
 
-    tableBody.innerHTML = logs.map(log => `
+    const noData = document.getElementById('noActionsData');
+    if (noData) noData.style.display = 'none';
+
+    const actionsTable = document.getElementById('actionsTable');
+    if (actionsTable) actionsTable.style.display = 'table';
+
+    tableBody.innerHTML = logs.map(log => {
+        const dateStr = new Date(log.created_at).toLocaleString('pt-BR');
+        const actionType = log.action || 'ação';
+        const target = log.target || (log.message && log.message.split('@')[1]) || '---';
+        const isSuccess = log.success !== false;
+        const statusClass = isSuccess ? 'status-active' : 'status-inactive';
+        const statusText = isSuccess ? 'Sucesso' : 'Falhou';
+
+        return `
         <tr>
-            <td>${new Date(log.created_at).toLocaleString('pt-BR')}</td>
-            <td><span class="eio-badge">${log.action || 'ação'}</span></td>
-            <td>${log.message.split('@')[1] || '---'}</td>
-            <td><span class="status-pill status-active">Sucesso</span></td>
+            <td>${dateStr}</td>
+            <td><span class="eio-badge">${actionType}</span></td>
+            <td>@${target}</td>
+            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function initializeCharts(stats) {

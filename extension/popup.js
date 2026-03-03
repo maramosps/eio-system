@@ -757,24 +757,16 @@ function loadImage(imgElement) {
     // data: URL e retorna para o popup.
     // ═══════════════════════════════════════════════════════════
 
-    chrome.runtime.sendMessage(
-        { type: 'proxyImage', url: imageUrl },
-        function (response) {
-            if (chrome.runtime.lastError) {
-                showPlaceholder(imgElement);
-                return;
-            }
+    // Atribuição direta via Src contornando as CSP baseadas nas novas permissive policies do manifets
+    imgElement.src = imageUrl;
+    imgElement.referrerPolicy = 'no-referrer';
+    imgElement.classList.remove('lazy-loading');
+    imgElement.classList.add('lazy-loaded');
 
-            if (response && response.dataUrl) {
-                imgElement.src = response.dataUrl;
-                imgElement.classList.remove('lazy-loading');
-                imgElement.classList.add('lazy-loaded');
-                loadedImageCount++;
-            } else {
-                showPlaceholder(imgElement);
-            }
-        }
-    );
+    imgElement.onerror = function () {
+        showPlaceholder(imgElement);
+    };
+    loadedImageCount++;
 }
 
 function showPlaceholder(imgElement) {
@@ -1615,11 +1607,19 @@ function initializeActionButtons() {
     const btnPauseMini = document.getElementById('btnPauseAuto');
     const btnStopMini = document.getElementById('btnStopAuto');
 
-    if (btnStartAcc) btnStartAcc.onclick = () => startAutomation();
+    if (btnStartAcc) btnStartAcc.onclick = () => {
+        btnStartAcc.disabled = true;
+        if (btnStartMini) btnStartMini.disabled = true;
+        startAutomation();
+    };
     if (btnStartMini) btnStartMini.onclick = () => {
+        btnStartMini.disabled = true;
+        if (btnStartAcc) btnStartAcc.disabled = true;
         const selectedActions = getSelectedActions();
         if (selectedActions.length === 0) {
             alert('Escolha pelo menos uma ação (Seguir, Curtir, etc.) nos botões acima.');
+            btnStartMini.disabled = false;
+            if (btnStartAcc) btnStartAcc.disabled = false;
             return;
         }
         prepareAndStartAutomation(selectedActions);
@@ -1747,6 +1747,11 @@ async function prepareAndStartAutomation(selectedActions) {
                 if (resp?.success) {
                     addLog('success', `▶️ Automação (${selectedActions.join('+')}) iniciada!`);
                     updateAutomationUI('running');
+
+                    AppState.selectedAccounts.clear();
+                    renderAccountsTable();
+                    updateSelectedActions();
+
                     alert('⚡ Automação Iniciada!\n\nImportante: Mantenha a aba do Instagram aberta enquanto a extensão roda.');
                 } else {
                     alert('Erro: ' + (resp?.message || 'Falha ao iniciar motor'));
@@ -1822,6 +1827,11 @@ async function startAutomation(actionOverride = null) {
                 if (resp?.success) {
                     addLog('success', `▶️ Automação (${selectedAction}) iniciada!`);
                     updateAutomationUI('running');
+
+                    AppState.selectedAccounts.clear();
+                    renderAccountsTable();
+                    updateSelectedActions();
+
                     alert('⚡ Automação Iniciada!\n\nImportante: Mantenha a aba do Instagram aberta.');
                 } else {
                     alert('Erro: ' + (resp?.message || 'Falha ao iniciar motor'));
@@ -1925,16 +1935,22 @@ function handleContextualAction(actionId) {
 // ═══════════════════════════════════════════════════════════
 // LOGS
 // ═══════════════════════════════════════════════════════════
-function addLog(level, message) {
-    const now = new Date();
-    const timestamp = now.toLocaleString('pt-BR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
+function addLog(level, message, providedTimestamp = null) {
+    let timestamp;
+    if (providedTimestamp) {
+        // Formata o ISO String the background para o padrão do BR local
+        const d = new Date(providedTimestamp);
+        timestamp = d.toLocaleString('pt-BR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+    } else {
+        const now = new Date();
+        timestamp = now.toLocaleString('pt-BR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+    }
 
     AppState.logs.unshift({ level, message, timestamp });
 
@@ -2108,6 +2124,17 @@ function updateAutomationUI(status) {
         }[status] || 'Parado';
     }
 
+    // Controle dos botões de ação para evitar duplicação ou cliques repetidos
+    const btnAcc = document.getElementById('btnStartAutomation');
+    const btnMini = document.getElementById('btnStartAuto');
+    if (status === 'running') {
+        if (btnAcc) btnAcc.disabled = true;
+        if (btnMini) btnMini.disabled = true;
+    } else {
+        if (btnAcc) btnAcc.disabled = false;
+        if (btnMini) btnMini.disabled = false;
+    }
+
     AppState.automationRunning = (status === 'running');
 }
 
@@ -2120,7 +2147,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             updateStats(message.stats);
             break;
         case 'consoleMessage':
-            addLog(message.level, message.message);
+            addLog(message.level, message.message, message.timestamp);
             break;
         case 'automationStarted':
             updateAutomationUI('running');

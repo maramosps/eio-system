@@ -861,31 +861,49 @@ module.exports = async (req, res) => {
                     });
                 }
 
-                // Buscar logs do usuário
-                const { data: logs, error } = await supabase
-                    .from('logs')
+                // ═══════════════════════════════════════════════════════════
+                // BUSCAR DA TABELA action_logs (FONTE PRIMÁRIA DE DADOS)
+                // A tabela 'logs' pode estar vazia; action_logs é a real.
+                // ═══════════════════════════════════════════════════════════
+                const { data: actionLogs, error: alError } = await supabase
+                    .from('action_logs')
                     .select('*')
                     .eq('user_id', decoded.userId)
                     .order('created_at', { ascending: false })
-                    .limit(100);
+                    .limit(200);
 
-                if (error) throw error;
+                if (alError) {
+                    console.error('[API Analytics] ❌ Erro ao buscar action_logs:', alError.message);
+                    throw alError;
+                }
 
-                // Calcular estatísticas básicas para o dashboard
+                const logs = actionLogs || [];
+
+                // Calcular estatísticas a partir de action_type (campo correto)
                 const stats = {
-                    follows: logs.filter(l => l.action === 'follow' || (l.message && l.message.includes('FOLLOW'))).length,
-                    likes: logs.filter(l => l.action === 'like' || (l.message && l.message.includes('LIKE'))).length,
-                    comments: logs.filter(l => l.action === 'comment').length,
-                    unfollows: logs.filter(l => l.action === 'unfollow').length
+                    follows: logs.filter(l => l.action_type === 'follow').length,
+                    likes: logs.filter(l => l.action_type === 'like' || l.action_type === 'like_feed_2').length,
+                    comments: logs.filter(l => l.action_type === 'comment').length,
+                    unfollows: logs.filter(l => l.action_type === 'unfollow').length
                 };
+
+                // Mapear para formato compatível com frontend
+                const recentActivity = logs.slice(0, 50).map(l => ({
+                    action: l.action_type,
+                    message: `${(l.action_type || '').toUpperCase()} em @${l.target_username || '---'}`,
+                    created_at: l.created_at,
+                    target: l.target_username,
+                    success: l.success
+                }));
 
                 return res.json({
                     success: true,
                     stats,
-                    recent_activity: logs
+                    recent_activity: recentActivity
                 });
             } catch (err) {
-                return res.status(401).json({ success: false });
+                console.error('[API Analytics Dashboard] ❌ Erro:', err.message);
+                return res.status(401).json({ success: false, message: err.message });
             }
         }
 

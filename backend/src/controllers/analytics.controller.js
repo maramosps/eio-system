@@ -356,11 +356,11 @@ exports.getDashboard = async (req, res, next) => {
 
         // Contar ações por tipo
         const follows = await Log.count({
-            where: { user_id: userId, action: 'followed', created_at: { [Op.gte]: startDate } }
+            where: { user_id: userId, action: 'follow', created_at: { [Op.gte]: startDate } }
         });
 
         const likes = await Log.count({
-            where: { user_id: userId, action: 'liked', created_at: { [Op.gte]: startDate } }
+            where: { user_id: userId, action: { [Op.in]: ['like', 'like_feed_2'] }, created_at: { [Op.gte]: startDate } }
         });
 
         const comments = await Log.count({
@@ -368,14 +368,14 @@ exports.getDashboard = async (req, res, next) => {
         });
 
         const unfollows = await Log.count({
-            where: { user_id: userId, action: 'unfollowed', created_at: { [Op.gte]: startDate } }
+            where: { user_id: userId, action: 'unfollow', created_at: { [Op.gte]: startDate } }
         });
 
         // Buscar atividade recente
         const recentActivity = await Log.findAll({
             where: {
                 user_id: userId,
-                action: { [Op.in]: ['followed', 'liked', 'unfollowed', 'comment'] }
+                action: { [Op.in]: ['follow', 'like', 'like_feed_2', 'unfollow', 'comment'] }
             },
             order: [['created_at', 'DESC']],
             limit: 20

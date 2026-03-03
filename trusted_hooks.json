@@ -1,0 +1,9 @@
+{
+  "C:\\Users\\user\\.gemini\\antigravity\\scratch\\eio-sistema-completo": [
+    "aios-session-init:node \".gemini/hooks/session-start.js\"",
+    "aios-context-inject:node \".gemini/hooks/before-agent.js\"",
+    "aios-security-check:node \".gemini/hooks/before-tool.js\"",
+    "aios-audit-log:node \".gemini/hooks/after-tool.js\"",
+    "aios-session-persist:node \".gemini/hooks/session-end.js\""
+  ]
+}

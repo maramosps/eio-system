@@ -1,0 +1,77 @@
+diff --git a/frontend/dashboard.html b/frontend/dashboard.html
+index b100c65..4861e23 100644
+--- a/frontend/dashboard.html
++++ b/frontend/dashboard.html
+@@ -247,6 +247,24 @@
+             </div>
+ 
+             <div class="eio-topbar-right">
++                <!-- ✅ STATUS DA EXTENSÃO (Visual Premium) -->
++                <div id="eio-connection-status" class="eio-connection-status"
++                    style="display: flex; align-items: center; gap: 10px; margin-right: 15px; padding: 8px 16px; background: rgba(255, 193, 7, 0.1); border-radius: 50px; border: 1px solid rgba(255, 193, 7, 0.2); transition: all 0.3s ease; cursor: pointer;">
++
++                    <div class="status-dot"
++                        style="width: 8px; height: 8px; background: #FFC107; border-radius: 50%; box-shadow: 0 0 8px #FFC107; animation: pulse-yellow 2s infinite;">
++                    </div>
++
++                    <div class="status-info" style="display: flex; flex-direction: column; line-height: 1.1;">
++                        <span class="status-text"
++                            style="color: #FFC107; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">AGUARDANDO
++                            EXTENSÃO</span>
++                        <a href="#" id="link-download-extension"
++                            style="font-size: 0.7rem; color: #aaa; text-decoration: none; margin-top: 2px;">Clique para
++                            baixar/ativar</a>
++                    </div>
++                </div>
++
+                 <div class="eio-notification-wrapper" style="position: relative;">
+                     <button class="eio-icon-btn" id="btnNotifications" title="Notificações">
+                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+@@ -553,8 +571,8 @@
+                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                             <div>
+                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Versão Atual</div>
+-                                <div style="font-size: 1.1rem; font-weight: 600; color: #6246ea;" id="extensionVersion">
+-                                    4.4.24 (E.I.O System)</div>
++                                <div style="font-size: 1.1rem; font-weight: 600; color: #4CAF50;" id="extensionVersion">
++                                    v4.6.5 (E.I.O System)</div>
+                             </div>
+                             <div>
+                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Tamanho</div>
+@@ -576,7 +594,7 @@
+                                 <polyline points="7 10 12 15 17 10"></polyline>
+                                 <line x1="12" y1="15" x2="12" y2="3"></line>
+                             </svg>
+-                            Baixar Extensão v4.4.24 (.zip)
++                            Baixar Extensão v4.6.5 (.zip)
+                         </button>
+ 
+                         <div
+@@ -3349,7 +3367,7 @@ Significa muito pra nós ter você aqui ❤️</textarea>
+     <script src="security.js"></script>
+     <script src="config.js"></script>
+     <script src="api.js?v=14"></script>
+-    <script src="dashboard.js?v=14"></script>
++    <!-- <script src="dashboard.js?v=14"></script> REMOVED FOR NAME SYNC -->
+     <script src="admin-integration.js"></script>
+     <script src="features-integration.js"></script>
+ 
+@@ -3419,8 +3437,15 @@ Significa muito pra nós ter você aqui ❤️</textarea>
+         })();
+     </script>
+ 
+-    <!-- E.I.O Global Connection v4.4.23 -->
+-    <script src="js/global-connection.js"></script>
++    <!-- CORE DASHBOARD LOGIC v4.6.2 -->
++    <!-- CORE SYSTEM CONFIG v4.6.5 -->
++    <script src="js/core-v464.js"></script>
++
++    <!-- CORE DASHBOARD LOGIC v4.6.2 -->
++    <script src="dashboard-v462.js?v=final"></script>
++
++    <!-- E.I.O Global Connection v4.5.1 -->
++    <script src="js/global-connection.js?v=9999"></script>
+ </body>
+ 
+ </html>
+\ No newline at end of file

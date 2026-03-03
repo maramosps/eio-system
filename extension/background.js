@@ -481,6 +481,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'stopAutomation':
             extensionState.isRunning = false;
             isFilaRodando = false;
+            self.isAutomationRunning = false;
             extensionState.nextRunTimestamp = null;
             if (processingTimeout) clearTimeout(processingTimeout);
             saveState();
@@ -547,8 +548,12 @@ let totalQueueSize = 0;
 let processedCount = 0;
 
 async function handleStartAutomation(sendResponse) {
+    if (self.isAutomationRunning) return;
+    self.isAutomationRunning = true;
+
     if (extensionState.isRunning || isFilaRodando) {
         console.log('[Motor] ⚠️ Tentativa de iniciar recusada: Já está rodando.');
+        self.isAutomationRunning = false;
         if (sendResponse) sendResponse({ success: false, message: 'Já está rodando' });
         return;
     }
@@ -557,6 +562,7 @@ async function handleStartAutomation(sendResponse) {
     const instagramTab = tabs.find(t => t.active) || tabs[0];
 
     if (!instagramTab) {
+        self.isAutomationRunning = false;
         if (sendResponse) sendResponse({ success: false, message: 'Abra o Instagram primeiro!' });
         return;
     }
@@ -606,6 +612,10 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
                 'comment': '💬 Comentou no post de', 'story_interact': '👁️ Viu Story de'
             };
             const label = actionNames[actionType] || `✅ Executou ${actionType} em`;
+            chrome.runtime.sendMessage({
+                type: 'console_log',
+                message: '✅ ' + actionType + ' executado em @' + username
+            }).catch(() => { });
             chrome.runtime.sendMessage({
                 type: 'consoleMessage',
                 level: 'success',
@@ -722,7 +732,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         }
     }
 
-    console.log(`[Motor] ═══════ COMBO RÁPIDO FINALIZADO PARA @${username} ═══════`);
+    // Combo concluído silenciosamente
 
     return {
         success: results.follow.success || results.like1.success, // Se curtiu ou seguiu, consideramos a roda motriz vitoriosa

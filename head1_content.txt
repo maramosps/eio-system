@@ -1,0 +1,26 @@
+commit ca737d4e2ef8b0f521b8071f84eeea46367ca705
+Author: MS Assessoria Digital <msasdigital@gmail.com>
+Date:   Sun Feb 8 21:02:33 2026 -0300
+
+    feat(v4.4.24): Direct Storage Injection - Nuclear fix for race condition flicker
+
+diff --git a/extension/content.js b/extension/content.js
+index 1945dbe..64dcf10 100644
+--- a/extension/content.js
++++ b/extension/content.js
+@@ -1269,13 +1269,13 @@ async function runExtractionFlow(payload) {
+ }
+ /**
+  * Executar ações no Instagram
+- * v4.4.23 - ZERO-RISK PROTOCOL - Regras obrigatórias para proteger a conta
++ * v4.4.24 - ZERO-RISK PROTOCOL - Regras obrigatórias para proteger a conta
+  */
+ async function executeInstagramAction(payload) {
+     const { type, target } = payload;
+ 
+     // ═══════════════════════════════════════════════════════════
+-    // v4.4.23 ZERO-RISK PROTOCOL - Pre-Flight Check
++    // v4.4.24 ZERO-RISK PROTOCOL - Pre-Flight Check
+     // Verifica metadados ANTES de qualquer interação
+     // Retorna SKIPPED (sucesso) em vez de erro para não poluir logs
+     // ═══════════════════════════════════════════════════════════

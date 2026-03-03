@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.I.O - Decole seu Insta</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="popup-v4.3-patch.css">
+    <link rel="stylesheet" href="flow-builder-styles.css">
+</head>
+
+<body>
+    <div class="eio-popup-container">
+        <!-- Header Premium -->
+        <header class="eio-popup-header">
+            <div class="eio-logo-compact">
+                <img src="public/assets/official_brand_rocket.png" alt="E.I.O" class="eio-logo-rocket" id="mainLogo">
+                <div class="eio-logo-text">
+                    <span class="eio-title">E.I.O SYSTEM</span>
+                    <span class="eio-subtitle">Decole seu Instagram</span>
+                </div>
+            </div>
+            <div class="eio-header-actions">
+                <div class="eio-current-time" id="currentDateTime">--</div>
+                <button class="eio-icon-btn" id="popoutBtn" title="Destacar Janela (Fixa na Tela)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+                <button class="eio-icon-btn" id="settingsBtn" title="Configura├º├Áes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Barra de Status Conectado -->
+        <div class="eio-connection-bar">
+            <div class="eio-status-dot"></div>
+            <span class="eio-connection-text">Current profile: <strong
+                    id="currentProfile">@msassessoriadigital</strong></span>
+            <div class="eio-quick-stats">
+                <span class="eio-mini-stat" title="A├º├Áes Hoje"><span id="actionsToday">0</span> a├º├Áes</span>
+            </div>
+        </div>
+
+        <!-- Navega├º├úo com 6 abas -->
+        <nav class="eio-tabs-nav">
+            <button class="eio-tab eio-tab-active" data-tab="contas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Contas</span>
+            </button>
+            <button class="eio-tab" data-tab="midias">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>M├¡dias</span>
+            </button>
+            <button class="eio-tab" data-tab="filtros">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filtros</span>
+            </button>
+            <button class="eio-tab" data-tab="mensagens">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                    </path>
+                </svg>
+                <span>DMs</span>
+            </button>
+            <button class="eio-tab" data-tab="config">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>Config</span>
+            </button>
+            <button class="eio-tab" data-tab="logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                <span>Logs</span>
+            </button>
+        </nav>
+
+        <!-- NOTA: O overlay de carregamento foi movido para loadingModal (├║nico modal unificado) -->
+
+        <main class="eio-main-scroll">
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA CONTAS - Tabela de perfis com sele├º├úo                   -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content eio-tab-content-active" id="contasTab">
+                <!-- A├º├Áes R├ípidas (selecion├íveis/combin├íveis) -->
+                <div class="eio-quick-actions-bar">
+                    <span class="eio-actions-label">A├º├Áes:</span>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleFollow" data-action="follow"
+                        title="Seguir">
+                        <span class="eio-quick-icon">Ô×ò</span>
+                        <span>Seguir</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleLike" data-action="like"
+                        title="Curtir 3 posts">
+                        <span class="eio-quick-icon">ÔØñ´©Å</span>
+                        <span>Curtir</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleComment" data-action="comment"
+                        title="Comentar (usar mensagens do dashboard)">
+                        <span class="eio-quick-icon">­ƒÆ¼</span>
+                        <span>Comentar</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleDM" data-action="dm"
+                        title="Enviar DM (usar mensagens do dashboard)">
+                        <span class="eio-quick-icon">Ô£ë´©Å</span>
+                        <span>DM</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle" id="toggleStory" data-action="story"
+                        title="Ver e curtir stories">
+                        <span class="eio-quick-icon">­ƒæü´©Å</span>
+                        <span>Story</span>
+                    </button>
+                    <button class="eio-quick-btn eio-action-toggle eio-action-danger" id="toggleUnfollow"
+                        data-action="unfollow" title="Deixar de seguir">
+                        <span class="eio-quick-icon">Ô×û</span>
+                        <span>Unfollow</span>
+                    </button>
+                </div>
+
+                <!-- Op├º├Áes da Fila -->
+                <div class="eio-queue-options">
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="optLikePosts" checked
+                                aria-label="Curtir posts automaticamente"> Curtir at├® <input type="number"
+                                id="optLikeCount" value="1" min="1" max="2" class="eio-mini-input"
+                                aria-label="Quantidade de posts para curtir"></label>
+                    </div>
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="optViewStory" checked
+                                aria-label="Ver stories automaticamente"> Ver stories</label>
+                    </div>
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="cbShowProfilePicInQueue" checked
+                                aria-label="Mostrar fotos de perfil na fila"> ­ƒô© Fotos</label>
+                    </div>
+                    <div class="eio-option-group">
+                        <label><input type="checkbox" id="configShowBadges" checked
+                                aria-label="Mostrar badges de status"> ­ƒÅÀ´©Å Badges</label>
+                    </div>
+                </div>
+
+                <!-- NOVA POSI├ç├âO: Bot├Áes de Ferramentas (Carregar, Selecionar, Exportar) -->
+                <div class="eio-action-buttons-bar"
+                    style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow: visible;">
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-primary eio-dropdown-trigger" id="btnLoadAccounts"
+                            style="min-width: 160px; justify-content: space-between;">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Carregar contas
+                            </span>
+                            <span>Ôû¥</span>
+                        </button>
+                        <!-- FIX: Menu abrindo para BAIXO (top: 100%) -->
+                        <div class="eio-dropdown-menu" id="loadAccountsMenu"
+                            style="top: 100%; bottom: auto; margin-top: 5px; max-height: 400px; overflow-y: auto;">
+                            <div class="eio-dropdown-section-title">Do perfil alvo: <span id="targetProfileName"
+                                    class="profile-ref">...</span></div>
+
+                            <button data-action="load-followers">­ƒæÑ Carregar Seguidores</button>
+                            <button data-action="load-following">Ô×í´©Å Carregar Seguindo / Unfollow</button>
+
+                            <div class="eio-dropdown-divider"></div>
+                            <div class="eio-dropdown-section-title">Do post atual:</div>
+
+                            <button data-action="load-likers">ÔØñ´©Å Carregar Curtidores</button>
+                            <button data-action="load-commenters">­ƒÆ¼ Carregar Comentadores</button>
+
+                            <div class="eio-dropdown-divider"></div>
+
+                            <button data-action="load-saved-queue">­ƒÆ¥ Carregar ├Ültima Fila Salva</button>
+                            <button data-action="load-whitelist">­ƒøí´©Å Carregar Whitelist (Protegidos)</button>
+                        </div>
+                    </div>
+
+                    <div class="eio-dropdown">
+                        <button class="eio-btn eio-btn-secondary eio-dropdown-trigger" id="btnSelect"
+                            style="justify-content: space-between;">
+                            Selecionar <span>Ôû¥</span>
+                        </button>
+                        <!-- FIX: Menu abrindo para BAIXO -->
+                        <div class="eio-dropdown-menu" id="selectMenu"
+                            style="top: 100%; bottom: auto; margin-top: 5px;">
+                            <button data-action="select-all">Ô£ô Selecionar Todos</button>
+                            <button data-action="invert-selection">­ƒöä Inverter Sele├º├úo</button>
+                            <button data-action="remove-selected">­ƒùæ´©Å Remover Selecionados</button>
+                        </div>
+                    </div>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnSaveQueue" title="Salvar Fila Atual">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Salvar
+                    </button>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnExportCSV" title="Exportar para Excel/CSV">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        CSV
+                    </button>
+                </div>
+
+                <!-- Barra de Automa├º├úo (Play/Pause) -->
+                <div class="eio-automation-bar">
+                    <div class="eio-automation-status-mini">
+                        <span class="eio-status-dot-mini" id="automationStatusDot"></span>
+                        <span id="automationStatusText">Parado</span>
+                        <span class="eio-automation-counter" id="automationCounter">0/0</span>
+                    </div>
+                    <div class="eio-automation-controls">
+                        <button class="eio-ctrl-btn eio-ctrl-start" id="btnStartAuto" title="Iniciar">ÔûÂ</button>
+                        <button class="eio-ctrl-btn eio-ctrl-pause" id="btnPauseAuto" title="Pausar">ÔÅ©</button>
+                        <button class="eio-ctrl-btn eio-ctrl-stop" id="btnStopAuto" title="Parar">ÔÅ╣</button>
+                    </div>
+                </div>
+
+                <!-- Status da Fila de A├º├Áes -->
+                <div class="eio-queue-status-bar" id="queueStatusBar">
+                    <div class="eio-queue-status-info">
+                        <span class="eio-queue-label">­ƒôï Fila:</span>
+                        <span class="eio-queue-action" id="queueActionType">Nenhuma a├º├úo</span>
+                        <span class="eio-queue-count" id="queueCount">0 contas</span>
+                    </div>
+                    <div class="eio-queue-limits">
+                        <span title="Limite de seguidores por dia">Ô×ò Follow: <strong
+                                id="dailyLimit">200/dia</strong></span>
+                        <span title="Limite de deixar de seguir por dia">Ô×û Unfollow: <strong
+                                id="dailyUnfollowLimit">500/dia</strong></span>
+                        <span title="Intervalo de seguran├ºa entre a├º├Áes">ÔÅ▒´©Å Delay: <strong
+                                id="actionDelay">80-90s</strong></span>
+                    </div>
+                </div>
+
+                <!-- Barra de Ferramentas -->
+                <div class="eio-queue-toolbar">
+                    <div class="eio-queue-info">
+                        <span id="queuePagination">­ƒôè 1 - 10 / 50 (50)</span>
+                        <span>Page: <input type="number" id="pageNumber" value="1" min="1" class="eio-page-input"
+                                aria-label="N├║mero da p├ígina"></span>
+                        <select id="pageSize" class="eio-select-mini" aria-label="Itens por p├ígina">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                    <div class="eio-queue-actions">
+                        <span id="selectedCount">0 selected</span>
+                    </div>
+                </div>
+
+                <!-- Grid de Contas (3 colunas) -->
+                <div class="eio-accounts-grid-container">
+                    <div class="eio-accounts-grid" id="accountsGrid">
+                        <!-- Dados ser├úo inseridos via JS como cards -->
+                    </div>
+                    <!-- Mantemos a tabela oculta para compatibilidade -->
+                    <table class="eio-accounts-table" id="accountsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllAccounts"
+                                        aria-label="Selecionar todas as contas"></th>
+                                <th>Pic</th>
+                                <th>@Username</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                        </tbody>
+                    </table>
+                    <div class="eio-table-empty" id="tableEmptyState">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="17" y1="11" x2="23" y2="11"></line>
+                        </svg>
+                        <p>Nenhuma conta carregada</p>
+                        <small>Use "Carregar contas" para come├ºar</small>
+                    </div>
+                </div>
+
+                <!-- Bot├Áes de A├º├úo (Fixos na base) -->
+
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA M├ìDIAS - Carregar de posts/reels                        -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="midiasTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">­ƒôÀ Fila de M├¡dias</h3>
+                    </div>
+                    <p class="eio-description">Adicione URLs de posts, reels ou stories para extrair intera├º├Áes.</p>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label" for="mediaUrl">URL do Post/Reel</label>
+                        <input type="text" class="eio-input" id="mediaUrl"
+                            placeholder="https://www.instagram.com/p/XXXX ou /reel/XXXX" aria-label="URL da m├¡dia">
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Tipo de Extra├º├úo</label>
+                        <select class="eio-select" id="mediaExtractType" aria-label="Tipo de extra├º├úo">
+                            <option value="likers">Curtidores</option>
+                            <option value="commenters">Comentadores</option>
+                            <option value="tagged">Usu├írios Marcados</option>
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+
+                    <button class="eio-btn eio-btn-primary" style="width: 100%;" id="btnAddMedia">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Adicionar ├á Fila de M├¡dias
+                    </button>
+
+                    <div class="eio-media-queue" id="mediaQueueList">
+                        <div class="eio-empty-state">
+                            <p>Nenhuma m├¡dia na fila</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA A├ç├òES - Flow Builder e automa├º├Áes                       -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="acoesTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">ÔÜí A├º├Áes R├ípidas</h3>
+                    </div>
+
+                    <div class="eio-quick-actions-grid">
+                        <button class="eio-action-card" id="actionFollow">
+                            <div class="eio-action-icon">Ô×ò</div>
+                            <span>Seguir</span>
+                        </button>
+                        <button class="eio-action-card" id="actionLike">
+                            <div class="eio-action-icon">ÔØñ´©Å</div>
+                            <span>Curtir</span>
+                        </button>
+                        <button class="eio-action-card" id="actionComment">
+                            <div class="eio-action-icon">­ƒÆ¼</div>
+                            <span>Comentar</span>
+                        </button>
+                        <button class="eio-action-card" id="actionDM">
+                            <div class="eio-action-icon">Ô£ë´©Å</div>
+                            <span>Enviar DM</span>
+                        </button>
+                        <button class="eio-action-card" id="actionUnfollow">
+                            <div class="eio-action-icon">Ô×û</div>
+                            <span>Unfollow</span>
+                        </button>
+                        <button class="eio-action-card" id="actionStory">
+                            <div class="eio-action-icon">­ƒæü´©Å</div>
+                            <span>Ver Story</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">­ƒñû Automa├º├úo em Execu├º├úo</h3>
+                    </div>
+
+                    <div class="eio-automation-status" id="automationStatus">
+                        <div class="eio-status-indicator eio-status-idle">
+                            <div class="eio-status-pulse"></div>
+                            <span>Parado</span>
+                        </div>
+                        <div class="eio-automation-progress">
+                            <div class="eio-progress-info">
+                                <span>Progresso: <strong id="automationProgress">0/0</strong></span>
+                                <span id="automationETA">--</span>
+                            </div>
+                            <div class="eio-progress-bar-bg">
+                                <div class="eio-progress-bar-fill" id="automationProgressBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button class="eio-btn eio-btn-primary" style="flex: 1;" id="btnStartAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Iniciar
+                        </button>
+                        <button class="eio-btn eio-btn-warning" style="flex: 1;" id="btnPauseAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                            Pausar
+                        </button>
+                        <button class="eio-btn eio-btn-danger" style="flex: 1;" id="btnStopAutomation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                            </svg>
+                            Parar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA FILTROS - Seguran├ºa Autom├ítica Ativada (v4.4.24)         -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="filtrosTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">­ƒøí´©Å Seguran├ºa Autom├ítica</h3>
+                    </div>
+
+                    <!-- Banner de Seguran├ºa Ativada -->
+                    <div
+                        style="background: linear-gradient(135deg, rgba(0, 200, 83, 0.2), rgba(0, 149, 246, 0.2)); padding: 20px; border-radius: 12px; border: 1px solid rgba(0, 200, 83, 0.4); margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <span style="font-size: 32px;">Ô£à</span>
+                            <div>
+                                <h4 style="margin: 0; color: #00C853; font-size: 18px;">PROTE├ç├âO ATIVA</h4>
+                                <p style="margin: 5px 0 0 0; color: #a0a0a0; font-size: 13px;">v4.4.24 - Filtros de
+                                    seguran├ºa autom├íticos</p>
+                            </div>
+                        </div>
+                        <p style="color: #e0e0e0; font-size: 14px; line-height: 1.6; margin: 0;">
+                            Para proteger sua conta contra bloqueios do Instagram, os filtros de seguran├ºa agora s├úo
+                            <strong>obrigat├│rios e autom├íticos</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Lista de Regras Autom├íticas -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                        <h4 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 14px;">­ƒöÆ Regras Autom├íticas
+                            Aplicadas:</h4>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 82, 82, 0.1); border-radius: 8px; border-left: 3px solid #FF5252;">
+                                <span style="font-size: 18px;">­ƒöÆ</span>
+                                <div>
+                                    <strong style="color: #FF5252;">Contas Privadas</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Risco de Action Block</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 8px; border-left: 3px solid #FFC107;">
+                                <span style="font-size: 18px;">Ô£ô</span>
+                                <div>
+                                    <strong style="color: #FFC107;">Contas Verificadas</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Alto risco de den├║ncia</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(156, 39, 176, 0.1); border-radius: 8px; border-left: 3px solid #9C27B0;">
+                                <span style="font-size: 18px;">­ƒôÀ</span>
+                                <div>
+                                    <strong style="color: #9C27B0;">Sem Foto de Perfil</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">Puladas
+                                        automaticamente - Poss├¡vel conta fake/bot</p>
+                                </div>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0, 149, 246, 0.1); border-radius: 8px; border-left: 3px solid #0095F6;">
+                                <span style="font-size: 18px;">ÔÅ▒´©Å</span>
+                                <div>
+                                    <strong style="color: #0095F6;">Delays Inteligentes</strong>
+                                    <p style="margin: 3px 0 0 0; color: #a0a0a0; font-size: 12px;">80s entre a├º├Áes ÔÇó 90s
+                                        entre perfis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estat├¡sticas de Prote├º├úo -->
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: rgba(0, 200, 83, 0.08); border-radius: 10px; text-align: center;">
+                        <p style="color: #00C853; font-size: 13px; margin: 0;">
+                            ­ƒøí´©Å Estas regras protegem sua conta 24/7 e <strong>n├úo podem ser desativadas</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA MENSAGENS - Configura├º├úo de DMs                         -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="mensagensTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">­ƒÆ¼ Configurar Mensagens (DM)</h3>
+                    </div>
+                    <p class="eio-description">Configure o modelo de mensagem que ser├í enviado automaticamente.</p>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Template da Mensagem</label>
+                        <div class="eio-variable-tags">
+                            <span class="eio-tag" title="Nome completo do usu├írio">@{{nome}}</span>
+                            <span class="eio-tag" title="Nome de usu├írio (@user)">@{{username}}</span>
+                            <span class="eio-tag" title="Sauda├º├úo (Bom dia/tarde/noite)">@{{saudacao}}</span>
+                        </div>
+                        <textarea class="eio-textarea" id="dmMessageTemplate" rows="6"
+                            placeholder="Ol├í {{nome}}, tudo bem? Vi seu perfil e..."></textarea>
+                    </div>
+
+                    <div class="eio-form-group">
+                        <label class="eio-label">Respostas R├ípidas (Exemplos)</label>
+                        <select class="eio-select" id="dmQuickReplies" aria-label="Carregar resposta r├ípida">
+                            <option value="">-- Selecione um modelo --</option>
+                            <option value="Ol├í {{nome}}, adorei seu conte├║do!">Elogio Simples</option>
+                            <option
+                                value="Oi {{nome}}, vi que voc├¬ tem interesse em marketing. Posso te enviar uma dica?">
+                                Abordagem de Venda</option>
+                            <option value="Obrigado por seguir, {{nome}}! Fique ├á vontade para chamar.">Boas-vindas
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="eio-checkbox-group">
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipPrivate" checked> Pular contas privadas
+                        </label>
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipBusiness"> Pular contas comerciais
+                        </label>
+                        <label class="eio-checkbox-label">
+                            <input type="checkbox" id="dmSkipIfChatExists" checked> N├úo enviar se j├í tivermos conversa
+                        </label>
+                    </div>
+
+                    <button class="eio-btn eio-btn-primary" id="btnSaveDMConfig" style="width: 100%; margin-top: 15px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Salvar Configura├º├úo
+                    </button>
+
+                    <button class="eio-btn eio-btn-ghost" id="btnTestDM" style="width: 100%; margin-top: 8px;">
+                        Ô£ë´©Å Enviar Teste (para mim mesmo)
+                    </button>
+                </div>
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA CONFIG - Configura├º├Áes avan├ºadas                        -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="configTab">
+                <div class="eio-config-sections">
+                    <!-- Op├º├Áes de Desempenho -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="perfomance">
+                            <span>Ôû╝ Op├º├Áes de Desempenho</span>
+                        </button>
+                        <div class="eio-config-content" id="perfomance">
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowBadges" checked> Mostrar selos na fila (FOLLOWED,
+                                REQUESTED, etc)
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowLikes" checked> Mostrar curtidas na fila
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configShowProfilePics" checked> Mostrar fotos de perfil na
+                                fila
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDismissNotifications" checked> Fechar popups
+                                autom├íticos do Instagram
+                            </label>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configLoadLastQueue" checked> Carregar a ├║ltima fila na
+                                inicializa├º├úo
+                            </label>
+                            <div class="eio-config-row"
+                                style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                                <label title="Tempo m├íximo para busca de perfis na lista aberta">ÔÅ▒´©Å Tempo
+                                    Extra├º├úo:</label>
+                                <input type="number" class="eio-input-mini" id="extractionTimeout" value="30" min="5"
+                                    max="300" aria-label="Tempo limite de extra├º├úo">
+                                <span>s (Alvo: 30s)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configurar Tempos de Espera -->
+                    <div class="eio-config-section">
+                        <button class="eio-config-header" data-collapse="delays">
+                            <span>ÔûÂ Configurar Tempos de Espera</span>
+                        </button>
+                        <div class="eio-config-content collapsed" id="delays">
+                            <!-- INTERVALOS FIXOS DE SEGURAN├çA -->
+                            <div class="eio-config-row">
+                                <div
+                                    style="background: linear-gradient(135deg, rgba(0, 149, 246, 0.2), rgba(88, 101, 242, 0.2)); padding: 15px; border-radius: 8px; border: 1px solid rgba(0, 149, 246, 0.3);">
+                                    <p style="margin: 0 0 10px 0; color: #00bcd4; font-weight: 600;">­ƒöÆ Intervalos de
+                                        Seguran├ºa (Fixos)</p>
+                                    <p style="margin: 0; color: #a0a0a0; font-size: 12px; line-height: 1.5;">
+                                        Para proteger sua conta contra bloqueios do Instagram, os intervalos s├úo fixos e
+                                        n├úo podem ser alterados:
+                                    </p>
+                                    <ul
+                                        style="margin: 10px 0 0 0; padding-left: 20px; color: #e0e0e0; font-size: 12px; line-height: 1.8;">
+                                        <li><strong>80 segundos</strong> entre a├º├Áes no mesmo perfil (seguir ÔåÆ curtir ÔåÆ
+                                            stories)</li>
+                                        <li><strong>90 segundos</strong> entre perfis diferentes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delaySoftLimit" value="10"
+                                    aria-label="Tempo de espera Soft Limit">
+                                <span>minutos ap├│s limite suave de taxa</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delayHardLimit" value="1"
+                                    aria-label="Tempo de espera Hard Limit">
+                                <span>horas ap├│s limite r├¡gido</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Aguardar</label>
+                                <input type="number" class="eio-input-mini" id="delay429" value="10"
+                                    aria-label="Tempo de espera erro 429">
+                                <span>minutos ap├│s erro 429</span>
+                            </div>
+                            <div class="eio-config-row">
+                                <label>Retry</label>
+                                <input type="number" class="eio-input-mini" id="retry404" value="10"
+                                    aria-label="Tentativas ap├│s erro 404">
+                                <span>times after 404 error</span>
+                            </div>
+                            <label class="eio-checkbox-label">
+                                <input type="checkbox" id="configDailyLimit" aria-label="Ativar limite di├írio"> Aguardar
+                                <input type="number" class="eio-input-mini" id="dailyLimitHours" value="24"
+                                    aria-label="Horas de espera di├íria">
+                                horas ap├│s realizar
+                                <input type="number" class="eio-input-mini" id="dailyLimitActions" value="50"
+                                    aria-label="N├║mero de a├º├Áes di├írias">
+                                segue/deixa de seguir
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <!-- ABA LOGS - Console de registros                             -->
+            <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+            <div class="eio-tab-content" id="logsTab">
+                <div class="eio-section">
+                    <div class="eio-section-header">
+                        <h3 class="eio-section-title">­ƒôï Registro</h3>
+                        <div class="eio-header-actions-inline">
+                            <button class="eio-btn eio-btn-ghost eio-btn-mini" id="trimLogBtn">Trim Log</button>
+                            <button class="eio-btn eio-btn-ghost eio-btn-mini" id="clearLogBtn">Limpar</button>
+                        </div>
+                    </div>
+                    <div class="eio-console-box" id="consoleLog">
+                        <!-- Logs injetados aqui -->
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    </main>
+
+    <footer class="eio-popup-footer">
+        <div class="eio-footer-actions">
+            <a href="https://wa.me/5521975312662" target="_blank" class="eio-footer-link" title="Suporte via WhatsApp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Suporte
+            </a>
+            <a href="https://eio-system.vercel.app/analytics.html" target="_blank" class="eio-footer-link"
+                title="Ver An├ílises no Dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                </svg>
+                An├ílises
+            </a>
+            <a href="https://eio-system.vercel.app/guia" target="_blank" class="eio-footer-link" id="userGuideLink"
+                title="Ver Guia Completo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                Aprender a Usar
+            </a>
+        </div>
+    </footer>
+    </div>
+
+    <!-- Modal de Termos & Login -->
+    <div id="termsModal" class="eio-terms-modal">
+        <div class="eio-terms-content" id="termsStep1">
+            <span class="eio-terms-title">­ƒøí´©Å Filtro de Seguran├ºa</span>
+            <div class="eio-terms-text">
+                O <b>E.I.O</b> utiliza navega├º├úo humana simulada altamente segura. Ao continuar, voc├¬ concorda em
+                respeitar os limites de a├º├Áes para preservar a sa├║de da sua conta.
+                <br><br>
+                <a href="https://eio-system.vercel.app/termos" target="_blank"
+                    style="color: var(--eio-blue-400); text-decoration: underline;">Ler Termo de Responsabilidade
+                    Completo</a>
+            </div>
+            <button class="eio-btn eio-btn-primary" style="width: 100%; margin-top: 15px;" id="btnGoToLogin">Concordo e
+                Desejo Come├ºar</button>
+        </div>
+
+        <div class="eio-terms-content" id="termsStep2" style="display: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">­ƒÜÇ</div>
+                <span class="eio-terms-title" style="margin-bottom: 5px;">Identifica├º├úo de Acesso</span>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Digite o @ do seu Instagram cadastrado</p>
+            </div>
+
+            <div class="eio-form-group">
+                <label class="eio-label" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">@ DO
+                    INSTAGRAM</label>
+                <div style="position: relative;">
+                    <span
+                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6246ea; font-weight: 600;">@</span>
+                    <input type="text" id="loginInstagramHandle" class="eio-input" placeholder="seu_perfil"
+                        style="width: 100%; padding-left: 30px;" aria-label="Nome de usu├írio do Instagram">
+                </div>
+            </div>
+
+            <button class="eio-btn eio-btn-primary" style="width: 100%; margin-top: 20px;" id="btnSubmitExtensionLogin">
+                Entrar no Sistema
+            </button>
+
+            <div
+                style="margin-top: 20px; padding: 10px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.2); border-radius: 8px;">
+                <p style="font-size: 0.75rem; color: #FFC107; margin: 0; line-height: 1.4;">
+                    ÔÜá´©Å Acesso restrito a usu├írios cadastrados no dashboard.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+    <!-- MODAL DE LOADING PROFISSIONAL - UX COMPLETA                 -->
+    <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+    <div id="loadingModal" class="eio-loading-modal" style="display: none;">
+        <div class="eio-loading-modal-backdrop"></div>
+        <div class="eio-loading-modal-content">
+            <!-- ├ìcone animado -->
+            <div class="eio-loading-icon-wrapper">
+                <div class="eio-loading-rocket">­ƒÜÇ</div>
+                <div class="eio-loading-spinner-ring"></div>
+            </div>
+
+            <!-- T├¡tulo din├ómico -->
+            <h2 class="eio-loading-title" id="loadingTitle">­ƒÜÇ Preparando sua listaÔÇª</h2>
+
+            <!-- Mensagem contextual -->
+            <p class="eio-loading-message" id="loadingMessage">
+                Estamos buscando e organizando os perfis selecionados.<br>
+                Isso pode levar at├® <strong id="loadingTimeEstimate">30</strong> segundos.<br>
+                Voc├¬ n├úo precisa sair desta tela.
+            </p>
+
+            <!-- Progress Bar -->
+            <div class="eio-loading-progress-container">
+                <div class="eio-loading-progress-bar">
+                    <div class="eio-loading-progress-fill" id="loadingProgressFill" style="width: 0%;"></div>
+                </div>
+                <div class="eio-loading-progress-info">
+                    <span id="loadingProgressText">Perfis carregados: <strong id="loadingCount">0</strong> / <strong
+                            id="loadingTotal">--</strong></span>
+                    <span id="loadingPercentage">0%</span>
+                </div>
+            </div>
+
+            <!-- Status din├ómico -->
+            <div class="eio-loading-status" id="loadingStatus">
+                <span class="eio-loading-status-dot"></span>
+                <span id="loadingStatusText">Iniciando extra├º├úo...</span>
+            </div>
+
+            <!-- Mensagem de seguran├ºa -->
+            <div class="eio-loading-security">
+                ­ƒöÉ Este processo acontece em segundo plano e respeita os limites de seguran├ºa do Instagram.
+            </div>
+
+            <!-- Timeout Action (hidden by default) -->
+            <div class="eio-loading-timeout" id="loadingTimeout" style="display: none;">
+                <div class="eio-loading-timeout-message">
+                    ÔÜá´©Å O carregamento est├í demorando mais que o esperado.<br>
+                    A lista continuar├í sendo preparada em segundo plano.
+                </div>
+                <button class="eio-btn eio-btn-primary" id="btnRefreshList">
+                    ­ƒöä Atualizar lista
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST DE SUCESSO -->
+    <div id="successToast" class="eio-success-toast" style="display: none;">
+        <div class="eio-toast-icon">Ô£à</div>
+        <div class="eio-toast-content">
+            <strong>Lista carregada com sucesso!</strong>
+            <span id="successToastCount">0 perfis prontos para processamento.</span>
+        </div>
+        <button class="eio-toast-close" id="closeSuccessToast">├ù</button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="backend-integration.js"></script>
+    <script src="license-manager.js"></script>
+    <script src="settings-handler.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 {
     "name": "eio-system",
-    "version": "1.0.0",
+    "version": "4.7.4",
     "private": true,
     "engines": {
         "node": ">=18.0.0"
