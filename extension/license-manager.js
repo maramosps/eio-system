@@ -412,6 +412,7 @@ class LicenseManager {
         if (typeof chrome !== 'undefined' && chrome.storage) {
             // Save in all keys expected by other modules for maximum compatibility
             await chrome.storage.local.set({
+                eio_token: data.token,
                 licenseData: data,
                 eioLicenseData: data,
                 eioUserData: { token: data.token, user: data.userId ? { id: data.userId } : null },

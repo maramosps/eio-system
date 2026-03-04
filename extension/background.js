@@ -92,7 +92,8 @@ async function getUserId() {
 
 async function getAuthToken() {
     return new Promise((resolve) => {
-        chrome.storage.local.get(['eio_auth_token', 'authToken', 'token', 'eioLicenseData'], (result) => {
+        chrome.storage.local.get(['eio_token', 'eio_auth_token', 'authToken', 'token', 'eioLicenseData'], (result) => {
+            if (result.eio_token) return resolve(result.eio_token);
             if (result.eio_auth_token) return resolve(result.eio_auth_token);
             if (result.authToken) return resolve(result.authToken);
             if (result.token) return resolve(result.token);

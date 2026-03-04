@@ -836,6 +836,7 @@ function renderAccountsTable() {
                 avatarHtml = `<img data-src="${acc.avatar}" 
                                    class="card-avatar igBotQueueAcctProfilePicture profile-avatar lazy-image" 
                                    alt="${cleanUsername}" 
+                                   crossorigin="anonymous"
                                    referrerpolicy="no-referrer" 
                                    style="display: block;"
                                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
@@ -1939,6 +1940,14 @@ function handleContextualAction(actionId) {
 // LOGS
 // ═══════════════════════════════════════════════════════════
 function addLog(level, message, providedTimestamp = null) {
+    // Deduplication guard: skip if same message arrived within 1 second
+    if (AppState.logs.length > 0) {
+        const last = AppState.logs[0];
+        if (last.message === message && last._ts && (Date.now() - last._ts) < 1000) {
+            return; // duplicate echo — skip
+        }
+    }
+
     let timestamp;
     if (providedTimestamp) {
         // Formata o ISO String the background para o padrão do BR local
@@ -1955,7 +1964,7 @@ function addLog(level, message, providedTimestamp = null) {
         });
     }
 
-    AppState.logs.unshift({ level, message, timestamp });
+    AppState.logs.unshift({ level, message, timestamp, _ts: Date.now() });
 
     if (AppState.logs.length > 500) {
         AppState.logs = AppState.logs.slice(0, 500);
