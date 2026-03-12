@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="design-system.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -367,7 +366,9 @@
     <script src="security.js"></script>
     <script src="config.js"></script>
     <script>
-        // Verificação de sessão manual - Removido auto-redirecionamento para evitar erros de login automático indesejado
+        // ═══════════════════════════════════════════════════════════
+        // E.I.O LOGIN - Via API REST (bcrypt no servidor)
+        // ═══════════════════════════════════════════════════════════
         console.log('🔑 Sistema de login pronto');
 
         const form = document.getElementById('loginForm');
@@ -396,74 +397,38 @@
                 return;
             }
 
-            // Estado de loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span>Entrando...';
 
             try {
-                // Usar configuração centralizada (carregada de config.js)
-                const supabaseUrl = window.EIO_CONFIG?.SUPABASE_URL;
-                const supabaseKey = window.EIO_CONFIG?.SUPABASE_ANON_KEY;
+                const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
 
-                // Fallback de segurança se Supabase não carregar
-                if (!window.supabase) {
-                    // Tenta fetch na API como último recurso se biblioteca falhar
-                    const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
-                    // ... fetch logic ... omitir para simplificar e focar no bypass
-                    throw new Error("Falha ao carregar bibliotecas de sistema.");
-                }
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-                const sbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                const data = await response.json();
 
-                console.log('🔄 Verificando usuário...');
+                if (data.success && data.token) {
+                    const user = data.user;
+                    const token = data.token;
 
-                // 1. Busca usuário na tabela users
-                const { data: user, error } = await sbClient
-                    .from('users')
-                    .select('*')
-                    .eq('email', email)
-                    .single();
+                    localStorage.setItem('accessToken', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    localStorage.setItem('eio_token', token);
+                    localStorage.setItem('eio_user', JSON.stringify(user));
 
-                // Se houver erro de conexão com Supabase aqui, caimos no catch.
-                // Mas o Supabase Direto é MUITO mais estável que a API Vercel Serverless (cold starts, env vars).
-
-                if (error || !user) {
-                    throw new Error("Usuário não encontrado.");
-                }
-
-                // 2. Bypass para Admin
-                if (email === 'maramosps@gmail.com') {
-                    console.log('⚠️ Acesso de recuperação ativado.');
-
-                    const sessionData = {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role || 'user'
-                    };
-
-                    // Token temporário. O Dashboard pode reclamar se validar assinatura, 
-                    // mas permitirá acesso visual.
-                    const recoveryToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MmMyN2QxYy1lMTYwLTRhM2EtYTU3Ny0wMzJiNmJlZmNlMDUiLCJlbWFpbCI6Im1hcmFtb3Nwc0BdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTYxNjIzOTAyMiwiZXhwIjoxOTE2MjM5MDIyfQ.SIG_PLACEHOLDER';
-
-                    localStorage.setItem('accessToken', recoveryToken);
-                    localStorage.setItem('user', JSON.stringify(sessionData));
-                    localStorage.setItem('eio_token', recoveryToken);
-                    localStorage.setItem('eio_user', JSON.stringify(sessionData));
-
-                    showAlert('Acesso concedido. Redirecionando...', 'success');
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                    showAlert('Login realizado! Redirecionando...', 'success');
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
                 } else {
-                    throw new Error("Acesso via recuperação restrito ao administrador.");
-                    // Para outros usuários, precisaríamos da senha.
+                    throw new Error(data.message || 'Credenciais inválidas');
                 }
 
             } catch (error) {
                 console.error('Erro Login:', error);
-                let text = 'Erro de conexão/Sistema instável.';
-                if (error.message.includes('Usuário não encontrado')) text = 'Email ou senha incorretos.';
-                if (error.message.includes('recuperação restrito')) text = error.message;
-
+                const text = error.message || 'Erro de conexão com o servidor.';
                 showAlert(text, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Entrar';
