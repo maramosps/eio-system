@@ -180,6 +180,33 @@
             letter-spacing: 0.05em;
             margin-top: 8px;
         }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper .form-input {
+            padding-right: 50px;
+        }
+
+        .btn-toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            transition: color 0.2s ease;
+            line-height: 1;
+        }
+
+        .btn-toggle-password:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
     </style>
 </head>
 
@@ -226,14 +253,20 @@
 
                 <div class="form-group">
                     <label class="form-label">Senha</label>
-                    <input type="password" class="form-input" id="password" name="password"
-                        placeholder="Mínimo 6 caracteres" required minlength="6">
+                    <div class="password-wrapper">
+                        <input type="password" class="form-input" id="password" name="password"
+                            placeholder="Mínimo 6 caracteres" required minlength="6">
+                        <button type="button" class="btn-toggle-password" data-target="password" aria-label="Mostrar senha">👁️</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Confirmar Senha</label>
-                    <input type="password" class="form-input" id="confirmPassword" name="confirmPassword"
-                        placeholder="Digite a senha novamente" required>
+                    <div class="password-wrapper">
+                        <input type="password" class="form-input" id="confirmPassword" name="confirmPassword"
+                            placeholder="Digite a senha novamente" required>
+                        <button type="button" class="btn-toggle-password" data-target="confirmPassword" aria-label="Mostrar senha">👁️</button>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary" id="submitBtn">
@@ -322,6 +355,18 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Criar Conta Grátis';
             }
+        });
+
+        // Toggle password visibility
+        document.querySelectorAll('.btn-toggle-password').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById(btn.dataset.target);
+                if (input) {
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    btn.textContent = isPassword ? '🙈' : '👁️';
+                }
+            });
         });
     </script>
 </body>

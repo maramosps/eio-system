@@ -1142,6 +1142,59 @@ module.exports = async (req, res) => {
             }
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // EMERGENCY ADMIN PASSWORD RESET (TEMPORARY - REMOVE AFTER USE)
+        // GET /api/v1/auth/emergency-reset
+        // Resets admin password to: Admin123!
+        // ═══════════════════════════════════════════════════════════
+        if ((path === '/api/v1/auth/emergency-reset' || pathFromQuery === 'v1/auth/emergency-reset') && method === 'GET') {
+            if (!supabase) {
+                return res.status(500).json({ success: false, message: 'Banco de dados não configurado' });
+            }
+
+            try {
+                const adminEmail = 'maramosps@gmail.com';
+                const newPassword = 'Admin123!';
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+                const { data, error } = await supabase
+                    .from('users')
+                    .update({ password_hash: hashedPassword })
+                    .eq('email', adminEmail)
+                    .select('id, email')
+                    .single();
+
+                if (error) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Erro ao resetar senha',
+                        error: error.message
+                    });
+                }
+
+                if (!data) {
+                    return res.status(404).json({
+                        success: false,
+                        message: `Usuário ${adminEmail} não encontrado na tabela users`
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: `Senha do admin resetada para: ${newPassword}`,
+                    user: { id: data.id, email: data.email },
+                    warning: '⚠️ REMOVA ESTA ROTA APÓS O USO! Ela é um risco de segurança.'
+                });
+
+            } catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Erro interno ao resetar senha',
+                    error: err.message
+                });
+            }
+        }
+
         // Not found
         return res.status(404).json({ message: 'Rota não encontrada', path: path, pathFromQuery: pathFromQuery });
 
