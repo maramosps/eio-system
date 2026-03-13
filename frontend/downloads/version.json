@@ -1,6 +1,10 @@
 {
-  "version": "4.7.4",
-  "filename": "eio-extension-v4.7.4.zip",
-  "releaseDate": "2026-02-21T20:50:25.377Z",
-  "changelog": "Release v4.7.4 (patch bump from v4.7.3)"
+    "version": "4.7.5",
+    "filename": "eio-extension-v4.7.5.zip",
+    "date": "2026-03-12",
+    "changelog": [
+        "Fix: Delays do combo agora respeitam 90-160s entre ações",
+        "Fix: Logs não duplicam mais no painel",
+        "Fix: Eliminada mensagem duplicada do executeSingleAction"
+    ]
 }

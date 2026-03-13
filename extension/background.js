@@ -1,4 +1,4 @@
-﻿/*
+/*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
   Motor de automação — VERSÃO 4.6.5
@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.4 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.5 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -613,16 +613,8 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
                 'comment': '💬 Comentou no post de', 'story_interact': '👁️ Viu Story de'
             };
             const label = actionNames[actionType] || `✅ Executou ${actionType} em`;
-            chrome.runtime.sendMessage({
-                type: 'console_log',
-                message: '✅ ' + actionType + ' executado em @' + username
-            }).catch(() => { });
-            chrome.runtime.sendMessage({
-                type: 'consoleMessage',
-                level: 'success',
-                message: `${label} @${username}`,
-                timestamp: exactTimestamp
-            }).catch(() => { });
+            // Single message only — prevents duplicate log echo
+            logAction('success', `${label} @${username}`);
         }
 
         return {
@@ -651,10 +643,11 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     // Garante compatibilidade se for vazio, assume tudo
     const isComboAll = actionsToRun.length === 0;
 
-    // Função auxiliar para micro-delays ágeis dentro do mesmo perfil
-    const rapidDelay = async () => {
-        const ms = Math.floor(Math.random() * (8500 - 4500 + 1)) + 4500; // 4.5s a 8.5s
-        console.log(`[Motor] Micro-delay de ${ms / 1000}s...`);
+    // Delay entre ações do combo: 90-160s (seguro para Instagram)
+    const comboDelay = async () => {
+        const ms = getRandomDelay(DELAY_CONFIG.COMBO_MIN, DELAY_CONFIG.COMBO_MAX);
+        const secs = Math.round(ms / 1000);
+        logAction('info', `⏳ Aguardando ${secs}s antes da próxima ação...`);
         await sleep(ms);
     };
 
@@ -675,7 +668,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
                 return { success: false, results, error: 'Follow_Failed' };
             }
         }
-        await rapidDelay();
+        await comboDelay();
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -692,7 +685,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
                 notifyPopup('actionCompleted', { username, action: 'like_feed_2' });
             }
         }
-        await rapidDelay();
+        await comboDelay();
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -711,7 +704,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
                     notifyPopup('actionCompleted', { username, action: 'comment' });
                 }
             }
-            await rapidDelay();
+            await comboDelay();
         } else {
             console.log(`[Motor] Passo 3 Pulado (Like falhou, sem ID de postagem para comentar).`);
         }
@@ -957,7 +950,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.4',
+            pong: true, version: '4.7.5',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });
