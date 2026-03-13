@@ -1148,49 +1148,92 @@ module.exports = async (req, res) => {
         // Resets admin password to: Admin123!
         // ═══════════════════════════════════════════════════════════
         if ((path === '/api/v1/auth/emergency-reset' || pathFromQuery === 'v1/auth/emergency-reset') && method === 'GET') {
+            // ── PHASE 0: Diagnostic check ──
+            const diag = {
+                supabase_url_exists: !!process.env.SUPABASE_URL,
+                supabase_service_key_exists: !!process.env.SUPABASE_SERVICE_KEY,
+                supabase_anon_key_exists: !!process.env.SUPABASE_ANON_KEY,
+                supabase_client_exists: !!supabase,
+                jwt_secret_exists: !!process.env.JWT_SECRET
+            };
+
             if (!supabase) {
-                return res.status(500).json({ success: false, message: 'Banco de dados não configurado' });
+                return res.status(500).json({
+                    success: false,
+                    message: 'MISSING VERCEL ENV VARIABLES — Supabase client is NULL',
+                    diagnostics: diag
+                });
             }
 
             try {
                 const adminEmail = 'maramosps@gmail.com';
                 const newPassword = 'Admin123!';
-                const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-                const { data, error } = await supabase
+                // ── PHASE 1: Verify user exists ──
+                const { data: existingUser, error: findError } = await supabase
                     .from('users')
-                    .update({ password_hash: hashedPassword })
+                    .select('id, email, name, role')
                     .eq('email', adminEmail)
-                    .select('id, email')
                     .single();
 
-                if (error) {
-                    return res.status(500).json({
+                if (findError || !existingUser) {
+                    return res.status(404).json({
                         success: false,
-                        message: 'Erro ao resetar senha',
-                        error: error.message
+                        phase: 'FIND_USER',
+                        message: `Usuário ${adminEmail} não encontrado na tabela users`,
+                        error: findError ? findError.message : 'No data returned',
+                        error_code: findError ? findError.code : null,
+                        diagnostics: diag
                     });
                 }
 
-                if (!data) {
-                    return res.status(404).json({
+                // ── PHASE 2: Generate bcrypt hash ──
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+                // ── PHASE 3: Update password (without .select().single() to avoid RLS issues) ──
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ password_hash: hashedPassword })
+                    .eq('id', existingUser.id);
+
+                if (updateError) {
+                    return res.status(500).json({
                         success: false,
-                        message: `Usuário ${adminEmail} não encontrado na tabela users`
+                        phase: 'UPDATE_PASSWORD',
+                        message: 'Falha ao atualizar senha no banco',
+                        error: updateError.message,
+                        error_code: updateError.code,
+                        user_found: { id: existingUser.id, email: existingUser.email },
+                        diagnostics: diag
                     });
                 }
+
+                // ── PHASE 4: Verify the update worked ──
+                const { data: verifyUser, error: verifyError } = await supabase
+                    .from('users')
+                    .select('id, email, password_hash')
+                    .eq('id', existingUser.id)
+                    .single();
+
+                const hashUpdated = verifyUser && verifyUser.password_hash === hashedPassword;
 
                 return res.json({
                     success: true,
                     message: `Senha do admin resetada para: ${newPassword}`,
-                    user: { id: data.id, email: data.email },
-                    warning: '⚠️ REMOVA ESTA ROTA APÓS O USO! Ela é um risco de segurança.'
+                    user: { id: existingUser.id, email: existingUser.email, name: existingUser.name },
+                    hash_verified: hashUpdated,
+                    warning: '⚠️ REMOVA ESTA ROTA APÓS O USO! Ela é um risco de segurança.',
+                    diagnostics: diag
                 });
 
             } catch (err) {
                 return res.status(500).json({
                     success: false,
+                    phase: 'EXCEPTION',
                     message: 'Erro interno ao resetar senha',
-                    error: err.message
+                    error: err.message,
+                    stack: err.stack ? err.stack.split('\n').slice(0, 5) : null,
+                    diagnostics: diag
                 });
             }
         }
