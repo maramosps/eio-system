@@ -1694,17 +1694,17 @@ async function executeSmartComment(target, payload) {
 
     addConsoleLog('info', `💬 Comentando: "${textToComment}"...`);
 
-    // 👉 MÉTODO 1: VIA API INVISÍVEL (Garante que é na MESMA postagem curtida e não falha se o modal estiver fechado)
+    // 👉 MÉTODO 1: VIA API INVISÍVEL (Garante que é na MESMA postagem curtida)
     if (window._lastEioMediaId) {
         try {
             chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via API silenciosa...' });
 
-            await fetch(`https://www.instagram.com/api/v1/web/comments/${window._lastEioMediaId}/add/`, {
+            const commentResponse = await fetch(`https://www.instagram.com/api/v1/web/comments/${window._lastEioMediaId}/add/`, {
                 method: 'POST',
                 headers: {
                     'X-IG-App-ID': config.api.xIgAppId,
                     'X-ASBD-ID': config.api.xAsbdId,
-                    'X-CSRFToken': getCookie('csrftoken') || '',
+                    'X-CSRFToken': getCsrfToken(),
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
@@ -1712,17 +1712,26 @@ async function executeSmartComment(target, payload) {
                 body: new URLSearchParams({ comment_text: textToComment, replied_to_comment_id: '' }).toString()
             });
 
-            addConsoleLog('success', `💬 Comentado com sucesso via API: "${textToComment}"`);
-            // Limpa o cache pra não comentar errado nos próximos
-            window._lastEioMediaId = null;
-            return { success: true, action: 'commented', text: textToComment, method: 'api' };
+            const commentData = await commentResponse.json().catch(() => ({}));
+
+            if (commentResponse.ok && (commentData.status === 'ok' || commentData.id)) {
+                addConsoleLog('success', `💬 Comentado com sucesso via API: "${textToComment}"`);
+                window._lastEioMediaId = null;
+                return { success: true, action: 'commented', text: textToComment, method: 'api' };
+            } else {
+                addConsoleLog('warning', `⚠️ API de comentário retornou erro: ${commentData.message || commentResponse.status}`);
+            }
         } catch (e) {
             addConsoleLog('warning', `⚠️ Falha no comment API, tentando DOM: ${e.message}`);
         }
+    } else {
+        addConsoleLog('warning', '⚠️ Sem mediaId salvo do like anterior. Tentando DOM...');
     }
 
-    // 👉 MÉTODO 2: FALLBACK VIA DOM ORIGINAL
-    const commentBox = document.querySelector('textarea[aria-label*="comentário"]');
+    // 👉 MÉTODO 2: FALLBACK VIA DOM
+    const commentBox = document.querySelector(
+        'textarea[aria-label*="comentário"], textarea[aria-label*="comment" i], textarea[aria-label*="Adicione"], textarea[placeholder*="comentário" i], textarea[placeholder*="comment" i]'
+    );
 
     if (commentBox) {
         chrome.runtime.sendMessage({ action: 'log_progress', message: 'Digitando comentário no DOM...' });
@@ -1730,7 +1739,6 @@ async function executeSmartComment(target, payload) {
         commentBox.focus();
         await randomDelay(500, 1000);
 
-        // Digitação Humanizada OBRIGATÓRIA
         await typeHumanized(commentBox, textToComment);
 
         await randomDelay(800, 1500);
@@ -1746,8 +1754,8 @@ async function executeSmartComment(target, payload) {
         }
     }
 
-    addConsoleLog('warning', '⚠️ Caixa de comentário não encontrada (DOM) e API indisponível.');
-    return { success: true, action: 'comment_failed' }; // Success: true para não travar o combo todo
+    addConsoleLog('error', '❌ Comentário falhou: caixa de comentário não encontrada e API indisponível.');
+    return { success: false, action: 'comment_failed' };
 }
 
 /**
@@ -1798,30 +1806,47 @@ async function executeLikeFeed2(target) {
             // 👉 GUARDA O ID PARA O PRÓXIMO PASSO DO COMBO (Comentar na MESMA postagem)
             window._lastEioMediaId = mediaId;
 
+            let likeResult = { success: false };
+
             // Tentar usar a função apiLike existente
             if (typeof apiLike === 'function') {
-                await apiLike(mediaId);
-            } else {
-                // Fallback fetch se apiLike não estiver acessível
-                await fetch(`https://www.instagram.com/web/likes/${mediaId}/like/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-IG-App-ID': config.api.xIgAppId,
-                        'X-ASBD-ID': config.api.xAsbdId,
-                        'X-CSRFToken': getCookie('csrftoken') || '',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'include'
-                });
+                likeResult = await apiLike(mediaId);
             }
 
-            likedCount++;
+            // Fallback se apiLike falhou ou não existe
+            if (!likeResult.success) {
+                try {
+                    const fallbackResp = await fetch(`https://www.instagram.com/api/v1/web/likes/${mediaId}/like/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-IG-App-ID': config.api.xIgAppId,
+                            'X-ASBD-ID': config.api.xAsbdId,
+                            'X-CSRFToken': getCsrfToken(),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'include'
+                    });
+                    const fallbackData = await fallbackResp.json().catch(() => ({}));
+                    likeResult = { success: fallbackResp.ok && fallbackData.status === 'ok' };
+                } catch (fallbackErr) {
+                    addConsoleLog('warning', `⚠️ Fallback like também falhou: ${fallbackErr.message}`);
+                }
+            }
+
+            if (likeResult.success) {
+                likedCount++;
+                addConsoleLog('success', `❤️ Post ${mediaId} curtido com sucesso!`);
+            } else {
+                addConsoleLog('warning', `⚠️ Falha ao curtir post ${mediaId}`);
+                window._lastEioMediaId = null; // Limpa para não comentar em post não curtido
+            }
+
             if (likedCount < postsToLike.length) {
                 addConsoleLog('info', '⏳ Aguardando 5s para próximo like...');
-                await randomDelay(5000, 6000); // Mini-delay de 5s entre likes
+                await randomDelay(5000, 6000);
             }
         }
-        return { success: true, action: 'liked_feed_2', count: likedCount };
+        return { success: likedCount > 0, action: 'liked_feed_2', count: likedCount };
 
     } catch (e) {
         addConsoleLog('error', `❌ Erro ao curtir feed de @${cleanTarget}: ${e.message}`);

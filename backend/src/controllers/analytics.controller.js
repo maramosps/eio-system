@@ -375,10 +375,11 @@ exports.getDashboard = async (req, res, next) => {
         const recentActivity = await Log.findAll({
             where: {
                 user_id: userId,
-                action: { [Op.in]: ['follow', 'like', 'like_feed_2', 'unfollow', 'comment'] }
+                action: { [Op.in]: ['follow', 'like', 'like_feed_2', 'unfollow', 'comment'] },
+                created_at: { [Op.gte]: startDate }
             },
             order: [['created_at', 'DESC']],
-            limit: 20
+            limit: 500
         });
 
         res.json({

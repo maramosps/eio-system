@@ -231,7 +231,8 @@ function updateChart(actions) {
     const dailyCounts = {};
     actions.forEach(a => {
         const date = new Date(a.created_at);
-        const dayKey = date.toISOString().split('T')[0];
+        // Use local timezone for grouping (sv-SE produces YYYY-MM-DD format)
+        const dayKey = date.toLocaleDateString('sv-SE');
         dailyCounts[dayKey] = (dailyCounts[dayKey] || 0) + 1;
     });
 
