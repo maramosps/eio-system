@@ -248,8 +248,9 @@ function updateChart(actions) {
         type: 'line',
         data: {
             labels: labels.map(d => {
-                const date = new Date(d);
-                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                // d is "YYYY-MM-DD" — split directly to avoid Date UTC parsing shift
+                const parts = d.split('-');
+                return `${parts[2]}/${parts[1]}`;
             }),
             datasets: [{
                 label: 'Ações',

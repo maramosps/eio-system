@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.4 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.7.6 Initializing - RECIPROCITY MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -1400,7 +1400,9 @@ async function executeInstagramAction(payload) {
     if (actionFn) {
         try {
             const result = await actionFn(target, payload);
-            return { success: true, meta: { target, time: new Date().toISOString(), ...result } };
+            // Propagate inner function's success status — NEVER override with true
+            const innerSuccess = result?.success !== undefined ? result.success : false;
+            return { success: innerSuccess, meta: { target, time: new Date().toISOString(), success: innerSuccess, ...result } };
         } catch (e) {
             addConsoleLog('error', `Erro ao executar ${type}: ${e.message}`);
             return { success: false, error: e.message };
@@ -2035,12 +2037,12 @@ async function sendDMInCurrentPage(target, message) {
         return { success: true, action: 'dm_sent', target };
     }
 
-    // Se não encontrou botão, tentar Enter
+    // Se não encontrou botão, tentar Enter — MAS não confirmar sucesso
     messageInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await randomDelay(500, 800);
 
-    addConsoleLog('success', `✅ DM enviada para @${target} (via Enter)`);
-    return { success: true, action: 'dm_sent', target };
+    addConsoleLog('warning', `⚠️ DM para @${target}: botão de enviar não encontrado, Enter pressionado mas não confirmado.`);
+    return { success: false, action: 'dm_unconfirmed', target };
 }
 
 /**
@@ -2707,6 +2709,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.4 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.7.6 - Auto popup dismiss enabled!');
 
 

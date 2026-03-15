@@ -58,7 +58,7 @@ window.addEventListener("message", (event) => {
         });
     }
 
-    // B. Solicitação de Status (Ping do Dashboard)
+    // B. Solicitação de Status (Ping do Dashboard - FORMATO ANTIGO)
     if (event.data?.type === "EIO_PING_EXTENSION") {
         console.log("[BRIDGE] 📡 Ping recebido do Dashboard, respondendo...");
         // Resposta imediata local
@@ -73,6 +73,12 @@ window.addEventListener("message", (event) => {
                 }, '*');
             }
         });
+    }
+
+    // C. Solicitação de Status (Ping do Explorador de Leads - FORMATO NOVO)
+    if (event.data?.type === "EIO_PING") {
+        console.log("[BRIDGE] 📡 EIO_PING recebido (Explorador de Leads), respondendo EIO_PONG...");
+        window.postMessage({ type: 'EIO_PONG', id: eid, extensionId: eid, version: VERSION }, '*');
     }
 });
 
