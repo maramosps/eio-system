@@ -1,10 +1,11 @@
 {
-    "version": "4.7.5",
-    "filename": "eio-extension-v4.7.5.zip",
-    "date": "2026-03-12",
+    "version": "4.7.6",
+    "filename": "eio-extension-v4.7.6.zip",
+    "date": "2026-03-15",
     "changelog": [
-        "Fix: Delays do combo agora respeitam 90-160s entre ações",
-        "Fix: Logs não duplicam mais no painel",
-        "Fix: Eliminada mensagem duplicada do executeSingleAction"
+        "Fix: Restaurado heartbeat extensão-dashboard (EIO_PING/EIO_PONG)",
+        "Fix: Gráfico Ações por Dia agora exibe data local correta",
+        "Fix: Eliminados ghost actions (DM/Like/Comment falsos)",
+        "Fix: Wrapper executeInstagramAction propaga success real"
     ]
 }
