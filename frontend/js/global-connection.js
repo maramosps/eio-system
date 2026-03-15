@@ -5,7 +5,7 @@
  * ═══════════════════════════════════════════════════════════
  */
 
-const VERSION = '4.7.4';
+const VERSION = '4.7.5';
 
 console.log("%c🌐 [GLOBAL] Iniciando Protocolo v" + VERSION + "...", "color: #6246ea; font-weight: bold; font-size: 14px;");
 
