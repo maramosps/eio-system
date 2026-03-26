@@ -1,11 +1,11 @@
 {
-    "version": "4.7.6",
-    "filename": "eio-extension-v4.7.6.zip",
-    "date": "2026-03-15",
+    "version": "4.7.7",
+    "filename": "eio-extension-v4.7.7.zip",
+    "date": "2026-03-26",
     "changelog": [
-        "Fix: Restaurado heartbeat extensão-dashboard (EIO_PING/EIO_PONG)",
-        "Fix: Gráfico Ações por Dia agora exibe data local correta",
-        "Fix: Eliminados ghost actions (DM/Like/Comment falsos)",
-        "Fix: Wrapper executeInstagramAction propaga success real"
+        "Fix: Ações IG reescritas com API fetch + headers completos (X-CSRFToken, X-IG-App-ID, X-Instagram-AJAX, X-IG-WWW-Claim)",
+        "Fix: DOM click fallbacks removidos — somente API confirmada registra sucesso",
+        "Fix: Auditoria follow-back deduplicada com guard de concorrência",
+        "Fix: executeSmartComment usa getInstagramApiHeaders() centralizado"
     ]
 }

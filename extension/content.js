@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.6 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.7.7 Initializing - RECIPROCITY MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -649,33 +649,70 @@ function getCsrfToken() {
 }
 
 /**
+ * Extract X-Instagram-AJAX revision ID from page shared data
+ * Instagram requires this header to validate API requests as legitimate
+ */
+function getInstagramAjaxId() {
+    try {
+        // Method 1: From window.__initialData or require('ServerNonce')
+        if (window.__initialData?.server_revision) return String(window.__initialData.server_revision);
+        // Method 2: From embedded script with server_revision
+        const scripts = document.querySelectorAll('script[type="text/javascript"]');
+        for (const script of scripts) {
+            const match = script.textContent?.match(/"server_revision":(\d+)/);
+            if (match) return match[1];
+        }
+        // Method 3: From link preload headers
+        const preload = document.querySelector('link[as="script"][href*="/rsrc.php/"]');
+        if (preload) {
+            const hrefMatch = preload.href.match(/\/v(\d+)\//);
+            if (hrefMatch) return hrefMatch[1];
+        }
+    } catch (e) { /* ignore */ }
+    return '1';
+}
+
+/**
+ * Build the full set of Instagram API headers needed for mutations
+ */
+function getInstagramApiHeaders() {
+    return {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCsrfToken(),
+        'X-IG-App-ID': config.api.xIgAppId,
+        'X-ASBD-ID': config.api.xAsbdId,
+        'X-IG-WWW-Claim': sessionStorage.getItem('www-claim-v2') || '0',
+        'X-Instagram-AJAX': getInstagramAjaxId(),
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+}
+
+/**
  * ═══════════════════════════════════════════════════════════
  * API DIRETA DO INSTAGRAM - FOLLOW SEM ABRIR PÁGINA
  * ═══════════════════════════════════════════════════════════
  */
 async function apiFollow(userId) {
     try {
-        const csrfToken = getCsrfToken();
+        const headers = getInstagramApiHeaders();
+        if (!headers['X-CSRFToken']) return { success: false, error: 'CSRF token not found' };
+
         const response = await fetch(`https://www.instagram.com/api/v1/friendships/create/${userId}/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrfToken,
-                'X-IG-App-ID': config.api.xIgAppId,
-                'X-ASBD-ID': config.api.xAsbdId,
-                'X-IG-WWW-Claim': '0',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers,
             body: `user_id=${userId}&container_module=profile&nav_chain=`,
-            credentials: 'include'
+            credentials: 'include',
+            referrer: 'https://www.instagram.com/',
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            mode: 'cors'
         });
 
-        const data = await response.json();
-        if (response.ok && (data.status === 'ok' || data.friendship_status)) {
+        if (!response.ok) return { success: false, status: response.status, error: `HTTP ${response.status}` };
+        const data = await response.json().catch(() => ({}));
+        if (data.status === 'ok' || data.friendship_status) {
             return { success: true, data };
-        } else {
-            return { success: false, status: response.status, message: data.message || 'Error' };
         }
+        return { success: false, status: response.status, message: data.message || 'IG did not confirm follow' };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -686,38 +723,43 @@ async function apiFollow(userId) {
  */
 async function apiUnfollow(userId) {
     try {
-        const csrfToken = getCsrfToken();
+        const headers = getInstagramApiHeaders();
+        if (!headers['X-CSRFToken']) return { success: false, error: 'CSRF token not found' };
+
         const response = await fetch(`https://www.instagram.com/api/v1/friendships/destroy/${userId}/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrfToken,
-                'X-IG-App-ID': config.api.xIgAppId,
-                'X-ASBD-ID': config.api.xAsbdId,
-                'X-IG-WWW-Claim': '0',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers,
             body: `user_id=${userId}&container_module=profile`,
-            credentials: 'include'
+            credentials: 'include',
+            referrer: 'https://www.instagram.com/',
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            mode: 'cors'
         });
 
-        const data = await response.json();
-        if (response.ok && data.status === 'ok') {
+        if (!response.ok) return { success: false, status: response.status, error: `HTTP ${response.status}` };
+        const data = await response.json().catch(() => ({}));
+        if (data.status === 'ok') {
             return { success: true, data };
-        } else {
-            return { success: false, status: response.status, message: data.message || 'Error' };
         }
+        return { success: false, status: response.status, message: data.message || 'IG did not confirm unfollow' };
     } catch (error) {
         return { success: false, error: error.message };
     }
 }
 
 /**
- * API DIRETA DO INSTAGRAM - LIKE SEM CLICAR
+ * API DIRETA DO INSTAGRAM - LIKE COM HEADERS COMPLETOS
+ * Inclui todos os headers anti-bot para garantir registro no backend do IG
  */
 async function apiLike(mediaId) {
     try {
         const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            return { success: false, error: 'CSRF token not found in cookies' };
+        }
+
+        const ajaxId = getInstagramAjaxId();
+
         const response = await fetch(`https://www.instagram.com/api/v1/web/likes/${mediaId}/like/`, {
             method: 'POST',
             headers: {
@@ -725,14 +767,28 @@ async function apiLike(mediaId) {
                 'X-CSRFToken': csrfToken,
                 'X-IG-App-ID': config.api.xIgAppId,
                 'X-ASBD-ID': config.api.xAsbdId,
+                'X-IG-WWW-Claim': sessionStorage.getItem('www-claim-v2') || '0',
+                'X-Instagram-AJAX': ajaxId,
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: `media_id=${mediaId}`,
-            credentials: 'include'
+            body: '',
+            credentials: 'include',
+            referrer: 'https://www.instagram.com/',
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            mode: 'cors'
         });
 
-        const data = await response.json();
-        return { success: data.status === 'ok', data };
+        if (!response.ok) {
+            return { success: false, status: response.status, error: `HTTP ${response.status}` };
+        }
+
+        const data = await response.json().catch(() => ({}));
+
+        if (data.status === 'ok') {
+            return { success: true, data };
+        }
+
+        return { success: false, status: response.status, message: data.message || 'IG did not confirm like' };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -1672,22 +1728,16 @@ async function executeLike(target) {
         }
     }
 
-    // Fallback: Clique no botão do DOM
-    const likeBtn = document.querySelector('svg[aria-label="Curtir"], svg[aria-label="Like"]')?.closest('button');
-    if (likeBtn) {
-        likeBtn.click();
-        addConsoleLog('success', `❤️ Curtiu via DOM (clique)`);
-        return { success: true, action: 'liked', method: 'dom' };
-    }
-
-    return { success: false, action: 'like_not_found' };
+    // DOM clicks are silently blocked by IG anti-bot — do NOT trust them
+    addConsoleLog('warning', '⚠️ Like via API falhou e DOM click não é confiável. Ação marcada como falha.');
+    return { success: false, action: 'like_api_failed' };
 }
 
 
 
 /**
- * Comentário Inteligente na Mesma Postagem (v4.7.2 - Integração API Invisível)
- * Usa o ID salvo do Like recém-feito para comentar por baixo dos panos!
+ * Comentário Inteligente na Mesma Postagem (v4.7.7 - Full API Headers)
+ * Usa o ID salvo do Like recém-feito para comentar via API com headers completos
  */
 async function executeSmartComment(target, payload) {
     const emojis = ['👍', '❤️', '🔥', '👏', '🚀', '🙌'];
@@ -1696,68 +1746,55 @@ async function executeSmartComment(target, payload) {
 
     addConsoleLog('info', `💬 Comentando: "${textToComment}"...`);
 
-    // 👉 MÉTODO 1: VIA API INVISÍVEL (Garante que é na MESMA postagem curtida)
+    // 👉 MÉTODO 1: VIA API COM HEADERS COMPLETOS (Garante registro no backend do IG)
     if (window._lastEioMediaId) {
         try {
-            chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via API silenciosa...' });
+            const headers = getInstagramApiHeaders();
+            if (!headers['X-CSRFToken']) {
+                addConsoleLog('error', '❌ CSRF Token ausente — comentário abortado.');
+                return { success: false, action: 'comment_no_csrf' };
+            }
+
+            chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via API segura...' });
 
             const commentResponse = await fetch(`https://www.instagram.com/api/v1/web/comments/${window._lastEioMediaId}/add/`, {
                 method: 'POST',
-                headers: {
-                    'X-IG-App-ID': config.api.xIgAppId,
-                    'X-ASBD-ID': config.api.xAsbdId,
-                    'X-CSRFToken': getCsrfToken(),
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers,
                 credentials: 'include',
-                body: new URLSearchParams({ comment_text: textToComment, replied_to_comment_id: '' }).toString()
+                body: new URLSearchParams({ comment_text: textToComment, replied_to_comment_id: '' }).toString(),
+                referrer: 'https://www.instagram.com/',
+                referrerPolicy: 'strict-origin-when-cross-origin',
+                mode: 'cors'
             });
+
+            if (!commentResponse.ok) {
+                addConsoleLog('warning', `⚠️ API de comentário HTTP ${commentResponse.status}`);
+                window._lastEioMediaId = null;
+                return { success: false, action: 'comment_http_error', status: commentResponse.status };
+            }
 
             const commentData = await commentResponse.json().catch(() => ({}));
 
-            if (commentResponse.ok && (commentData.status === 'ok' || commentData.id)) {
+            if (commentData.status === 'ok' || commentData.id) {
                 addConsoleLog('success', `💬 Comentado com sucesso via API: "${textToComment}"`);
                 window._lastEioMediaId = null;
                 return { success: true, action: 'commented', text: textToComment, method: 'api' };
-            } else {
-                addConsoleLog('warning', `⚠️ API de comentário retornou erro: ${commentData.message || commentResponse.status}`);
             }
+
+            addConsoleLog('warning', `⚠️ IG não confirmou comentário: ${commentData.message || 'unknown'}`);
+            window._lastEioMediaId = null;
+            return { success: false, action: 'comment_not_confirmed', message: commentData.message };
+
         } catch (e) {
-            addConsoleLog('warning', `⚠️ Falha no comment API, tentando DOM: ${e.message}`);
-        }
-    } else {
-        addConsoleLog('warning', '⚠️ Sem mediaId salvo do like anterior. Tentando DOM...');
-    }
-
-    // 👉 MÉTODO 2: FALLBACK VIA DOM
-    const commentBox = document.querySelector(
-        'textarea[aria-label*="comentário"], textarea[aria-label*="comment" i], textarea[aria-label*="Adicione"], textarea[placeholder*="comentário" i], textarea[placeholder*="comment" i]'
-    );
-
-    if (commentBox) {
-        chrome.runtime.sendMessage({ action: 'log_progress', message: 'Digitando comentário no DOM...' });
-
-        commentBox.focus();
-        await randomDelay(500, 1000);
-
-        await typeHumanized(commentBox, textToComment);
-
-        await randomDelay(800, 1500);
-
-        const postBtn = document.querySelector('button[type="submit"]') ||
-            Array.from(document.querySelectorAll('div[role="button"]'))
-                .find(el => el.textContent === 'Publicar' || el.textContent === 'Post');
-
-        if (postBtn) {
-            postBtn.click();
-            addConsoleLog('success', `💬 Comentado com sucesso: "${textToComment}"`);
-            return { success: true, action: 'commented', text: textToComment, method: 'dom' };
+            addConsoleLog('error', `❌ Exceção no comment API: ${e.message}`);
+            window._lastEioMediaId = null;
+            return { success: false, action: 'comment_exception', error: e.message };
         }
     }
 
-    addConsoleLog('error', '❌ Comentário falhou: caixa de comentário não encontrada e API indisponível.');
-    return { success: false, action: 'comment_failed' };
+    // Sem mediaId = sem post para comentar — não tentar DOM (não sabemos em qual post)
+    addConsoleLog('error', '❌ Comentário falhou: nenhum mediaId disponível do like anterior.');
+    return { success: false, action: 'comment_no_media_id' };
 }
 
 /**
@@ -2709,6 +2746,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.6 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.7.7 - Auto popup dismiss enabled!');
 
 

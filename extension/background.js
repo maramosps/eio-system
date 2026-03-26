@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.6 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.7 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -217,10 +217,21 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // v4.6.5 - FOLLOW-BACK MONITOR & DM TRIGGER
 // REGRA DE OURO: DM SÓ com follow-back + histórico DM vazio
 // ═══════════════════════════════════════════════════════════
+// Set to track in-flight follow-back audits (prevents duplicate runs)
+const _activeAudits = new Set();
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name.startsWith('check_followback_')) {
         const username = alarm.name.replace('check_followback_', '');
-        console.log(`[E.I.O v4.6.5] ⏰ Auditoria de Segurança para @${username}...`);
+
+        // Concurrency guard: skip if audit already running for this user
+        if (_activeAudits.has(username)) {
+            console.log(`[E.I.O v4.7.7] ⏭️ Auditoria para @${username} já em execução, ignorando.`);
+            return;
+        }
+        _activeAudits.add(username);
+
+        console.log(`[E.I.O v4.7.7] ⏰ Auditoria de Segurança para @${username}...`);
 
         try {
             const tabId = extensionState.activeTabId || (await ensureValidTab());
@@ -413,8 +424,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
             }
 
         } catch (e) {
-            console.error('[E.I.O v4.6.5] Erro na auditoria de follow-back:', e);
+            console.error('[E.I.O v4.7.7] Erro na auditoria de follow-back:', e);
             logAction('error', `❌ Erro na auditoria de @${username}: ${e.message}`);
+        } finally {
+            _activeAudits.delete(username);
         }
     }
 });
@@ -435,7 +448,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.6',
+                pong: true, version: '4.7.7',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -507,7 +520,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.6' });
+            sendResponse({ success: true, version: '4.7.7' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -814,10 +827,17 @@ async function processQueue() {
         await saveState();
 
         if (actionSuccess && useCombo) {
-            chrome.alarms.create(`check_followback_${item.username}`, {
-                delayInMinutes: DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES
-            });
-            logAction('info', `📋 Auditoria de follow-back agendada para @${item.username} em ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
+            const alarmName = `check_followback_${item.username}`;
+            // Guard: only create alarm if one doesn't already exist for this user
+            const existing = await chrome.alarms.get(alarmName).catch(() => null);
+            if (!existing) {
+                chrome.alarms.create(alarmName, {
+                    delayInMinutes: DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES
+                });
+                logAction('info', `📋 Auditoria de follow-back agendada para @${item.username} em ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
+            } else {
+                logAction('info', `📋 Auditoria para @${item.username} já agendada, ignorando duplicata.`);
+            }
         }
 
         // Próximo perfil
