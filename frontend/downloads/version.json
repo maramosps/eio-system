@@ -1,13 +1,11 @@
 {
-    "version": "4.7.8",
-    "filename": "eio-extension-v4.7.8.zip",
+    "version": "4.7.9",
+    "filename": "eio-extension-v4.7.9.zip",
     "date": "2026-03-27",
     "changelog": [
-        "Fix: Shadow Block bypass — reverte Like/Comment de fetch API para DOM interaction",
-        "New: simulateHumanClick() com sequência completa mouseover→mouseenter→mousedown→mouseup→click",
-        "New: simulateHumanType() com keydown→keypress→input→keyup por caractere",
-        "Fix: executeLikeFeed2 agora abre posts no grid e clica no SVG heart via DOM",
-        "Fix: executeSmartComment digita no textarea e clica em Publicar via DOM",
-        "Fix: Wait mínimo de 2s após cada ação para IG registrar a mudança DOM"
+        "Fix: Remove hardcoded 'admin-ms' UUID fallback causing 500 errors on Supabase",
+        "Fix: Admin login now goes through backend to get real Supabase UUID",
+        "Fix: Dashboard admin fallback no longer references invalid 'admin-ms' id",
+        "Fix: Analytics data now saves correctly for admin user"
     ]
 }

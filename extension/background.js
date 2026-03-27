@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.8 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.9 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -226,12 +226,12 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
         // Concurrency guard: skip if audit already running for this user
         if (_activeAudits.has(username)) {
-            console.log(`[E.I.O v4.7.8] ⏭️ Auditoria para @${username} já em execução, ignorando.`);
+            console.log(`[E.I.O v4.7.9] ⏭️ Auditoria para @${username} já em execução, ignorando.`);
             return;
         }
         _activeAudits.add(username);
 
-        console.log(`[E.I.O v4.7.8] ⏰ Auditoria de Segurança para @${username}...`);
+        console.log(`[E.I.O v4.7.9] ⏰ Auditoria de Segurança para @${username}...`);
 
         try {
             const tabId = extensionState.activeTabId || (await ensureValidTab());
@@ -424,7 +424,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
             }
 
         } catch (e) {
-            console.error('[E.I.O v4.7.8] Erro na auditoria de follow-back:', e);
+            console.error('[E.I.O v4.7.9] Erro na auditoria de follow-back:', e);
             logAction('error', `❌ Erro na auditoria de @${username}: ${e.message}`);
         } finally {
             _activeAudits.delete(username);
@@ -448,7 +448,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.8',
+                pong: true, version: '4.7.9',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -520,7 +520,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.8' });
+            sendResponse({ success: true, version: '4.7.9' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER

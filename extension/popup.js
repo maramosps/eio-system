@@ -2519,28 +2519,7 @@ function initializeLoginHandlers() {
             btnSubmitLogin.disabled = true;
 
             try {
-                // SPECIAL ACCESS FOR ADMIN
-                if (handle.toLowerCase().replace('@', '') === 'msassessoriadigital') {
-                    const adminUser = {
-                        id: 'admin-ms',
-                        name: 'MS Assessoria',
-                        email: 'maramosps@gmail.com',
-                        instagram_handle: 'msassessoriadigital',
-                        role: 'admin'
-                    };
-                    const adminToken = 'eio_admin_bypass_' + Date.now();
-
-                    await chrome.storage.local.set({ eio_token: adminToken, user: adminUser });
-                    AppState.isAuthenticated = true;
-                    AppState.user = adminUser;
-
-                    document.getElementById('termsModal').style.display = 'none';
-                    document.querySelector('.eio-popup-container').style.display = 'flex';
-                    addLog('success', '🔓 Acesso de Administrador concedido!');
-                    return;
-                }
-
-                // Call Backend for Regular Users
+                // ALL users (including admin) go through the backend to get a real Supabase UUID
                 const response = await fetch('https://eio-system.vercel.app/api/v1/auth/instagram-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

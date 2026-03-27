@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.8 Initializing - HUMAN EMULATION MODE...');
+console.log('E.I.O Content Script v4.7.9 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -620,7 +620,7 @@ function randomDelay(min, max) {
 
 /**
  * ═══════════════════════════════════════════════════════════
- * ADVANCED HUMAN EMULATION HELPERS (v4.7.8)
+ * ADVANCED HUMAN EMULATION HELPERS (v4.7.9)
  * Bypasses Instagram anti-bot layer by simulating full user
  * interaction sequences with realistic timing.
  * ═══════════════════════════════════════════════════════════
@@ -1849,7 +1849,7 @@ async function executeLike(target) {
 
 
 /**
- * Comentário Inteligente via DOM Human Emulation (v4.7.8)
+ * Comentário Inteligente via DOM Human Emulation (v4.7.9)
  * Simula digitação humana no campo de comentários e clique no botão Post.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -1948,7 +1948,7 @@ async function executeSmartComment(target, payload) {
 }
 
 /**
- * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.8)
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.9)
  * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -2484,7 +2484,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.8 Ready!');
+console.log('E.I.O Content Script v4.7.9 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2917,6 +2917,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.8 - DOM Human Emulation active!');
+console.log('E.I.O Content Script v4.7.9 - DOM Human Emulation active!');
 
 
