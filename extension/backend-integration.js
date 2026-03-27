@@ -14,14 +14,24 @@ const EIO_BACKEND = {
      */
     async getToken() {
         return new Promise((resolve) => {
-            chrome.storage.local.get(['eio_token', 'eioLicenseData', 'eioUserData'], (result) => {
-                // Priority: eio_token (set by popup login) > eioLicenseData > eioUserData
+            chrome.storage.local.get(['eio_token', 'eioLicenseData', 'eioUserData', 'extensionLicense'], (result) => {
+                // Priority: eio_token (set by popup login) > eioLicenseData > eioUserData > extensionLicense
                 const token = result.eio_token
                     || result.eioLicenseData?.token
                     || result.eioUserData?.token
+                    || result.extensionLicense?.token
                     || null;
                 if (!token) {
-                    console.warn('[E.I.O Backend] ⚠️ Nenhum token encontrado no storage. Chaves verificadas: eio_token, eioLicenseData, eioUserData');
+                    console.error('[E.I.O Backend] ❌ Nenhum token JWT encontrado no storage!');
+                    console.error('[E.I.O Backend] Chaves verificadas: eio_token, eioLicenseData, eioUserData, extensionLicense');
+                    console.error('[E.I.O Backend] Valores:', {
+                        eio_token: !!result.eio_token,
+                        eioLicenseData: !!result.eioLicenseData?.token,
+                        eioUserData: !!result.eioUserData?.token,
+                        extensionLicense: !!result.extensionLicense?.token
+                    });
+                } else {
+                    console.log('[E.I.O Backend] ✅ Token JWT obtido, length:', token.length);
                 }
                 resolve(token);
             });
@@ -128,7 +138,8 @@ const EIO_BACKEND = {
             });
             if (!res1.ok) {
                 const errBody = await res1.text().catch(() => '(sem corpo)');
-                console.error('ERRO API DASHBOARD [/actions]:', res1.status, errBody);
+                console.error(`[E.I.O Backend] ❌ ERRO /actions (${res1.status}):`, errBody);
+                if (res1.status === 401) console.error('[E.I.O Backend] 🔑 Token pode estar expirado ou inválido. Refaça login.');
             } else {
                 console.log(`[E.I.O Analytics] ✅ /actions OK: ${action} -> @${target}`);
             }
@@ -188,7 +199,8 @@ const EIO_BACKEND = {
 
             if (!response.ok) {
                 const errBody = await response.text().catch(() => '(sem corpo)');
-                console.error('ERRO API DASHBOARD [/crm/update-status]:', response.status, errBody);
+                console.error(`[E.I.O Backend] ❌ ERRO /crm/update-status (${response.status}):`, errBody);
+                if (response.status === 401) console.error('[E.I.O Backend] 🔑 Token pode estar expirado ou inválido. Refaça login.');
                 return { success: false, status: response.status, error: errBody };
             }
 

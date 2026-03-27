@@ -709,9 +709,16 @@ module.exports = async (req, res) => {
                 return res.status(401).json({ success: false, message: 'Token não fornecido' });
             }
 
+            let decoded;
             try {
                 const token = authHeader.replace('Bearer ', '');
-                const decoded = jwt.verify(token, jwtSecret);
+                decoded = jwt.verify(token, jwtSecret);
+            } catch (jwtErr) {
+                console.error('[API /leads/batch] JWT Error:', jwtErr.message);
+                return res.status(401).json({ success: false, message: 'Token JWT inválido ou expirado' });
+            }
+
+            try {
                 const { leads } = req.body;
 
                 if (!leads || !Array.isArray(leads)) {
@@ -730,15 +737,18 @@ module.exports = async (req, res) => {
                         extracted_at: new Date().toISOString()
                     })));
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[API /leads/batch] DB Error:', error);
+                    return res.status(500).json({ success: false, message: 'Erro no banco de dados', error: error.message });
+                }
 
                 return res.json({
                     success: true,
                     message: `${leads.length} leads sincronizados com sucesso`
                 });
             } catch (err) {
-                console.error('Lead sync error:', err);
-                return res.status(401).json({ success: false, message: 'Token inválido ou erro no banco' });
+                console.error('[API /leads/batch] Unexpected Error:', err);
+                return res.status(500).json({ success: false, message: 'Erro interno', error: err.message });
             }
         }
 
@@ -749,9 +759,16 @@ module.exports = async (req, res) => {
                 return res.status(401).json({ success: false, message: 'Token não fornecido' });
             }
 
+            let decoded;
             try {
                 const token = authHeader.replace('Bearer ', '');
-                const decoded = jwt.verify(token, jwtSecret);
+                decoded = jwt.verify(token, jwtSecret);
+            } catch (jwtErr) {
+                console.error('[API /crm/update-status] JWT Error:', jwtErr.message);
+                return res.status(401).json({ success: false, message: 'Token JWT inválido ou expirado' });
+            }
+
+            try {
                 const { instagram_username, status, last_action, updated_at } = req.body;
 
                 if (!instagram_username) {
@@ -768,12 +785,15 @@ module.exports = async (req, res) => {
                     .eq('user_id', decoded.userId)
                     .eq('username', instagram_username);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[API /crm/update-status] DB Error:', error);
+                    return res.status(500).json({ success: false, message: 'Erro no banco de dados', error: error.message });
+                }
 
                 return res.json({ success: true, message: 'Status atualizado com sucesso' });
             } catch (err) {
-                console.error('Update status error:', err);
-                return res.status(401).json({ success: false, message: 'Token inválido ou erro no banco' });
+                console.error('[API /crm/update-status] Unexpected Error:', err);
+                return res.status(500).json({ success: false, message: 'Erro interno', error: err.message });
             }
         }
 

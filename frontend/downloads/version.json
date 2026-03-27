@@ -1,11 +1,12 @@
 {
-    "version": "4.7.9",
-    "filename": "eio-extension-v4.7.9.zip",
+    "version": "4.7.10",
+    "filename": "eio-extension-v4.7.10.zip",
     "date": "2026-03-27",
     "changelog": [
-        "Fix: Remove hardcoded 'admin-ms' UUID fallback causing 500 errors on Supabase",
-        "Fix: Admin login now goes through backend to get real Supabase UUID",
-        "Fix: Dashboard admin fallback no longer references invalid 'admin-ms' id",
-        "Fix: Analytics data now saves correctly for admin user"
+        "Fix: JWT token now properly stored in chrome.storage.local on login",
+        "Fix: eio_user stored as object instead of JSON string",
+        "Fix: logout() now removes eio_token key",
+        "Fix: backend-integration.js retrieves token from 4 fallback sources",
+        "Fix: Backend separates JWT errors from DB errors (no more misleading 401)"
     ]
 }
