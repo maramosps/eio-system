@@ -1,11 +1,13 @@
 {
-    "version": "4.7.7",
-    "filename": "eio-extension-v4.7.7.zip",
-    "date": "2026-03-26",
+    "version": "4.7.8",
+    "filename": "eio-extension-v4.7.8.zip",
+    "date": "2026-03-27",
     "changelog": [
-        "Fix: Ações IG reescritas com API fetch + headers completos (X-CSRFToken, X-IG-App-ID, X-Instagram-AJAX, X-IG-WWW-Claim)",
-        "Fix: DOM click fallbacks removidos — somente API confirmada registra sucesso",
-        "Fix: Auditoria follow-back deduplicada com guard de concorrência",
-        "Fix: executeSmartComment usa getInstagramApiHeaders() centralizado"
+        "Fix: Shadow Block bypass — reverte Like/Comment de fetch API para DOM interaction",
+        "New: simulateHumanClick() com sequência completa mouseover→mouseenter→mousedown→mouseup→click",
+        "New: simulateHumanType() com keydown→keypress→input→keyup por caractere",
+        "Fix: executeLikeFeed2 agora abre posts no grid e clica no SVG heart via DOM",
+        "Fix: executeSmartComment digita no textarea e clica em Publicar via DOM",
+        "Fix: Wait mínimo de 2s após cada ação para IG registrar a mudança DOM"
     ]
 }

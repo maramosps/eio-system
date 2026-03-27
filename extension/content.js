@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.7 Initializing - RECIPROCITY MODE...');
+console.log('E.I.O Content Script v4.7.8 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -616,6 +616,119 @@ async function loadFollowingViaAPI(username, limit = 200) {
  */
 function randomDelay(min, max) {
     return new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1)) + min));
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * ADVANCED HUMAN EMULATION HELPERS (v4.7.8)
+ * Bypasses Instagram anti-bot layer by simulating full user
+ * interaction sequences with realistic timing.
+ * ═══════════════════════════════════════════════════════════
+ */
+
+/**
+ * Simulates a full human mouse-click sequence on an element.
+ * Dispatches: mouseover → mouseenter → mousedown → mouseup → click
+ * with small random delays (10-50ms) between each event.
+ */
+async function simulateHumanClick(element) {
+    if (!element) throw new Error('simulateHumanClick: element is null');
+
+    const rect = element.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2 + (Math.random() * 4 - 2);
+    const cy = rect.top + rect.height / 2 + (Math.random() * 4 - 2);
+
+    const baseOpts = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: cx,
+        clientY: cy,
+        screenX: cx + window.screenX,
+        screenY: cy + window.screenY,
+        button: 0,
+        buttons: 1
+    };
+
+    const tinyDelay = () => new Promise(r => setTimeout(r, Math.floor(Math.random() * 41) + 10));
+
+    element.dispatchEvent(new MouseEvent('mouseover', baseOpts));
+    await tinyDelay();
+
+    element.dispatchEvent(new MouseEvent('mouseenter', { ...baseOpts, bubbles: false }));
+    await tinyDelay();
+
+    element.dispatchEvent(new MouseEvent('mousedown', baseOpts));
+    await tinyDelay();
+
+    element.dispatchEvent(new MouseEvent('mouseup', baseOpts));
+    await tinyDelay();
+
+    element.dispatchEvent(new MouseEvent('click', baseOpts));
+
+    addConsoleLog('info', `🖱️ Human click simulated on <${element.tagName}>`);
+}
+
+/**
+ * Simulates human typing into an input/textarea/contenteditable element.
+ * For each character dispatches: focus → keydown → keypress → input → keyup
+ * with small random delays between events and between characters.
+ */
+async function simulateHumanType(inputElement, text) {
+    if (!inputElement) throw new Error('simulateHumanType: inputElement is null');
+
+    inputElement.focus();
+    inputElement.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+    await randomDelay(100, 200);
+
+    const isNativeInput = inputElement.tagName === 'TEXTAREA' || inputElement.tagName === 'INPUT';
+
+    for (const char of text) {
+        const keyOpts = {
+            key: char,
+            code: `Key${char.toUpperCase()}`,
+            charCode: char.charCodeAt(0),
+            keyCode: char.charCodeAt(0),
+            which: char.charCodeAt(0),
+            bubbles: true,
+            cancelable: true
+        };
+
+        inputElement.dispatchEvent(new KeyboardEvent('keydown', keyOpts));
+        await randomDelay(5, 15);
+
+        inputElement.dispatchEvent(new KeyboardEvent('keypress', keyOpts));
+        await randomDelay(5, 15);
+
+        if (isNativeInput) {
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLTextAreaElement.prototype, 'value'
+            )?.set || Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+            )?.set;
+
+            if (nativeSetter) {
+                nativeSetter.call(inputElement, inputElement.value + char);
+            } else {
+                inputElement.value += char;
+            }
+        } else {
+            inputElement.textContent += char;
+        }
+
+        inputElement.dispatchEvent(new InputEvent('input', {
+            bubbles: true,
+            inputType: 'insertText',
+            data: char
+        }));
+        await randomDelay(5, 15);
+
+        inputElement.dispatchEvent(new KeyboardEvent('keyup', keyOpts));
+
+        await randomDelay(30, 90);
+    }
+
+    addConsoleLog('info', `⌨️ Human type simulated: "${text}"`);
 }
 
 /**
@@ -1736,156 +1849,214 @@ async function executeLike(target) {
 
 
 /**
- * Comentário Inteligente na Mesma Postagem (v4.7.7 - Full API Headers)
- * Usa o ID salvo do Like recém-feito para comentar via API com headers completos
+ * Comentário Inteligente via DOM Human Emulation (v4.7.8)
+ * Simula digitação humana no campo de comentários e clique no botão Post.
+ * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
 async function executeSmartComment(target, payload) {
     const emojis = ['👍', '❤️', '🔥', '👏', '🚀', '🙌'];
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const textToComment = payload.comment || randomEmoji;
 
-    addConsoleLog('info', `💬 Comentando: "${textToComment}"...`);
+    addConsoleLog('info', `💬 [DOM] Comentando: "${textToComment}"...`);
+    chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via DOM humano...' });
 
-    // 👉 MÉTODO 1: VIA API COM HEADERS COMPLETOS (Garante registro no backend do IG)
-    if (window._lastEioMediaId) {
-        try {
-            const headers = getInstagramApiHeaders();
-            if (!headers['X-CSRFToken']) {
-                addConsoleLog('error', '❌ CSRF Token ausente — comentário abortado.');
-                return { success: false, action: 'comment_no_csrf' };
-            }
+    try {
+        // Locate comment input — Instagram uses multiple selectors
+        const commentSelectors = [
+            'textarea[aria-label="Adicione um comentário..."]',
+            'textarea[aria-label="Add a comment…"]',
+            'textarea[placeholder="Adicione um comentário..."]',
+            'textarea[placeholder="Add a comment…"]',
+            'form textarea',
+            'textarea'
+        ];
 
-            chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via API segura...' });
-
-            const commentResponse = await fetch(`https://www.instagram.com/api/v1/web/comments/${window._lastEioMediaId}/add/`, {
-                method: 'POST',
-                headers,
-                credentials: 'include',
-                body: new URLSearchParams({ comment_text: textToComment, replied_to_comment_id: '' }).toString(),
-                referrer: 'https://www.instagram.com/',
-                referrerPolicy: 'strict-origin-when-cross-origin',
-                mode: 'cors'
-            });
-
-            if (!commentResponse.ok) {
-                addConsoleLog('warning', `⚠️ API de comentário HTTP ${commentResponse.status}`);
-                window._lastEioMediaId = null;
-                return { success: false, action: 'comment_http_error', status: commentResponse.status };
-            }
-
-            const commentData = await commentResponse.json().catch(() => ({}));
-
-            if (commentData.status === 'ok' || commentData.id) {
-                addConsoleLog('success', `💬 Comentado com sucesso via API: "${textToComment}"`);
-                window._lastEioMediaId = null;
-                return { success: true, action: 'commented', text: textToComment, method: 'api' };
-            }
-
-            addConsoleLog('warning', `⚠️ IG não confirmou comentário: ${commentData.message || 'unknown'}`);
-            window._lastEioMediaId = null;
-            return { success: false, action: 'comment_not_confirmed', message: commentData.message };
-
-        } catch (e) {
-            addConsoleLog('error', `❌ Exceção no comment API: ${e.message}`);
-            window._lastEioMediaId = null;
-            return { success: false, action: 'comment_exception', error: e.message };
+        let commentInput = null;
+        for (const sel of commentSelectors) {
+            commentInput = document.querySelector(sel);
+            if (commentInput) break;
         }
-    }
 
-    // Sem mediaId = sem post para comentar — não tentar DOM (não sabemos em qual post)
-    addConsoleLog('error', '❌ Comentário falhou: nenhum mediaId disponível do like anterior.');
-    return { success: false, action: 'comment_no_media_id' };
+        if (!commentInput) {
+            addConsoleLog('warning', '⚠️ Campo de comentário não encontrado na página.');
+            return { success: false, action: 'comment_input_not_found' };
+        }
+
+        // Click on the textarea to expand it (Instagram collapses it by default)
+        await simulateHumanClick(commentInput);
+        await randomDelay(300, 600);
+
+        // Re-query after click (Instagram may replace the element upon focus)
+        for (const sel of commentSelectors) {
+            const refreshed = document.querySelector(sel);
+            if (refreshed) { commentInput = refreshed; break; }
+        }
+
+        commentInput.focus();
+        await randomDelay(200, 400);
+
+        // Type the comment using human emulation
+        await simulateHumanType(commentInput, textToComment);
+        await randomDelay(500, 800);
+
+        // Locate the Post / Publicar button
+        const postButtonSelectors = [
+            'div[role="button"][tabindex="0"]',
+            'button[type="submit"]'
+        ];
+
+        let postButton = null;
+
+        // Strategy 1: find by text content "Publicar" or "Post"
+        const allButtons = document.querySelectorAll('button, div[role="button"], span[role="button"]');
+        for (const btn of allButtons) {
+            const txt = btn.textContent?.trim().toLowerCase();
+            if (txt === 'publicar' || txt === 'post' || txt === 'postar') {
+                postButton = btn;
+                break;
+            }
+        }
+
+        // Strategy 2: Submit button within the same form as the comment input
+        if (!postButton) {
+            const form = commentInput.closest('form');
+            if (form) {
+                postButton = form.querySelector('button[type="submit"]') ||
+                             form.querySelector('div[role="button"]');
+            }
+        }
+
+        if (!postButton) {
+            addConsoleLog('warning', '⚠️ Botão Post/Publicar não encontrado.');
+            return { success: false, action: 'post_button_not_found' };
+        }
+
+        // Click Post with human emulation
+        await simulateHumanClick(postButton);
+
+        // Wait minimum 2 seconds for IG internal scripts to register the action
+        await randomDelay(2000, 3000);
+
+        addConsoleLog('success', `💬 Comentário enviado via DOM: "${textToComment}"`);
+        return { success: true, action: 'commented', text: textToComment, method: 'dom_human' };
+
+    } catch (e) {
+        addConsoleLog('error', `❌ Erro no comentário DOM: ${e.message}`);
+        return { success: false, action: 'comment_exception', error: e.message };
+    }
 }
 
 /**
- * Curte 2 posts recentes do perfil alvo via API
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.8)
+ * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
+ * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
 async function executeLikeFeed2(target) {
     const cleanTarget = target?.replace('@', '').toLowerCase();
-    addConsoleLog('info', `❤️ Curtindo 2 posts recentes de @${cleanTarget}...`);
+    addConsoleLog('info', `❤️ [DOM] Curtindo posts recentes de @${cleanTarget}...`);
 
     try {
-        // 1. Obter info básica para pegar ID
-        const profileInfo = await getProfileInfoViaAPI(cleanTarget);
-        if (!profileInfo || !profileInfo.id) throw new Error('Perfil não encontrado');
-
-        // 2. Obter feed via API (usando query hash pública de feed de usuário)
-        // Fallback: Tentar endpoint web_profile_info novamente se getProfileInfoViaAPI não retornar edges suficientes
-
-        let edges = [];
-
-        // Tentativa 1: Re-fetch completo para garantir edges
-        const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanTarget}`, {
-            headers: {
-                'X-IG-App-ID': config.api.xIgAppId,
-                'X-ASBD-ID': config.api.xAsbdId,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'include'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            edges = data?.data?.user?.edge_owner_to_timeline_media?.edges || [];
+        // 1. Navigate to the target profile if not already there
+        const currentPath = window.location.pathname.replace(/\//g, '').toLowerCase();
+        if (currentPath !== cleanTarget) {
+            addConsoleLog('info', `📍 Navegando para perfil de @${cleanTarget}...`);
+            window.location.href = `https://www.instagram.com/${cleanTarget}/`;
+            await randomDelay(3000, 5000);
         }
 
-        if (edges.length === 0) {
-            addConsoleLog('warning', `⚠️ @${cleanTarget} não tem posts para curtir.`);
+        // 2. Find post thumbnails on the profile grid
+        await randomDelay(1500, 2500);
+
+        const postLinks = document.querySelectorAll('a[href*="/p/"], a[href*="/reel/"]');
+
+        if (postLinks.length === 0) {
+            addConsoleLog('warning', `⚠️ @${cleanTarget} não tem posts visíveis no grid.`);
             return { success: true, action: 'no_posts', count: 0 };
         }
 
+        const postsToLike = Array.from(postLinks).slice(0, 2);
         let likedCount = 0;
-        const postsToLike = edges.slice(0, 2); // Pega os 2 primeiros (o motor agora pede só 1 geralmente)
 
-        for (const post of postsToLike) {
-            const mediaId = post.node.id;
-            addConsoleLog('info', `❤️ Curtindo post ${mediaId}...`);
-            chrome.runtime.sendMessage({ action: 'log_progress', message: `Curtindo post ${likedCount + 1}/${postsToLike.length}...` });
+        for (let i = 0; i < postsToLike.length; i++) {
+            const postLink = postsToLike[i];
+            addConsoleLog('info', `❤️ Abrindo post ${i + 1}/${postsToLike.length}...`);
+            chrome.runtime.sendMessage({ action: 'log_progress', message: `Curtindo post ${i + 1}/${postsToLike.length}...` });
 
-            // 👉 GUARDA O ID PARA O PRÓXIMO PASSO DO COMBO (Comentar na MESMA postagem)
-            window._lastEioMediaId = mediaId;
+            // Click to open the post modal
+            await simulateHumanClick(postLink);
+            await randomDelay(2000, 3000);
 
-            let likeResult = { success: false };
+            // 3. Find the Like button (SVG heart) inside the opened post
+            const likeSelectors = [
+                'svg[aria-label="Curtir"]',
+                'svg[aria-label="Like"]',
+                'svg[aria-label="Amei"]'
+            ];
 
-            // Tentar usar a função apiLike existente
-            if (typeof apiLike === 'function') {
-                likeResult = await apiLike(mediaId);
-            }
-
-            // Fallback se apiLike falhou ou não existe
-            if (!likeResult.success) {
-                try {
-                    const fallbackResp = await fetch(`https://www.instagram.com/api/v1/web/likes/${mediaId}/like/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-IG-App-ID': config.api.xIgAppId,
-                            'X-ASBD-ID': config.api.xAsbdId,
-                            'X-CSRFToken': getCsrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        credentials: 'include'
-                    });
-                    const fallbackData = await fallbackResp.json().catch(() => ({}));
-                    likeResult = { success: fallbackResp.ok && fallbackData.status === 'ok' };
-                } catch (fallbackErr) {
-                    addConsoleLog('warning', `⚠️ Fallback like também falhou: ${fallbackErr.message}`);
+            let likeButton = null;
+            for (const sel of likeSelectors) {
+                const svg = document.querySelector(sel);
+                if (svg) {
+                    likeButton = svg.closest('div[role="button"]') ||
+                                 svg.closest('button') ||
+                                 svg.closest('span[role="button"]') ||
+                                 svg.parentElement;
+                    break;
                 }
             }
 
-            if (likeResult.success) {
-                likedCount++;
-                addConsoleLog('success', `❤️ Post ${mediaId} curtido com sucesso!`);
+            if (likeButton) {
+                // Click like with human emulation
+                await simulateHumanClick(likeButton);
+
+                // Wait minimum 2 seconds for IG to register the DOM change
+                await randomDelay(2000, 3000);
+
+                // Verify the like was registered (heart should become filled/red)
+                const filledHeart = document.querySelector('svg[aria-label="Descurtir"], svg[aria-label="Unlike"]');
+                if (filledHeart) {
+                    likedCount++;
+                    addConsoleLog('success', `❤️ Post ${i + 1} curtido com sucesso via DOM!`);
+
+                    // Save a reference for the comment step (extract mediaId from URL)
+                    const postUrl = window.location.href;
+                    const mediaMatch = postUrl.match(/\/p\/([^/]+)/) || postUrl.match(/\/reel\/([^/]+)/);
+                    if (mediaMatch) {
+                        window._lastEioPostShortcode = mediaMatch[1];
+                    }
+                } else {
+                    // It may already have been liked
+                    const alreadyLiked = document.querySelector('svg[aria-label="Descurtir"], svg[aria-label="Unlike"]');
+                    if (alreadyLiked) {
+                        likedCount++;
+                        addConsoleLog('info', `ℹ️ Post ${i + 1} já estava curtido.`);
+                    } else {
+                        addConsoleLog('warning', `⚠️ Like no post ${i + 1} não confirmado visualmente.`);
+                    }
+                }
             } else {
-                addConsoleLog('warning', `⚠️ Falha ao curtir post ${mediaId}`);
-                window._lastEioMediaId = null; // Limpa para não comentar em post não curtido
+                addConsoleLog('warning', `⚠️ Botão de like (coração) não encontrado no post ${i + 1}.`);
             }
 
-            if (likedCount < postsToLike.length) {
+            // Close the post modal (press Escape or click X)
+            const closeBtn = document.querySelector('svg[aria-label="Fechar"], svg[aria-label="Close"]');
+            if (closeBtn) {
+                const closeBtnParent = closeBtn.closest('div[role="button"]') || closeBtn.closest('button') || closeBtn.parentElement;
+                if (closeBtnParent) await simulateHumanClick(closeBtnParent);
+            } else {
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            }
+            await randomDelay(1000, 1500);
+
+            // Wait between likes
+            if (i < postsToLike.length - 1) {
                 addConsoleLog('info', '⏳ Aguardando 5s para próximo like...');
                 await randomDelay(5000, 6000);
             }
         }
-        return { success: likedCount > 0, action: 'liked_feed_2', count: likedCount };
+
+        return { success: likedCount > 0, action: 'liked_feed_2', count: likedCount, method: 'dom_human' };
 
     } catch (e) {
         addConsoleLog('error', `❌ Erro ao curtir feed de @${cleanTarget}: ${e.message}`);
@@ -2313,7 +2484,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.4 Ready!');
+console.log('E.I.O Content Script v4.7.8 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2427,7 +2598,7 @@ window.addEventListener('message', async (event) => {
         window.postMessage({
             type: 'EIO_PONG',
             extensionId: chrome.runtime.id,
-            version: '4.7.4'
+            version: '4.7.8'
         }, '*');
         return;
     }
@@ -2746,6 +2917,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.7 - Auto popup dismiss enabled!');
+console.log('E.I.O Content Script v4.7.8 - DOM Human Emulation active!');
 
 
