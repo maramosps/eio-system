@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.10 Initializing - HUMAN EMULATION MODE...');
+console.log('E.I.O Content Script v4.7.11 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -620,7 +620,7 @@ function randomDelay(min, max) {
 
 /**
  * ═══════════════════════════════════════════════════════════
- * ADVANCED HUMAN EMULATION HELPERS (v4.7.10)
+ * ADVANCED HUMAN EMULATION HELPERS (v4.7.11)
  * Bypasses Instagram anti-bot layer by simulating full user
  * interaction sequences with realistic timing.
  * ═══════════════════════════════════════════════════════════
@@ -1849,7 +1849,7 @@ async function executeLike(target) {
 
 
 /**
- * Comentário Inteligente via DOM Human Emulation (v4.7.10)
+ * Comentário Inteligente via DOM Human Emulation (v4.7.11)
  * Simula digitação humana no campo de comentários e clique no botão Post.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -1864,12 +1864,11 @@ async function executeSmartComment(target, payload) {
     try {
         // Locate comment input — Instagram uses multiple selectors
         const commentSelectors = [
-            'textarea[aria-label="Adicione um comentário..."]',
-            'textarea[aria-label="Add a comment…"]',
-            'textarea[placeholder="Adicione um comentário..."]',
-            'textarea[placeholder="Add a comment…"]',
+            'textarea[aria-label*=\'comment\' i]',
+            'textarea[aria-label*=\'comentário\' i]',
+            'textarea[placeholder*=\'comment\' i]',
             'form textarea',
-            'textarea'
+            'div[role="button"][tabindex="0"] + div textarea'
         ];
 
         let commentInput = null;
@@ -1948,7 +1947,7 @@ async function executeSmartComment(target, payload) {
 }
 
 /**
- * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.10)
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.11)
  * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -2212,7 +2211,7 @@ async function sendDMInCurrentPage(target, message) {
     await randomDelay(1000, 1500);
 
     // Procurar campo de texto da mensagem
-    const messageInput = document.querySelector('textarea[placeholder*="Mensagem"], textarea[placeholder*="Message"]') ||
+    const messageInput = document.querySelector('div[aria-label*="Message" i], div[aria-label*="Mensagem" i], textarea[placeholder*="Mensagem" i], textarea[placeholder*="Message" i]') ||
         document.querySelector('div[contenteditable="true"][role="textbox"]') ||
         document.querySelector('textarea');
 
@@ -2222,6 +2221,7 @@ async function sendDMInCurrentPage(target, message) {
     }
 
     // Focar no campo
+    await simulateHumanClick(messageInput);
     messageInput.focus();
     await randomDelay(300, 500);
 
@@ -2229,7 +2229,7 @@ async function sendDMInCurrentPage(target, message) {
     const personalizedMessage = personalizeMessage(message, target);
 
     // Digitar mensagem de forma humanizada (letra por letra)
-    await typeHumanized(messageInput, personalizedMessage);
+    await simulateHumanType(messageInput, personalizedMessage);
 
     await randomDelay(500, 800);
 
@@ -2239,7 +2239,7 @@ async function sendDMInCurrentPage(target, message) {
         findSendButton();
 
     if (sendBtn && !sendBtn.disabled) {
-        sendBtn.click();
+        await simulateHumanClick(sendBtn);
         await randomDelay(500, 800);
         addConsoleLog('success', `✅ DM enviada para @${target}!`);
         return { success: true, action: 'dm_sent', target };
@@ -2484,7 +2484,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.10 Ready!');
+console.log('E.I.O Content Script v4.7.11 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2917,6 +2917,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.10 - DOM Human Emulation active!');
+console.log('E.I.O Content Script v4.7.11 - DOM Human Emulation active!');
 
 

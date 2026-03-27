@@ -779,8 +779,7 @@ module.exports = async (req, res) => {
                 const { error } = await supabase
                     .from('leads')
                     .update({
-                        status: status || 'updated',
-                        updated_at: updated_at || new Date().toISOString()
+                        status: status || 'updated'
                     })
                     .eq('user_id', decoded.userId)
                     .eq('username', instagram_username);

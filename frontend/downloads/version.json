@@ -1,6 +1,6 @@
 {
-    "version": "4.7.10",
-    "filename": "eio-extension-v4.7.10.zip",
+    "version": "4.7.11",
+    "filename": "eio-extension-v4.7.11.zip",
     "date": "2026-03-27",
     "changelog": [
         "Fix: JWT token now properly stored in chrome.storage.local on login",
