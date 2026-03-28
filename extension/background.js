@@ -1,14 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação — VERSÃO 4.6.5
-  LÓGICA DE RECIPROCIDADE E SEGURANÇA CIRÚRGICA
-  Combo: Follow → Like×2 → Comment(Emoji) → View Story
-  DM somente com follow-back + histórico DM vazio
+  Motor de automação — VERSÃO 4.7.12
+  MVP STREAMLINED: Follow → Like → View Story
+  Comment e DM removidos para estabilidade
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.11 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.12 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -18,8 +17,8 @@ let extensionState = {
     currentActionType: 'follow',
     currentOptions: {},
     stats: {
-        followsToday: 0, likesToday: 0, commentsToday: 0,
-        storiesLikedToday: 0, unfollowsToday: 0, dmsToday: 0,
+        followsToday: 0, likesToday: 0,
+        storiesLikedToday: 0, unfollowsToday: 0,
         totalActionsToday: 0, sessionStartTime: null
     },
     limits: {
@@ -42,11 +41,10 @@ let isFilaRodando = false;
 // DELAYS FIXOS E SEGUROS - NÃO CONFIGURÁVEIS
 // ═══════════════════════════════════════════════════════════
 const DELAY_CONFIG = {
-    BETWEEN_ACTIONS_SAME_PROFILE: 80000, // 80s (Fallback)
-    BETWEEN_PROFILES: 90000,             // 90s
-    COMBO_MIN: 90000,                    // 90s — mínimo entre cliques do combo
-    COMBO_MAX: 160000,                   // 160s — máximo entre cliques do combo
-    FOLLOWBACK_CHECK_MINUTES: 25         // 25 min para auditoria pós follow-back
+    BETWEEN_ACTIONS_SAME_PROFILE: 15000, // 15s (mínimo seguro)
+    BETWEEN_PROFILES: 30000,             // 30s
+    COMBO_MIN: 15000,                    // 15s — mínimo entre cliques do combo
+    COMBO_MAX: 120000                    // 120s — máximo entre cliques do combo
 };
 
 function getRandomDelay(min, max) {
@@ -62,7 +60,7 @@ function getRandomDelay(min, max) {
  * @param {number} max - Maximum seconds (default: 160)
  * @returns {Promise} - Resolves after random seconds
  */
-async function randomDelaySeconds(min = 90, max = 160) {
+async function randomDelaySeconds(min = 15, max = 120) {
     const seconds = Math.floor(Math.random() * (max - min + 1)) + min;
     const ms = seconds * 1000;
     console.log(`[Motor] Aguardando ${seconds}s...`);
@@ -213,224 +211,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
-// ═══════════════════════════════════════════════════════════
-// v4.6.5 - FOLLOW-BACK MONITOR & DM TRIGGER
-// REGRA DE OURO: DM SÓ com follow-back + histórico DM vazio
-// ═══════════════════════════════════════════════════════════
-// Set to track in-flight follow-back audits (prevents duplicate runs)
-const _activeAudits = new Set();
-
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name.startsWith('check_followback_')) {
-        const username = alarm.name.replace('check_followback_', '');
-
-        // Concurrency guard: skip if audit already running for this user
-        if (_activeAudits.has(username)) {
-            console.log(`[E.I.O v4.7.11] ⏭️ Auditoria para @${username} já em execução, ignorando.`);
-            return;
-        }
-        _activeAudits.add(username);
-
-        console.log(`[E.I.O v4.7.11] ⏰ Auditoria de Segurança para @${username}...`);
-
-        try {
-            const tabId = extensionState.activeTabId || (await ensureValidTab());
-            if (!tabId) {
-                console.log('[E.I.O v4.6.5] ❌ Nenhuma aba do Instagram disponível para auditoria.');
-                return;
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            // CHECK 1: O perfil ainda nos segue? (Follow-back)
-            // ═══════════════════════════════════════════════════════════
-            logAction('info', `🔍 [CHECK 1] Verificando se @${username} seguiu de volta...`);
-
-            const followCheckResults = await chrome.scripting.executeScript({
-                target: { tabId },
-                func: async (u) => {
-                    try {
-                        const cleanUsername = u.replace('@', '').toLowerCase();
-                        const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
-                            headers: {
-                                'X-IG-App-ID': '936619743392459',
-                                'X-ASBD-ID': '129477',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'include'
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            const user = data?.data?.user;
-                            return {
-                                followsViewer: user?.follows_viewer || false,
-                                followedByViewer: user?.followed_by_viewer || false,
-                                username: user?.username || cleanUsername
-                            };
-                        }
-                        return { followsViewer: false, followedByViewer: false, error: 'API error' };
-                    } catch (e) {
-                        return { followsViewer: false, followedByViewer: false, error: e.message };
-                    }
-                },
-                args: [username]
-            });
-
-            const followStatus = followCheckResults[0]?.result;
-
-            if (!followStatus || !followStatus.followsViewer) {
-                logAction('info', `⏸️ [CHECK 1 FALHOU] @${username} NÃO segue de volta. Fluxo encerrado definitivamente.`);
-                await sendActionLog('followback_check', username, false);
-                return; // REGRA DE OURO: Sem follow-back = encerrado
-            }
-
-            logAction('success', `✅ [CHECK 1 OK] @${username} segue de volta!`);
-
-            // ═══════════════════════════════════════════════════════════
-            // CHECK 2: Filtro de Virgindade — Histórico de DM vazio?
-            // ═══════════════════════════════════════════════════════════
-            logAction('info', `🔍 [CHECK 2] Verificando histórico de DMs com @${username}...`);
-
-            const dmCheckResults = await chrome.scripting.executeScript({
-                target: { tabId },
-                func: async (u) => {
-                    try {
-                        const cleanUsername = u.replace('@', '').toLowerCase();
-
-                        // Primeiro, obter o ID do usuário
-                        const profileResp = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUsername}`, {
-                            headers: {
-                                'X-IG-App-ID': '936619743392459',
-                                'X-ASBD-ID': '129477',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'include'
-                        });
-
-                        if (!profileResp.ok) return { hasPriorDMs: true, error: 'profile_fetch_fail' };
-
-                        const profileData = await profileResp.json();
-                        const targetUserId = profileData?.data?.user?.id;
-                        if (!targetUserId) return { hasPriorDMs: true, error: 'no_user_id' };
-
-                        // Verificar inbox para conversas com este usuário
-                        // Usa endpoint de inbox threads para checar se existe thread com este user
-                        const inboxResp = await fetch(`https://www.instagram.com/api/v1/direct_v2/inbox/?persistentBadging=true&folder=&limit=20&thread_message_limit=1`, {
-                            headers: {
-                                'X-IG-App-ID': '936619743392459',
-                                'X-ASBD-ID': '129477',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'include'
-                        });
-
-                        if (!inboxResp.ok) {
-                            // Se não conseguir verificar inbox, ABORTAR por segurança (fail-safe)
-                            return { hasPriorDMs: true, error: 'inbox_fetch_fail' };
-                        }
-
-                        const inboxData = await inboxResp.json();
-                        const threads = inboxData?.inbox?.threads || [];
-
-                        // Checar se alguma thread contém este usuário
-                        for (const thread of threads) {
-                            const users = thread.users || [];
-                            for (const user of users) {
-                                if (user.pk?.toString() === targetUserId?.toString() ||
-                                    user.username?.toLowerCase() === cleanUsername) {
-                                    // Thread existe — NÃO é primeira conversa
-                                    return { hasPriorDMs: true, threadId: thread.thread_id };
-                                }
-                            }
-                        }
-
-                        // Verificar também mensagens pendentes (requests)
-                        const pendingResp = await fetch(`https://www.instagram.com/api/v1/direct_v2/pending_inbox/?persistentBadging=true&folder=&limit=20`, {
-                            headers: {
-                                'X-IG-App-ID': '936619743392459',
-                                'X-ASBD-ID': '129477',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'include'
-                        });
-
-                        if (pendingResp.ok) {
-                            const pendingData = await pendingResp.json();
-                            const pendingThreads = pendingData?.inbox?.threads || [];
-
-                            for (const thread of pendingThreads) {
-                                const users = thread.users || [];
-                                for (const user of users) {
-                                    if (user.pk?.toString() === targetUserId?.toString() ||
-                                        user.username?.toLowerCase() === cleanUsername) {
-                                        return { hasPriorDMs: true, threadId: thread.thread_id, pending: true };
-                                    }
-                                }
-                            }
-                        }
-
-                        // Nenhuma conversa encontrada = histórico limpo
-                        return { hasPriorDMs: false };
-
-                    } catch (e) {
-                        // Em caso de erro, ABORTAR por segurança
-                        return { hasPriorDMs: true, error: e.message };
-                    }
-                },
-                args: [username]
-            });
-
-            const dmStatus = dmCheckResults[0]?.result;
-
-            // ═══════════════════════════════════════════════════════════
-            // TRAVA DE SEGURANÇA: Se já existe conversa, ABORTAR
-            // ═══════════════════════════════════════════════════════════
-            if (!dmStatus || dmStatus.hasPriorDMs) {
-                const reason = dmStatus?.error
-                    ? `Erro na verificação (${dmStatus.error}) — abortando por segurança`
-                    : dmStatus?.pending
-                        ? 'Conversa pendente já existe'
-                        : 'Histórico de DMs NÃO está vazio';
-
-                logAction('info', `🛑 [CHECK 2 FALHOU] @${username}: ${reason}. DM ABORTADA silenciosamente.`);
-                await sendActionLog('dm_aborted_history', username, false);
-                return; // TRAVA DE SEGURANÇA: Abortar silenciosamente
-            }
-
-            logAction('success', `✅ [CHECK 2 OK] Histórico de DMs com @${username} está LIMPO!`);
-
-            // ═══════════════════════════════════════════════════════════
-            // TODOS OS CHECKS PASSARAM → ENVIAR DM DE BOAS-VINDAS
-            // ═══════════════════════════════════════════════════════════
-            logAction('success', `🚀 @${username} passou na auditoria completa! Enviando DM de boas-vindas...`);
-
-            const dmMessage = extensionState.currentOptions.dmMessage
-                || extensionState.currentOptions.dmMessageTemplate
-                || 'Olá! Obrigado por seguir de volta! 😊';
-
-            const dmResult = await sendMessageWithRetry(tabId, {
-                action: 'execute',
-                payload: { type: 'dm', target: username, message: dmMessage }
-            });
-
-            if (dmResult?.success) {
-                logAction('success', `✅ DM de boas-vindas enviada para @${username}!`);
-                await sendActionLog('dm_welcome', username, true);
-                extensionState.stats.dmsToday++;
-                await saveState();
-            } else {
-                logAction('warning', `⚠️ Falha ao enviar DM para @${username}: ${dmResult?.error || 'desconhecido'}`);
-                await sendActionLog('dm_welcome', username, false);
-            }
-
-        } catch (e) {
-            console.error('[E.I.O v4.7.11] Erro na auditoria de follow-back:', e);
-            logAction('error', `❌ Erro na auditoria de @${username}: ${e.message}`);
-        } finally {
-            _activeAudits.delete(username);
-        }
-    }
-});
+// v4.7.12 - Follow-back audit & DM trigger REMOVED for MVP stability
 
 // ═══════════════════════════════════════════════════════════
 // MESSAGE HANDLER (CENTRAL)
@@ -448,7 +229,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.11',
+                pong: true, version: '4.7.12',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -520,7 +301,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.11' });
+            sendResponse({ success: true, version: '4.7.12' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -599,7 +380,7 @@ async function handleStartAutomation(sendResponse) {
 /**
  * Execute a single action and return result
  * @param {number} tabId - Tab ID
- * @param {string} actionType - Action type (follow, like_feed_2, comment, story_interact)
+ * @param {string} actionType - Action type (follow, like_feed_2, story_interact)
  * @param {string} username - Target username
  * @param {object} options - Action options
  * @returns {Promise<{success: boolean, error?: string}>}
@@ -611,8 +392,7 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
             payload: {
                 type: actionType,
                 target: username,
-                options: options,
-                comment: options.commentMessage || "Top! 👏"
+                options: options
             }
         });
 
@@ -623,7 +403,7 @@ async function executeSingleAction(tabId, actionType, username, options = {}) {
             const exactTimestamp = new Date().toISOString();
             const actionNames = {
                 'follow': '👥 Seguiu', 'like_feed_2': '❤️ Curtiu post de',
-                'comment': '💬 Comentou no post de', 'story_interact': '👁️ Viu Story de'
+                'story_interact': '👁️ Viu Story de'
             };
             const label = actionNames[actionType] || `✅ Executou ${actionType} em`;
             // Single message only — prevents duplicate log echo
@@ -648,7 +428,6 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     const results = {
         follow: { success: false },
         like1: { success: false },
-        comment: { success: false },
         story: { success: false }
     };
 
@@ -701,30 +480,10 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         await comboDelay();
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // PASSO 3: COMENTAR NA POSTAGEM (COMMENT)
-    // ═══════════════════════════════════════════════════════════
-    // SÓ comenta se o LIKE foi executado e bem-sucedido (pois precisamos do ID do post que acabamos de curtir)
-    if (isComboAll || actionsToRun.includes('comment')) {
-        console.log(`[Motor] Passo 3 (Comentar)...`);
-        if (results.like1.success || !actionsToRun.includes('like')) {
-            const commentPerm = await checkEnginePermission('comment', username);
-            if (commentPerm.allowed) {
-                results.comment = await executeSingleAction(tabId, 'comment', username, options);
-                if (results.comment.success) {
-                    updateStats('comment');
-                    await sendActionLog('comment', username, true);
-                    notifyPopup('actionCompleted', { username, action: 'comment' });
-                }
-            }
-            await comboDelay();
-        } else {
-            console.log(`[Motor] Passo 3 Pulado (Like falhou, sem ID de postagem para comentar).`);
-        }
-    }
+    // v4.7.12 — Comment step REMOVED for MVP stability
 
     // ═══════════════════════════════════════════════════════════
-    // PASSO 4: VER STORY (STORY)
+    // PASSO 3: VER STORY (STORY)
     // ═══════════════════════════════════════════════════════════
     if (isComboAll || actionsToRun.includes('story') || actionsToRun.includes('viewStory')) {
         console.log(`[Motor] Passo 4 (Visualizar Story)...`);
@@ -826,19 +585,7 @@ async function processQueue() {
         extensionState.currentComboUsername = null;
         await saveState();
 
-        if (actionSuccess && useCombo) {
-            const alarmName = `check_followback_${item.username}`;
-            // Guard: only create alarm if one doesn't already exist for this user
-            const existing = await chrome.alarms.get(alarmName).catch(() => null);
-            if (!existing) {
-                chrome.alarms.create(alarmName, {
-                    delayInMinutes: DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES
-                });
-                logAction('info', `📋 Auditoria de follow-back agendada para @${item.username} em ${DELAY_CONFIG.FOLLOWBACK_CHECK_MINUTES}min.`);
-            } else {
-                logAction('info', `📋 Auditoria para @${item.username} já agendada, ignorando duplicata.`);
-            }
-        }
+        // v4.7.12 — Follow-back audit alarm REMOVED for MVP stability
 
         // Próximo perfil
         if (extensionState.isRunning && extensionState.queue.length > 0) {
@@ -912,7 +659,7 @@ function updateStats(type) {
     extensionState.stats.totalActionsToday++;
     if (type === 'follow') extensionState.stats.followsToday++;
     if (type === 'like' || type === 'like_feed_2') extensionState.stats.likesToday++;
-    if (type === 'comment') extensionState.stats.commentsToday++;
+    // comment stats removed in v4.7.12
     if (type === 'story_interact') extensionState.stats.storiesLikedToday++;
     if (type === 'unfollow') extensionState.stats.unfollowsToday++;
     notifyPopup('statsUpdate', { stats: extensionState.stats });
@@ -970,7 +717,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.5',
+            pong: true, version: '4.7.12',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });

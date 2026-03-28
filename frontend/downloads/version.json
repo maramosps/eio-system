@@ -1,12 +1,12 @@
 {
-    "version": "4.7.11",
-    "filename": "eio-extension-v4.7.11.zip",
-    "date": "2026-03-27",
+    "version": "4.7.12",
+    "filename": "eio-extension-v4.7.12.zip",
+    "date": "2026-03-28",
     "changelog": [
-        "Fix: JWT token now properly stored in chrome.storage.local on login",
-        "Fix: eio_user stored as object instead of JSON string",
-        "Fix: logout() now removes eio_token key",
-        "Fix: backend-integration.js retrieves token from 4 fallback sources",
-        "Fix: Backend separates JWT errors from DB errors (no more misleading 401)"
+        "MVP Streamlined: Focus on Follow, Like, Story View only",
+        "Removed: Comment feature (DOM volatility reduction)",
+        "Removed: DM & Follow-back audit feature (stability)",
+        "Optimized: Action delays now 15-120 seconds (faster automation)",
+        "Removed: Follow-back alarm/cron system"
     ]
 }

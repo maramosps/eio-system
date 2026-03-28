@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.11 Initializing - HUMAN EMULATION MODE...');
+console.log('E.I.O Content Script v4.7.12 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -620,7 +620,7 @@ function randomDelay(min, max) {
 
 /**
  * ═══════════════════════════════════════════════════════════
- * ADVANCED HUMAN EMULATION HELPERS (v4.7.11)
+ * ADVANCED HUMAN EMULATION HELPERS (v4.7.12)
  * Bypasses Instagram anti-bot layer by simulating full user
  * interaction sequences with realistic timing.
  * ═══════════════════════════════════════════════════════════
@@ -1560,9 +1560,8 @@ async function executeInstagramAction(payload) {
         'unfollow': executeUnfollow,
         'viewStory': executeStoryInteract,
         'like_feed_2': executeLikeFeed2,
-        'story_interact': executeStoryInteract,
-        'comment': executeSmartComment,
-        'dm': executeDM
+        'story_interact': executeStoryInteract
+        // comment and dm removed in v4.7.12 for MVP stability
     };
 
     const actionFn = actionFunctions[type];
@@ -1848,106 +1847,10 @@ async function executeLike(target) {
 
 
 
-/**
- * Comentário Inteligente via DOM Human Emulation (v4.7.11)
- * Simula digitação humana no campo de comentários e clique no botão Post.
- * Bypasses Shadow Block que descartava fetch API silenciosamente.
- */
-async function executeSmartComment(target, payload) {
-    const emojis = ['👍', '❤️', '🔥', '👏', '🚀', '🙌'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-    const textToComment = payload.comment || randomEmoji;
-
-    addConsoleLog('info', `💬 [DOM] Comentando: "${textToComment}"...`);
-    chrome.runtime.sendMessage({ action: 'log_progress', message: 'Comentando via DOM humano...' });
-
-    try {
-        // Locate comment input — Instagram uses multiple selectors
-        const commentSelectors = [
-            'textarea[aria-label*=\'comment\' i]',
-            'textarea[aria-label*=\'comentário\' i]',
-            'textarea[placeholder*=\'comment\' i]',
-            'form textarea',
-            'div[role="button"][tabindex="0"] + div textarea'
-        ];
-
-        let commentInput = null;
-        for (const sel of commentSelectors) {
-            commentInput = document.querySelector(sel);
-            if (commentInput) break;
-        }
-
-        if (!commentInput) {
-            addConsoleLog('warning', '⚠️ Campo de comentário não encontrado na página.');
-            return { success: false, action: 'comment_input_not_found' };
-        }
-
-        // Click on the textarea to expand it (Instagram collapses it by default)
-        await simulateHumanClick(commentInput);
-        await randomDelay(300, 600);
-
-        // Re-query after click (Instagram may replace the element upon focus)
-        for (const sel of commentSelectors) {
-            const refreshed = document.querySelector(sel);
-            if (refreshed) { commentInput = refreshed; break; }
-        }
-
-        commentInput.focus();
-        await randomDelay(200, 400);
-
-        // Type the comment using human emulation
-        await simulateHumanType(commentInput, textToComment);
-        await randomDelay(500, 800);
-
-        // Locate the Post / Publicar button
-        const postButtonSelectors = [
-            'div[role="button"][tabindex="0"]',
-            'button[type="submit"]'
-        ];
-
-        let postButton = null;
-
-        // Strategy 1: find by text content "Publicar" or "Post"
-        const allButtons = document.querySelectorAll('button, div[role="button"], span[role="button"]');
-        for (const btn of allButtons) {
-            const txt = btn.textContent?.trim().toLowerCase();
-            if (txt === 'publicar' || txt === 'post' || txt === 'postar') {
-                postButton = btn;
-                break;
-            }
-        }
-
-        // Strategy 2: Submit button within the same form as the comment input
-        if (!postButton) {
-            const form = commentInput.closest('form');
-            if (form) {
-                postButton = form.querySelector('button[type="submit"]') ||
-                             form.querySelector('div[role="button"]');
-            }
-        }
-
-        if (!postButton) {
-            addConsoleLog('warning', '⚠️ Botão Post/Publicar não encontrado.');
-            return { success: false, action: 'post_button_not_found' };
-        }
-
-        // Click Post with human emulation
-        await simulateHumanClick(postButton);
-
-        // Wait minimum 2 seconds for IG internal scripts to register the action
-        await randomDelay(2000, 3000);
-
-        addConsoleLog('success', `💬 Comentário enviado via DOM: "${textToComment}"`);
-        return { success: true, action: 'commented', text: textToComment, method: 'dom_human' };
-
-    } catch (e) {
-        addConsoleLog('error', `❌ Erro no comentário DOM: ${e.message}`);
-        return { success: false, action: 'comment_exception', error: e.message };
-    }
-}
+// v4.7.12 — executeSmartComment REMOVED for MVP stability (DOM volatility)
 
 /**
- * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.11)
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.12)
  * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -2118,221 +2021,8 @@ async function executeStoryInteract(target) {
     }
 }
 
-/**
- * Envia Direct Message (DM) para um usuário
- * Funciona navegando para a página de mensagens e enviando
- */
-async function executeDM(target, payload) {
-    const cleanTarget = target?.replace('@', '');
-    const message = payload?.message || payload?.text || payload?.options?.dmMessageTemplate || '';
-
-    if (!message) {
-        addConsoleLog('warning', '⚠️ Nenhuma mensagem definida para enviar');
-        return { success: false, action: 'no_message' };
-    }
-
-    addConsoleLog('info', `✉️ Preparando DM para @${cleanTarget}...`);
-
-    try {
-        // Verificar se já estamos na página de DMs
-        const currentUrl = window.location.href;
-
-        if (currentUrl.includes('/direct/')) {
-            // Já estamos nas DMs - procurar ou criar conversa
-            return await sendDMInCurrentPage(cleanTarget, message);
-        }
-
-        // Se estamos no perfil do usuário, procurar botão de mensagem
-        if (currentUrl.includes(`/${cleanTarget}`)) {
-            const messageBtn = findMessageButton();
-            if (messageBtn) {
-                messageBtn.click();
-                await randomDelay(2000, 3000);
-                return await sendDMInCurrentPage(cleanTarget, message);
-            }
-        }
-
-        // Navegar para DMs do usuário
-        const dmUrl = `https://www.instagram.com/direct/t/${cleanTarget}/`;
-        addConsoleLog('info', `📩 Navegando para DM de @${cleanTarget}...`);
-
-        // Notificar background para navegar
-        chrome.runtime.sendMessage({
-            action: 'navigate',
-            url: dmUrl
-        });
-
-        await randomDelay(3000, 4000);
-
-        // Tentar enviar a mensagem
-        return await sendDMInCurrentPage(cleanTarget, message);
-
-    } catch (error) {
-        addConsoleLog('error', `❌ Erro ao enviar DM: ${error.message}`);
-        return { success: false, action: 'dm_error', error: error.message };
-    }
-}
-
-/**
- * Encontra o botão de mensagem na página do perfil
- */
-function findMessageButton() {
-    const buttons = document.querySelectorAll('button, div[role="button"]');
-    for (const btn of buttons) {
-        const text = btn.textContent?.toLowerCase() || '';
-        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
-
-        if (text.includes('mensagem') || text.includes('message') ||
-            ariaLabel.includes('mensagem') || ariaLabel.includes('message')) {
-            return btn;
-        }
-    }
-
-    // Procurar pelo ícone de mensagem
-    const svgs = document.querySelectorAll('svg');
-    for (const svg of svgs) {
-        const parent = svg.closest('button, div[role="button"]');
-        if (parent) {
-            const ariaLabel = parent.getAttribute('aria-label')?.toLowerCase() || '';
-            if (ariaLabel.includes('mensagem') || ariaLabel.includes('message')) {
-                return parent;
-            }
-        }
-    }
-
-    return null;
-}
-
-/**
- * Envia mensagem na página de DMs atual
- */
-async function sendDMInCurrentPage(target, message) {
-    // Aguardar a página carregar
-    await randomDelay(1000, 1500);
-
-    // Procurar campo de texto da mensagem
-    const messageInput = document.querySelector('div[aria-label*="Message" i], div[aria-label*="Mensagem" i], textarea[placeholder*="Mensagem" i], textarea[placeholder*="Message" i]') ||
-        document.querySelector('div[contenteditable="true"][role="textbox"]') ||
-        document.querySelector('textarea');
-
-    if (!messageInput) {
-        addConsoleLog('warning', '⚠️ Campo de mensagem não encontrado');
-        return { success: false, action: 'input_not_found' };
-    }
-
-    // Focar no campo
-    await simulateHumanClick(messageInput);
-    messageInput.focus();
-    await randomDelay(300, 500);
-
-    // Personalizar mensagem com variáveis
-    const personalizedMessage = personalizeMessage(message, target);
-
-    // Digitar mensagem de forma humanizada (letra por letra)
-    await simulateHumanType(messageInput, personalizedMessage);
-
-    await randomDelay(500, 800);
-
-    // Procurar botão de enviar
-    const sendBtn = document.querySelector('button[type="submit"]') ||
-        document.querySelector('div[role="button"] svg[aria-label*="Enviar"]')?.closest('div[role="button"]') ||
-        findSendButton();
-
-    if (sendBtn && !sendBtn.disabled) {
-        await simulateHumanClick(sendBtn);
-        await randomDelay(500, 800);
-        addConsoleLog('success', `✅ DM enviada para @${target}!`);
-        return { success: true, action: 'dm_sent', target };
-    }
-
-    // Se não encontrou botão, tentar Enter — MAS não confirmar sucesso
-    messageInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    await randomDelay(500, 800);
-
-    addConsoleLog('warning', `⚠️ DM para @${target}: botão de enviar não encontrado, Enter pressionado mas não confirmado.`);
-    return { success: false, action: 'dm_unconfirmed', target };
-}
-
-/**
- * Encontra o botão de enviar na página de DMs
- */
-function findSendButton() {
-    const allButtons = document.querySelectorAll('button, div[role="button"]');
-    for (const btn of allButtons) {
-        const text = btn.textContent?.toLowerCase() || '';
-        if (text === 'enviar' || text === 'send') {
-            return btn;
-        }
-    }
-    return null;
-}
-
-/**
- * Personaliza mensagem com variáveis
- */
-function personalizeMessage(message, target) {
-    return message
-        .replace(/\{\{nome\}\}/gi, target)
-        .replace(/\{\{username\}\}/gi, target)
-        .replace(/\{\{@\}\}/gi, `@${target}`)
-        .replace(/\{\{data\}\}/gi, new Date().toLocaleDateString('pt-BR'))
-        .replace(/\{\{hora\}\}/gi, new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-}
-
-/**
- * Digita texto de forma humanizada (letra por letra)
- */
-async function typeHumanized(element, text) {
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-    const typeChar = async (char) => {
-        if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
-            element.value += char;
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-        } else if (element.getAttribute('contenteditable')) {
-            element.textContent += char;
-            element.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: char }));
-        }
-        await randomDelay(50, 150);
-    };
-
-    const backspace = async () => {
-        if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
-            element.value = element.value.slice(0, -1);
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-        } else if (element.getAttribute('contenteditable')) {
-            element.textContent = element.textContent.slice(0, -1);
-            element.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
-        }
-        await randomDelay(100, 200);
-    };
-
-    // Mapeamento de "vizinhas" no teclado QWERTY para erros realistas
-    const qwertyMap = {
-        'a': 's', 's': 'd', 'd': 'f', 'f': 'g', 'g': 'h', 'h': 'j', 'j': 'k', 'k': 'l',
-        'q': 'w', 'w': 'e', 'e': 'r', 'r': 't', 't': 'y', 'y': 'u', 'u': 'i', 'i': 'o',
-        'z': 'x', 'x': 'c', 'c': 'v', 'v': 'b', 'b': 'n', 'n': 'm', 'm': 'n'
-    };
-
-    // Limpar
-    if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
-        element.value = '';
-    } else {
-        element.textContent = '';
-    }
-
-    for (const char of text) {
-        // 5% de chance de erro de digitação
-        if (Math.random() < 0.05 && qwertyMap[char.toLowerCase()]) {
-            const wrongChar = qwertyMap[char.toLowerCase()];
-            await typeChar(wrongChar); // Digita errado
-            await randomDelay(200, 500); // "Ops, errei" reaction time
-            await backspace(); // Apaga
-            await randomDelay(50, 150); // Breve pausa
-        }
-        await typeChar(char); // Digita certo
-    }
-}
+// v4.7.12 — executeDM, sendDMInCurrentPage, findMessageButton, findSendButton,
+// personalizeMessage, typeHumanized ALL REMOVED for MVP stability
 
 
 async function executeViewStory(target) {
@@ -2484,7 +2174,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.11 Ready!');
+console.log('E.I.O Content Script v4.7.12 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2917,6 +2607,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.11 - DOM Human Emulation active!');
+console.log('E.I.O Content Script v4.7.12 - DOM Human Emulation active!');
 
 

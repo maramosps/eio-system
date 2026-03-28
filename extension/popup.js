@@ -45,12 +45,8 @@ const AppState = {
         showProfilePics: true,
         showBadges: true,
         showBadges: true,
-        autoSaveQueue: true,
-        // DM Config Defaults
-        dmMessageTemplate: '',
-        dmSkipPrivate: true,
-        dmSkipBusiness: false,
-        dmSkipIfChatExists: true
+        autoSaveQueue: true
+        // DM Config removed in v4.7.12
     },
     logs: [],
     mediaQueue: []
@@ -76,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTabs();
     initializeDropdowns();
     initializeFilters();
-    initializeDMHandlers();
+    // initializeDMHandlers() removed in v4.7.12
     initializeConfigSections();
     initializeTableHandlers();
     initializeActionButtons();
@@ -1890,11 +1886,7 @@ function collectConfig() {
         showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true,
         dismissNotifications: document.getElementById('configDismissNotifications')?.checked ?? true,
         loadLastQueue: document.getElementById('configLoadLastQueue')?.checked ?? true,
-        // DM Config
-        dmMessageTemplate: document.getElementById('dmMessageTemplate')?.value || '',
-        dmSkipPrivate: document.getElementById('dmSkipPrivate')?.checked ?? true,
-        dmSkipBusiness: document.getElementById('dmSkipBusiness')?.checked ?? false,
-        dmSkipIfChatExists: document.getElementById('dmSkipIfChatExists')?.checked ?? true
+        // DM Config removed in v4.7.12
     };
 }
 
@@ -1902,10 +1894,9 @@ function handleContextualAction(actionId) {
     const actions = {
         'actionFollow': 'follow',
         'actionLike': 'like',
-        'actionComment': 'comment',
-        'actionDM': 'dm',
         'actionUnfollow': 'unfollow',
         'actionStory': 'viewStory'
+        // actionComment and actionDM removed in v4.7.12
     };
 
     const action = actions[actionId];
@@ -2269,82 +2260,7 @@ function initializeMediaHandlers() {
     renderMediaQueue();
 }
 
-// ═══════════════════════════════════════════════════════════
-// DM HANDLERS
-// ═══════════════════════════════════════════════════════════
-function initializeDMHandlers() {
-    const templateInput = document.getElementById('dmMessageTemplate');
-    const quickReplies = document.getElementById('dmQuickReplies');
-    const btnSave = document.getElementById('btnSaveDMConfig');
-    const btnTest = document.getElementById('btnTestDM');
-
-    // Load saved DM config into UI
-    if (AppState.config) {
-        if (templateInput) templateInput.value = AppState.config.dmMessageTemplate || '';
-        if (document.getElementById('dmSkipPrivate')) document.getElementById('dmSkipPrivate').checked = AppState.config.dmSkipPrivate !== false;
-        if (document.getElementById('dmSkipBusiness')) document.getElementById('dmSkipBusiness').checked = !!AppState.config.dmSkipBusiness;
-        if (document.getElementById('dmSkipIfChatExists')) document.getElementById('dmSkipIfChatExists').checked = AppState.config.dmSkipIfChatExists !== false;
-    }
-
-    // Handle Quick Replies
-    if (quickReplies && templateInput) {
-        quickReplies.addEventListener('change', (e) => {
-            const val = e.target.value;
-            if (val) {
-                templateInput.value = val;
-            }
-        });
-    }
-
-    // Save Button
-    if (btnSave) {
-        btnSave.addEventListener('click', () => {
-            AppState.config = { ...AppState.config, ...collectConfig() };
-            saveState();
-            addLog('success', '💾 Configuração de DM salva!');
-            // Visual feedback
-            const originalText = btnSave.innerHTML;
-            btnSave.innerHTML = '✅ Salvo!';
-            setTimeout(() => { btnSave.innerHTML = originalText; }, 2000);
-        });
-    }
-
-    // Test Button
-    if (btnTest) {
-        btnTest.addEventListener('click', async () => {
-            const message = templateInput.value;
-            if (!message) {
-                alert('Digite uma mensagem primeiro.');
-                return;
-            }
-
-            addLog('info', '✉️ Enviando teste de DM para você mesmo...');
-
-            // Send test to background
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                const activeTab = tabs[0];
-                if (activeTab?.url?.includes('instagram.com')) {
-                    // Get current user to send to self
-                    chrome.tabs.sendMessage(activeTab.id, { action: 'get_current_profile' }, (response) => {
-                        const target = response?.username || 'instagram'; // Fallback
-
-                        chrome.tabs.sendMessage(activeTab.id, {
-                            action: 'execute',
-                            payload: {
-                                type: 'dm',
-                                target: target, // Send to self
-                                message: message,
-                                options: collectConfig()
-                            }
-                        });
-                    });
-                } else {
-                    alert('Abra o Instagram para testar.');
-                }
-            });
-        });
-    }
-}
+// v4.7.12 — initializeDMHandlers REMOVED for MVP stability
 
 function renderMediaQueue() {
     const listContainer = document.getElementById('mediaQueueList');

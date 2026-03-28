@@ -129,9 +129,6 @@
                 <span>Explorador de Leads</span>
             </a>
 
-            <a href="#agents" class="eio-nav-item" data-page="agents">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h4z"
                         stroke="currentColor" stroke-width="2" />
                     <path d="M4 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8z"
                         stroke="currentColor" stroke-width="2" />
@@ -153,13 +150,6 @@
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
                 <span>CRM & Leads</span>
-            </a>
-
-            <a href="#messages" class="eio-nav-item" data-page="messages">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>Mensagens</span>
             </a>
 
             <a href="#protools" class="eio-nav-item" data-page="protools">
@@ -511,24 +501,6 @@
 
                     <div class="eio-stat-card">
                         <div class="eio-stat-header">
-                            <span class="eio-stat-label">Comentários</span>
-                            <div class="eio-stat-icon eio-stat-icon-cyan">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="eio-stat-value" id="statComments">0</div>
-                        <div class="eio-stat-change eio-stat-neutral" id="statCommentsChange">
-                            <span>Sem atividade ainda</span>
-                        </div>
-                    </div>
-
-                    <div class="eio-stat-card">
-                        <div class="eio-stat-header">
                             <span class="eio-stat-label">Taxa de Engajamento</span>
                             <div class="eio-stat-icon eio-stat-icon-orange">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -572,7 +544,7 @@
                             <div>
                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Versão Atual</div>
                                 <div style="font-size: 1.1rem; font-weight: 600; color: #4CAF50;" id="extensionVersion">
-                                    v4.7.11 (E.I.O System)</div>
+                                    v4.7.12 (E.I.O System)</div>
                             </div>
                             <div>
                                 <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Tamanho</div>
@@ -594,7 +566,7 @@
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
                             </svg>
-                            Baixar Extensão v4.7.11 (.zip)
+                            Baixar Extensão v4.7.12 (.zip)
                         </button>
 
                         <div
@@ -619,28 +591,8 @@
                     </div>
                 </div>
 
-                <!-- Central de Mensagens & Atividade -->
+                <!-- Atividade Recente -->
                 <div class="eio-dashboard-grid">
-                    <div class="eio-card">
-                        <div class="eio-card-header">
-                            <h3>📨 Mensagens Recentes</h3>
-                            <a href="#messages" class="eio-link" data-page="messages"
-                                onclick="document.querySelector('[data-page=messages]').click()">Ver todas</a>
-                        </div>
-                        <div class="eio-messages-preview" id="messagesPreview">
-                            <!-- Estado vazio por padrão -->
-                            <div class="eio-empty-state" style="padding: 40px 20px; text-align: center;">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-                                    stroke="rgba(255,255,255,0.3)" stroke-width="1.5" style="margin-bottom: 15px;">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                </svg>
-                                <p style="color: rgba(255,255,255,0.5); margin-bottom: 15px;">Nenhuma mensagem ainda</p>
-                                <p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-bottom: 0;">
-                                    As DMs extraídas pela extensão aparecerão aqui
-                                </p>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="eio-card">
                         <div class="eio-card-header">
@@ -921,23 +873,7 @@
                                     </div>
                                 </div>
 
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <span style="font-size: 1.5rem;">💬</span>
-                                        <div>
-                                            <div style="color: #fff; font-weight: 600;">Respondeu DM</div>
-                                            <div style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">Lead quente!
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="color: #aaa;">+</span>
-                                        <input type="number" value="5" min="0" max="10" class="eio-input"
-                                            style="width: 60px; text-align: center; padding: 8px;">
-                                        <span style="color: #aaa;">pontos</span>
-                                    </div>
-                                </div>
+                                <!-- "Respondeu DM" criteria removed for MVP stability -->
 
                                 <div
                                     style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px;">
@@ -1683,14 +1619,7 @@ Conta com a gente sempre! ❤️</textarea>
                             <div style="margin-top: 25px;">
                                 <h4 style="color: #fff; margin: 0 0 15px;">⚡ Gatilhos Automáticos de Lead Quente</h4>
                                 <div style="display: grid; gap: 12px;">
-                                    <label
-                                        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
-                                        <div style="display: flex; align-items: center; gap: 12px;"><input
-                                                type="checkbox" checked
-                                                style="width: 20px; height: 20px; accent-color: #FF5722;"><span
-                                                style="color: #fff;">💬 Respondeu DM em menos de 1 hora</span></div>
-                                        <span style="color: #FF5722; font-weight: 600;">+5 pts</span>
-                                    </label>
+                                    <!-- DM trigger removed -->
                                     <label
                                         style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
                                         <div style="display: flex; align-items: center; gap: 12px;"><input
@@ -1744,10 +1673,7 @@ Conta com a gente sempre! ❤️</textarea>
                                             style="width: 18px; height: 18px; accent-color: #FF5722;"> Mover
                                         automaticamente
                                         para coluna "Quente" no CRM</label>
-                                    <label
-                                        style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); cursor: pointer;"><input
-                                            type="checkbox" style="width: 18px; height: 18px; accent-color: #FF5722;">
-                                        Enviar DM automática de follow-up</label>
+                                <!-- Auto-DM removed -->
                                 </div>
                             </div>
 
@@ -2408,12 +2334,7 @@ Significa muito pra nós ter você aqui ❤️</textarea>
                                 </div>
                                 <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Seguidores Ganhos</div>
                             </div>
-                            <div
-                                style="padding: 20px; background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.05)); border-radius: 12px; text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 700; color: #2196F3;" id="metricDMRate">0%
-                                </div>
-                                <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Taxa de Resposta DM</div>
-                            </div>
+                            <!-- DM Rate metric removed -->
                             <div
                                 style="padding: 20px; background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(156, 39, 176, 0.05)); border-radius: 12px; text-align: center;">
                                 <div style="font-size: 2rem; font-weight: 700; color: #9C27B0;" id="metricLeads">0</div>
@@ -2655,21 +2576,7 @@ Significa muito pra nós ter você aqui ❤️</textarea>
                                     data-type="post">Que incrível! 🔥 Obrigado por me incluir!</textarea>
                             </div>
 
-                            <div
-                                style="padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                                    <input type="checkbox" style="width: 20px; height: 20px; accent-color: #FF5722;">
-                                    <span style="font-size: 1.5rem;">💬</span>
-                                    <div>
-                                        <div style="color: #9C27B0; font-weight: 600;">Menção em Comentários</div>
-                                        <div style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">Quando alguém te
-                                            menciona em comentário</div>
-                                    </div>
-                                </div>
-                                <textarea class="eio-input mention-response" rows="2"
-                                    style="width: 100%; padding: 12px;"
-                                    data-type="comment">Opa! Vi que você me chamou! 👋 Como posso ajudar?</textarea>
-                            </div>
+                            <!-- Comment mentions removed -->
                         </div>
 
                         <!-- Histórico de menções -->
