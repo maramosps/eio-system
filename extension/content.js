@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.12 Initializing - HUMAN EMULATION MODE...');
+console.log('E.I.O Content Script v4.7.13 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -620,7 +620,7 @@ function randomDelay(min, max) {
 
 /**
  * ═══════════════════════════════════════════════════════════
- * ADVANCED HUMAN EMULATION HELPERS (v4.7.12)
+ * ADVANCED HUMAN EMULATION HELPERS (v4.7.13)
  * Bypasses Instagram anti-bot layer by simulating full user
  * interaction sequences with realistic timing.
  * ═══════════════════════════════════════════════════════════
@@ -1383,15 +1383,14 @@ async function runExtractionFlow(payload) {
             // O texto "Segue você" ou "Follows you" aparece no item.
             const followsMe = btnText.includes('segue você') || btnText.includes('follows you');
 
-            // APLICAR FILTROS - COMENTADO PARA NÃO OCULTAR DADOS
-            // Deixamos o usuário filtrar no Dashboard depois
-            /* 
+            // APLICAR FILTROS RIGOROSOS DE EXTRAÇÃO (v4.7.13)
+            // Skip automático de perfis que já seguimos ou já foi solicitado
             if (extractType === 'followers') {
-                if (isFollowing || isRequested || followsMe) {
+                if (isFollowing || isRequested) {
+                    // Pular este perfil para poupar scraping e ações redundantes
                     continue;
                 }
             }
-            */
 
             if (extractType === 'following') {
                 // Se carrego quem sigo, obviamente aceito 'isFollowing'
@@ -1561,7 +1560,7 @@ async function executeInstagramAction(payload) {
         'viewStory': executeStoryInteract,
         'like_feed_2': executeLikeFeed2,
         'story_interact': executeStoryInteract
-        // comment and dm removed in v4.7.12 for MVP stability
+        // comment and dm removed in v4.7.13 for MVP stability
     };
 
     const actionFn = actionFunctions[type];
@@ -1847,10 +1846,10 @@ async function executeLike(target) {
 
 
 
-// v4.7.12 — executeSmartComment REMOVED for MVP stability (DOM volatility)
+// v4.7.13 — executeSmartComment REMOVED for MVP stability (DOM volatility)
 
 /**
- * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.12)
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.13)
  * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -2021,7 +2020,7 @@ async function executeStoryInteract(target) {
     }
 }
 
-// v4.7.12 — executeDM, sendDMInCurrentPage, findMessageButton, findSendButton,
+// v4.7.13 — executeDM, sendDMInCurrentPage, findMessageButton, findSendButton,
 // personalizeMessage, typeHumanized ALL REMOVED for MVP stability
 
 
@@ -2174,7 +2173,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.12 Ready!');
+console.log('E.I.O Content Script v4.7.13 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2607,6 +2606,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.12 - DOM Human Emulation active!');
+console.log('E.I.O Content Script v4.7.13 - DOM Human Emulation active!');
 
 

@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.12 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.13 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -211,7 +211,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
-// v4.7.12 - Follow-back audit & DM trigger REMOVED for MVP stability
+// v4.7.13 - Follow-back audit & DM trigger REMOVED for MVP stability
 
 // ═══════════════════════════════════════════════════════════
 // MESSAGE HANDLER (CENTRAL)
@@ -480,7 +480,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         await comboDelay();
     }
 
-    // v4.7.12 — Comment step REMOVED for MVP stability
+    // v4.7.13 — Comment step REMOVED for MVP stability
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 3: VER STORY (STORY)
@@ -585,7 +585,7 @@ async function processQueue() {
         extensionState.currentComboUsername = null;
         await saveState();
 
-        // v4.7.12 — Follow-back audit alarm REMOVED for MVP stability
+        // v4.7.13 — Follow-back audit alarm REMOVED for MVP stability
 
         // Próximo perfil
         if (extensionState.isRunning && extensionState.queue.length > 0) {
@@ -659,7 +659,7 @@ function updateStats(type) {
     extensionState.stats.totalActionsToday++;
     if (type === 'follow') extensionState.stats.followsToday++;
     if (type === 'like' || type === 'like_feed_2') extensionState.stats.likesToday++;
-    // comment stats removed in v4.7.12
+    // comment stats removed in v4.7.13
     if (type === 'story_interact') extensionState.stats.storiesLikedToday++;
     if (type === 'unfollow') extensionState.stats.unfollowsToday++;
     notifyPopup('statsUpdate', { stats: extensionState.stats });

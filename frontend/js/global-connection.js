@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O GLOBAL CONNECTION v4.7.12
+ * E.I.O GLOBAL CONNECTION v4.7.13
  * 🔥 SILENT GREEN - MutationObserver + Auto-Fix UI
  * ═══════════════════════════════════════════════════════════
  */
