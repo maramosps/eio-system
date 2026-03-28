@@ -3355,13 +3355,16 @@ Significa muito pra nós ter você aqui ❤️</textarea>
     <!-- E.I.O Global Connection v4.5.1 -->
     <script src="js/global-connection.js?v=9999"></script>
 
-<style>
-  a[href*="agent"], 
-  a[href*="mensag"], 
-  a[href*="messag"] { 
-    display: none !important; 
-  }
-</style>
+<script>
+  // Marreta: Varre a tela e esconde os botões pelo nome, não importa a tag HTML
+  setInterval(() => {
+    document.querySelectorAll('a, li, div, span').forEach(el => {
+      if(el.innerText && (el.innerText === 'Agentes IA' || el.innerText === 'Mensagens Auto')) {
+        el.style.display = 'none';
+      }
+    });
+  }, 500);
+</script>
 
 </body>
 
