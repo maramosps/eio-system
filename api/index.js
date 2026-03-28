@@ -769,24 +769,51 @@ module.exports = async (req, res) => {
             }
 
             try {
-                const { instagram_username, status, last_action, updated_at } = req.body;
+                const { instagram_username, status, last_action, updated_at, force_create } = req.body;
 
                 if (!instagram_username) {
                     return res.status(400).json({ success: false, message: 'username obrigatório' });
                 }
 
-                // Atualizar lead no Supabase
-                const { error } = await supabase
+                // Check se lead existe
+                const { data: existingLead } = await supabase
                     .from('leads')
-                    .update({
-                        status: status || 'updated'
-                    })
+                    .select('id')
                     .eq('user_id', decoded.userId)
-                    .eq('username', instagram_username);
+                    .eq('username', instagram_username)
+                    .single();
 
-                if (error) {
-                    console.error('[API /crm/update-status] DB Error:', error);
-                    return res.status(500).json({ success: false, message: 'Erro no banco de dados', error: error.message });
+                if (existingLead) {
+                    // Atualizar lead no Supabase
+                    const { error } = await supabase
+                        .from('leads')
+                        .update({
+                            status: status || 'updated',
+                            last_action: last_action || null
+                        })
+                        .eq('id', existingLead.id);
+
+                    if (error) {
+                        console.error('[API /crm/update-status] DB Error:', error);
+                        return res.status(500).json({ success: false, message: 'Erro no banco de dados', error: error.message });
+                    }
+                } else if (force_create) {
+                    // Criar lead se foi via motor de automação (EIO-EXT)
+                    const { error } = await supabase
+                        .from('leads')
+                        .insert([{
+                            user_id: decoded.userId,
+                            username: instagram_username,
+                            full_name: instagram_username,
+                            status: status || 'novos',
+                            last_action: last_action || null,
+                            extracted_at: new Date().toISOString()
+                        }]);
+                        
+                    if (error) {
+                        console.error('[API /crm/update-status] Insert Error:', error);
+                        return res.status(500).json({ success: false, message: 'Erro ao inserir no banco de dados', error: error.message });
+                    }
                 }
 
                 return res.json({ success: true, message: 'Status atualizado com sucesso' });

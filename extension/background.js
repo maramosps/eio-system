@@ -1,7 +1,7 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação — VERSÃO 4.7.12
+  Motor de automação — VERSÃO 4.7.13
   MVP STREAMLINED: Follow → Like → View Story
   Comment e DM removidos para estabilidade
 ═══════════════════════════════════════════════════════════
@@ -146,6 +146,29 @@ async function sendActionLog(actionType, targetProfile, success) {
             console.error('ERRO API DASHBOARD [/api/v1/actions]:', response.status, errBody);
         } else {
             console.log('[E.I.O API] 📤 Log enviado com sucesso via /api/v1/actions');
+            
+            // v4.7.13 - AUTO POPULATE LEAD IN CRM (Immediate population)
+            if (success && (actionType === 'follow' || actionType === 'like_feed_2' || actionType === 'like')) {
+                try {
+                    const crmStatus = actionType === 'follow' ? 'novos' : 'contactados';
+                    await fetch(`${BACKEND_URL}/api/v1/crm/update-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            instagram_username: targetProfile.replace('@', ''),
+                            status: crmStatus,
+                            last_action: actionType,
+                            force_create: true
+                        })
+                    });
+                    console.log(`[E.I.O CRM] 👤 Lead atualizado/criado no dashboard (${crmStatus})`);
+                } catch (crmErr) {
+                    console.error('[E.I.O CRM] Falha ao preencher CRM:', crmErr.message);
+                }
+            }
         }
     } catch (error) {
         console.error('ERRO API DASHBOARD [/api/v1/actions] CATCH:', error.message);
@@ -229,7 +252,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.12',
+                pong: true, version: '4.7.13',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -301,7 +324,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.12' });
+            sendResponse({ success: true, version: '4.7.13' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -717,7 +740,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.12',
+            pong: true, version: '4.7.13',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });
