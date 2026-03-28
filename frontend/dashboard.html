@@ -199,7 +199,14 @@
                     <span>Assinaturas</span>
                 </a>
 
-                
+                <a href="#admin-messages" class="eio-nav-item" data-page="admin-messages"
+                    style="color: var(--eio-pink-400);">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2L3 7L10 12L17 7L10 2Z" stroke="currentColor" stroke-width="2" />
+                        <path d="M3 12L10 17L17 12" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Mensagens Auto</span>
+                </a>
 
                 <a href="#admin-finances" class="eio-nav-item" data-page="admin-finances"
                     style="color: var(--eio-pink-400);">
@@ -3351,6 +3358,16 @@ Significa muito pra nós ter você aqui ❤️</textarea>
   }
 </style>
 
+<script>
+  // Script Assassino: Elimina qualquer resquício visual sem quebrar o DOM
+  setInterval(() => {
+    document.querySelectorAll('a, li, div, span, h2, p').forEach(el => {
+      if(el.innerText && (el.innerText.includes('Agentes IA') || el.innerText.includes('Mensagens Auto') || el.innerText.includes('Central de Agentes IA'))) {
+        el.style.display = 'none';
+      }
+    });
+  }, 500);
+</script>
 
 </body>
 

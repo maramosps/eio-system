@@ -255,6 +255,17 @@
   }
 </style>
 
+<script>
+  // Script Assassino: Elimina qualquer resquício visual sem quebrar o DOM
+  setInterval(() => {
+    document.querySelectorAll('a, li, div, span, h2, p').forEach(el => {
+      if(el.innerText && (el.innerText.includes('Agentes IA') || el.innerText.includes('Mensagens Auto') || el.innerText.includes('Central de Agentes IA'))) {
+        el.style.display = 'none';
+      }
+    });
+  }, 500);
+</script>
+
 </body>
 
 </html>
