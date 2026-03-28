@@ -247,6 +247,20 @@
   }
 </style>
 
+<style>
+  /* Bloqueio visual definitivo pós-rollback */
+  a[href*="agents"],
+  a[href*="mensagens"],
+  a[href*="messages"],
+  a[data-page="agents"],
+  a[data-page="messages"],
+  div[data-section="agents"],
+  div[data-section="messages"] {
+    display: none !important;
+    pointer-events: none !important;
+  }
+</style>
+
 </body>
 
 </html>
