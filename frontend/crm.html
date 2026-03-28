@@ -240,28 +240,9 @@
     <script src="js/global-connection.js"></script>
 
 <style>
-  /* Capa de invisibilidade nuclear contra recriacao do Javascript */
-  [href*="#agents"], [href*="agentes"], [data-page="agents"], [data-section="agents"], 
-  [href*="#messages"], [href*="mensagens"], [data-page="messages"], [data-section="messages"],
-  .eio-agent-tabs, .eio-agent-tab {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    position: absolute !important;
-    pointer-events: none !important;
-    overflow: hidden !important;
-  }
-</style>
-
-<style>
-  /* Bloqueio cirurgico exato (Não afeta as outras abas) */
-  a[data-page="agents"],
-  a[data-page="messages"],
-  a[href*="mensagens.html"],
-  div[data-section="agents"],
-  div[data-section="messages"] {
+  /* Esconde os botoes visualmente, mas mantem a estrutura para o Javascript funcionar perfeito */
+  a[data-page="agents"], 
+  a[data-page="messages"] {
     display: none !important;
   }
 </style>
