@@ -199,14 +199,7 @@
                     <span>Assinaturas</span>
                 </a>
 
-                <a href="#admin-messages" class="eio-nav-item" data-page="admin-messages"
-                    style="color: var(--eio-pink-400);">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 2L3 7L10 12L17 7L10 2Z" stroke="currentColor" stroke-width="2" />
-                        <path d="M3 12L10 17L17 12" stroke="currentColor" stroke-width="2" />
-                    </svg>
-                    <span>Mensagens Auto</span>
-                </a>
+                
 
                 <a href="#admin-finances" class="eio-nav-item" data-page="admin-finances"
                     style="color: var(--eio-pink-400);">
@@ -3341,6 +3334,22 @@ Significa muito pra nós ter você aqui ❤️</textarea>
 
     <!-- E.I.O Global Connection v4.5.1 -->
     <script src="js/global-connection.js?v=9999"></script>
+
+<style>
+  /* Capa de invisibilidade nuclear contra recriacao do Javascript */
+  [href*="#agents"], [href*="agentes"], [data-page="agents"], [data-section="agents"], 
+  [href*="#messages"], [href*="mensagens"], [data-page="messages"], [data-section="messages"],
+  .eio-agent-tabs, .eio-agent-tab {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+</style>
 
 
 </body>
