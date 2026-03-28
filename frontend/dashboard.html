@@ -129,14 +129,7 @@
                 <span>Explorador de Leads</span>
             </a>
 
-            <a href="#agents" class="eio-nav-item" data-page="agents">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="2" width="20" height="20" rx="2" stroke="currentColor" stroke-width="2" />
-                    <path d="M4 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8z" stroke="currentColor" stroke-width="2" />
-                    <path d="M10 14h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <span>Agentes IA</span>
-            </a>
+            
 
             <a href="analytics.html" class="eio-nav-item">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -617,13 +610,7 @@
                 </div>
             </div>
 
-            <!-- AI Agents Section (Complete) -->
-            <div class="eio-content-section" data-section="agents">
-                <div class="eio-section-header-dash">
-                    <h2 class="eio-section-title-dash">🤖 Central de Agentes IA</h2>
-                    <p>Configure assistentes inteligentes para automatizar respostas, qualificar leads e gerenciar
-                        conversas</p>
-                </div>
+            
 
                 <!-- Tabs de navegação dos agentes -->
                 <div class="eio-agent-tabs" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
@@ -3355,16 +3342,6 @@ Significa muito pra nós ter você aqui ❤️</textarea>
     <!-- E.I.O Global Connection v4.5.1 -->
     <script src="js/global-connection.js?v=9999"></script>
 
-<script>
-  // Marreta: Varre a tela e esconde os botões pelo nome, não importa a tag HTML
-  setInterval(() => {
-    document.querySelectorAll('a, li, div, span').forEach(el => {
-      if(el.innerText && (el.innerText === 'Agentes IA' || el.innerText === 'Mensagens Auto')) {
-        el.style.display = 'none';
-      }
-    });
-  }, 500);
-</script>
 
 </body>
 
