@@ -255,16 +255,16 @@
   }
 </style>
 
-<script>
-  // Script Assassino: Elimina qualquer resquício visual sem quebrar o DOM
-  setInterval(() => {
-    document.querySelectorAll('a, li, div, span, h2, p').forEach(el => {
-      if(el.innerText && (el.innerText.includes('Agentes IA') || el.innerText.includes('Mensagens Auto') || el.innerText.includes('Central de Agentes IA'))) {
-        el.style.display = 'none';
-      }
-    });
-  }, 500);
-</script>
+<style>
+  /* Bloqueio cirurgico exato (Não afeta as outras abas) */
+  a[data-page="agents"],
+  a[data-page="messages"],
+  a[href*="mensagens.html"],
+  div[data-section="agents"],
+  div[data-section="messages"] {
+    display: none !important;
+  }
+</style>
 
 </body>
 
