@@ -799,6 +799,45 @@
   }
 </style>
 
+<style>
+  /* Fix Definitivo e Alinhado para o Botão Config (Top Right) */
+  #eioSettingsBtn, /* ID provável */
+  button[title*="Configur"], /* Selector por atributo de texto */
+  .eio-settings-btn { /* Classe provável */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important; /* Espaço perfeito entre ícone e texto */
+    padding: 6px 12px !important;
+    width: auto !important;
+    min-width: 90px !important; /* Garante que o texto 'Config' não quebre */
+    overflow: visible !important; /* Impede que o texto seja cortado */
+    cursor: pointer !important; /* Força o ponteiro do mouse */
+    position: relative !important; /* Garante o clique correto */
+    z-index: 10 !important;
+  }
+
+  /* Força tamanho e comportamento do SVG/Ícone dentro do botão */
+  #eioSettingsBtn svg, 
+  button[title*="Configur"] svg,
+  .eio-settings-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important; /* Impede que o ícone seja esmagado */
+    margin: 0 !important; /* Reseta margens quebradas */
+    vertical-align: middle !important;
+  }
+
+  /* Garante o texto 'Config' alinhado */
+  #eioSettingsBtn span,
+  button[title*="Configur"] span,
+  .eio-settings-btn span {
+    margin: 0 !important;
+    white-space: nowrap !important; /* Mantém 'Config' em uma linha só */
+    font-size: 13px !important;
+  }
+</style>
+
 </body>
 
 </html>
