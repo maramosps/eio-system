@@ -2159,3 +2159,26 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
 }
+
+/* FORÇA O ALINHAMENTO DAS ABAS PRINCIPAIS - IGNORANDO TRAVAS DO CHROME */
+.eio-tab {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+}
+
+.eio-tab svg {
+    position: static !important; /* Arranca a engrenagem de cima do texto */
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+}
+
+.eio-tab span {
+    position: static !important;
+    margin: 0 !important;
+}
