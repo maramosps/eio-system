@@ -598,6 +598,19 @@ async function processQueue() {
                 }
             }
         }
+// --- INÍCIO DA INTELIGÊNCIA: GRAVAR NA MEMÓRIA ---
+        if (actionSuccess) {
+            const bancoDeDados = await chrome.storage.local.get(['historicoInteracoesEIO']);
+            let historico = bancoDeDados.historicoInteracoesEIO || [];
+            
+            // Se o nome ainda não está no caderninho, ele anota e salva
+            if (!historico.includes(item.username)) {
+                historico.push(item.username);
+                await chrome.storage.local.set({ historicoInteracoesEIO: historico });
+                logAction('info', `🧠 @${item.username} foi salvo na memória para não ser repetido amanhã!`);
+            }
+        }
+        // --- FIM DA INTELIGÊNCIA ---
 
         // ═══════════════════════════════════════════════════════════
         // ITEM PROCESSADO — Remover da fila e incrementar AQUI (ÚNICO LUGAR)
