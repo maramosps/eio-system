@@ -484,7 +484,7 @@ async function initExtensionDownload() {
     // ═══════════════════════════════════════════════════════════
     // VERSÃO DINÂMICA: Lê do manifest via fetch para nunca ficar hardcoded
     // ═══════════════════════════════════════════════════════════
-    let currentVersion = '4.7.7'; // Fallback
+    let currentVersion = '4.7.15'; // Fallback
     try {
         // Tentar ler versão de um endpoint ou arquivo de versão
         const versionResp = await fetch('downloads/version.json').catch(() => null);
