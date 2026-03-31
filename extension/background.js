@@ -191,7 +191,10 @@ async function checkEnginePermission(actionType, targetUsername) {
         });
 
         if (!response.ok) return { allowed: true, delayMs: 10000, reason: 'Engine Unreachable' };
-        return await response.json();
+        let permissaoServidor = await response.json();
+        // Substitui o tempo do servidor por um tempo humano aleatório entre 60 e 80 segundos
+        permissaoServidor.delayMs = Math.floor(Math.random() * (80000 - 60000 + 1)) + 60000;
+        return permissaoServidor;
     } catch (e) {
         return { allowed: true, delayMs: 5000, reason: 'Engine Error' };
     }
