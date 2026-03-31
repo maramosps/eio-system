@@ -1110,49 +1110,63 @@ async function loadFromInstagram(type, limit = 200) {
 }
 
 function processLoadedAccounts(accounts) {
-    // Processar resultados - normalizar campos de diferentes fontes
-    AppState.accounts = accounts.map(acc => {
-        // Tentar encontrar a URL da foto em vários lugares possíveis
-        const avatarUrl = acc.profilePic ||
-            acc.avatar ||
-            acc.profile_pic_url ||
-            acc.profile_pic_url_hd ||
-            acc.user?.profile_pic_url ||
-            '';
+    // 1. CARREGAR A MEMÓRIA DO ROBÔ (O que ele já fez antes)
+    chrome.storage.local.get(['historicoInteracoesEIO'], (resultado) => {
+        let historico = resultado.historicoInteracoesEIO || [];
+        addLog('info', `🧠 Lendo memória: ${historico.length} perfis já trabalhados no passado.`);
 
-        return {
-            username: (acc.username || '').replace('@', ''),
-            fullName: acc.fullName || acc.full_name || acc.name || '',
-            avatar: avatarUrl,
-            id: acc.id || acc.pk || null,
-            isPrivate: !!acc.isPrivate || !!acc.is_private,
-            isVerified: !!acc.isVerified || !!acc.is_verified,
-            followers: acc.followers || acc.edge_followed_by?.count || 0,
-            following: acc.following || acc.edge_follow?.count || 0,
-            status: acc.status || 'pending',
-            followedByViewer: acc.followed_by_viewer || acc.followedByViewer || false,
-            followsViewer: acc.follows_viewer || acc.followsViewer || false,
-            requestedByViewer: acc.requested_by_viewer || acc.requestedByViewer || false
-        };
+        // 2. NORMALIZAR OS DADOS CRUS DO INSTAGRAM
+        let perfisProcessados = accounts.map(acc => {
+            const avatarUrl = acc.profilePic || acc.avatar || acc.profile_pic_url || acc.profile_pic_url_hd || acc.user?.profile_pic_url || '';
+            return {
+                username: (acc.username || '').replace('@', ''),
+                fullName: acc.fullName || acc.full_name || acc.name || '',
+                avatar: avatarUrl,
+                id: acc.id || acc.pk || null,
+                isPrivate: !!acc.isPrivate || !!acc.is_private,
+                isVerified: !!acc.isVerified || !!acc.is_verified,
+                followers: acc.followers || acc.edge_followed_by?.count || 0,
+                following: acc.following || acc.edge_follow?.count || 0,
+                status: acc.status || 'pending',
+                followedByViewer: acc.followed_by_viewer || acc.followedByViewer || false,
+                followsViewer: acc.follows_viewer || acc.followsViewer || false,
+                requestedByViewer: acc.requested_by_viewer || acc.requestedByViewer || false
+            };
+        });
+
+        // 3. O FILTRO INTELIGENTE (Cruzar a lista nova com o histórico)
+        let contagemRepetidos = 0;
+        AppState.accounts = perfisProcessados.filter(perfil => {
+            // Se o nome do perfil ESTÁ na memória, joga fora (retorna false)
+            if (historico.includes(perfil.username)) {
+                contagemRepetidos++;
+                return false; 
+            }
+            // Se é um nome novo, deixa passar para a tela (retorna true)
+            return true;
+        });
+
+        if (contagemRepetidos > 0) {
+            addLog('warning', `🛡️ Inteligência E.I.O: ${contagemRepetidos} perfis repetidos foram bloqueados da fila.`);
+        }
+
+        // 4. APLICAR FILTROS E JOGAR NA TELA (O que sobrou, ou seja, os novos)
+        AppState.filteredAccounts = [...AppState.accounts];
+        applyFilters();
+        renderAccountsTable();
+        updateSelectedCount();
+        saveState();
+
+        // Sincronizar com dashboard se backend disponível
+        if (window.EIO_BACKEND && AppState.accounts.length > 0) {
+            addLog('info', '📤 Sincronizando leads com o dashboard...');
+            // Sync logic placeholder
+        }
+
+        addLog('success', `✅ ${AppState.accounts.length} perfis NOVOS prontos para ação.`);
+        LoadingManager.showSuccess(AppState.accounts.length);
     });
-
-    // Aplicar filtros iniciais
-    AppState.filteredAccounts = [...AppState.accounts];
-    applyFilters();
-    renderAccountsTable();
-    updateSelectedCount();
-    saveState();
-
-    // Sincronizar com dashboard se backend disponível
-    if (window.EIO_BACKEND && AppState.accounts.length > 0) {
-        addLog('info', '📤 Sincronizando leads com o dashboard...');
-        // Sync logic placeholder
-    }
-
-    addLog('success', `✅ ${AppState.accounts.length} contas processadas.`);
-    LoadingManager.showSuccess(AppState.accounts.length);
 }
-
 
 
 // Funções auxiliares para carregamento (placeholders)
