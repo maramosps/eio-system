@@ -1,13 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação — VERSÃO 4.7.13
+  Motor de automação — VERSÃO 4.7.15
   MVP STREAMLINED: Follow → Like → View Story
   Comment e DM removidos para estabilidade
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.13 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.7.15 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -147,7 +147,7 @@ async function sendActionLog(actionType, targetProfile, success) {
         } else {
             console.log('[E.I.O API] 📤 Log enviado com sucesso via /api/v1/actions');
             
-            // v4.7.13 - AUTO POPULATE LEAD IN CRM (Immediate population)
+            // v4.7.15 - AUTO POPULATE LEAD IN CRM (Immediate population)
             if (success && (actionType === 'follow' || actionType === 'like_feed_2' || actionType === 'like')) {
                 try {
                     const crmStatus = actionType === 'follow' ? 'novos' : 'contactados';
@@ -237,7 +237,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
-// v4.7.13 - Follow-back audit & DM trigger REMOVED for MVP stability
+// v4.7.15 - Follow-back audit & DM trigger REMOVED for MVP stability
 
 // ═══════════════════════════════════════════════════════════
 // MESSAGE HANDLER (CENTRAL)
@@ -255,7 +255,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.13',
+                pong: true, version: '4.7.15',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -327,7 +327,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.13' });
+            sendResponse({ success: true, version: '4.7.15' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -506,7 +506,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
         await comboDelay();
     }
 
-    // v4.7.13 — Comment step REMOVED for MVP stability
+    // v4.7.15 — Comment step REMOVED for MVP stability
 
     // ═══════════════════════════════════════════════════════════
     // PASSO 3: VER STORY (STORY)
@@ -624,7 +624,7 @@ async function processQueue() {
         extensionState.currentComboUsername = null;
         await saveState();
 
-        // v4.7.13 — Follow-back audit alarm REMOVED for MVP stability
+        // v4.7.15 — Follow-back audit alarm REMOVED for MVP stability
 
         // Próximo perfil
         if (extensionState.isRunning && extensionState.queue.length > 0) {
@@ -698,7 +698,7 @@ function updateStats(type) {
     extensionState.stats.totalActionsToday++;
     if (type === 'follow') extensionState.stats.followsToday++;
     if (type === 'like' || type === 'like_feed_2') extensionState.stats.likesToday++;
-    // comment stats removed in v4.7.13
+    // comment stats removed in v4.7.15
     if (type === 'story_interact') extensionState.stats.storiesLikedToday++;
     if (type === 'unfollow') extensionState.stats.unfollowsToday++;
     notifyPopup('statsUpdate', { stats: extensionState.stats });
@@ -756,7 +756,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.13',
+            pong: true, version: '4.7.15',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });

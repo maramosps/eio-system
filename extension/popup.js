@@ -46,7 +46,7 @@ const AppState = {
         showBadges: true,
         showBadges: true,
         autoSaveQueue: true
-        // DM Config removed in v4.7.13
+        // DM Config removed in v4.7.15
     },
     logs: [],
     mediaQueue: []
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTabs();
     initializeDropdowns();
     initializeFilters();
-    // initializeDMHandlers() removed in v4.7.13
+    // initializeDMHandlers() removed in v4.7.15
     initializeConfigSections();
     initializeTableHandlers();
     initializeActionButtons();
@@ -1900,7 +1900,7 @@ function collectConfig() {
         showProfilePics: document.getElementById('configShowProfilePics')?.checked ?? true,
         dismissNotifications: document.getElementById('configDismissNotifications')?.checked ?? true,
         loadLastQueue: document.getElementById('configLoadLastQueue')?.checked ?? true,
-        // DM Config removed in v4.7.13
+        // DM Config removed in v4.7.15
     };
 }
 
@@ -1910,7 +1910,7 @@ function handleContextualAction(actionId) {
         'actionLike': 'like',
         'actionUnfollow': 'unfollow',
         'actionStory': 'viewStory'
-        // actionComment and actionDM removed in v4.7.13
+        // actionComment and actionDM removed in v4.7.15
     };
 
     const action = actions[actionId];
@@ -2274,7 +2274,7 @@ function initializeMediaHandlers() {
     renderMediaQueue();
 }
 
-// v4.7.13 — initializeDMHandlers REMOVED for MVP stability
+// v4.7.15 — initializeDMHandlers REMOVED for MVP stability
 
 function renderMediaQueue() {
     const listContainer = document.getElementById('mediaQueueList');
