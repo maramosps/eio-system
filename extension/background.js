@@ -41,10 +41,10 @@ let isFilaRodando = false;
 // DELAYS FIXOS E SEGUROS - NÃO CONFIGURÁVEIS
 // ═══════════════════════════════════════════════════════════
 const DELAY_CONFIG = {
-    BETWEEN_ACTIONS_SAME_PROFILE: 15000, // 15s (mínimo seguro)
-    BETWEEN_PROFILES: 30000,             // 30s
-    COMBO_MIN: 15000,                    // 15s — mínimo entre cliques do combo
-    COMBO_MAX: 120000                    // 120s — máximo entre cliques do combo
+    BETWEEN_ACTIONS_SAME_PROFILE: 3000, // 03s — super rápido entre ações
+    BETWEEN_PROFILES: 5000,             // 05s — pulo rápido para o próximo cliente
+    COMBO_MIN: 3000,                    // 03s — mínimo entre cliques do combo
+    COMBO_MAX: 8000                     // 08s — máximo absoluto de espera
 };
 
 function getRandomDelay(min, max) {
@@ -56,14 +56,15 @@ function getRandomDelay(min, max) {
 // ═══════════════════════════════════════════════════════════
 /**
  * Random delay in SECONDS (not milliseconds)
- * @param {number} min - Minimum seconds (default: 90)
- * @param {number} max - Maximum seconds (default: 160)
+ * @param {number} min - Minimum seconds (default: 60)
+ * @param {number} max - Maximum seconds (default: 80)
  * @returns {Promise} - Resolves after random seconds
  */
-async function randomDelaySeconds(min = 15, max = 120) {
-    const seconds = Math.floor(Math.random() * (max - min + 1)) + min;
-    const ms = seconds * 1000;
-    console.log(`[Motor] Aguardando ${seconds}s...`);
+async function randomDelaySeconds(min = 3, max = 8) {
+    // Ignora qualquer pedido de tempo alto e força no máximo 8 segundos
+    const tempoReal = Math.floor(Math.random() * (8 - 3 + 1)) + 3;
+    const ms = tempoReal * 1000;
+    console.log(`[Motor] Aguardando ${tempoReal}s...`);
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -192,8 +193,9 @@ async function checkEnginePermission(actionType, targetUsername) {
 
         if (!response.ok) return { allowed: true, delayMs: 10000, reason: 'Engine Unreachable' };
         let permissaoServidor = await response.json();
-        // Substitui o tempo do servidor por um tempo humano aleatório entre 60 e 80 segundos
-        permissaoServidor.delayMs = Math.floor(Math.random() * (80000 - 60000 + 1)) + 60000;
+        
+        // Tempo humano acelerado: sorteio entre 15 e 25 segundos
+        permissaoServidor.delayMs = Math.floor(Math.random() * (25000 - 15000 + 1)) + 15000;
         return permissaoServidor;
     } catch (e) {
         return { allowed: true, delayMs: 5000, reason: 'Engine Error' };
@@ -677,21 +679,19 @@ async function ensureValidTab() {
     return null;
 }
 
-async function sendMessageWithRetry(tabId, message, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await chrome.tabs.sendMessage(tabId, message);
-        } catch (error) {
-            if (i < retries - 1) {
-                if (error.message.includes('context invalidated')) {
-                    const newId = await ensureValidTab();
-                    if (newId) tabId = newId;
-                }
-                await sleep(2000);
-            }
+async function sendMessageWithRetry(tabId, message) {
+    try {
+        // Envia o comando UMA ÚNICA VEZ. Fim das ações duplicadas!
+        return await chrome.tabs.sendMessage(tabId, message);
+    } catch (error) {
+        // Se o Instagram recarregar a página do nada (context invalidated)
+        if (error.message.includes('context invalidated')) {
+            const newId = await ensureValidTab();
+            if (newId) return await chrome.tabs.sendMessage(newId, message);
         }
+        // Para qualquer outro erro de lentidão, ele marca como sucesso falso para não travar, mas não repete!
+        return { success: false, reason: 'Erro de comunicação ignorado para evitar duplicação' };
     }
-    throw new Error('Falha comunicação com Instagram');
 }
 
 function updateStats(type) {

@@ -1968,62 +1968,49 @@ async function executeLikeFeed2(target) {
 /**
  * Interage com Story (Visualizar + Like opcional) - v4.6.1 Refined
  */
-async function executeStoryInteract(target) {
-    addConsoleLog('info', `👁️ Buscando Stories de @${target}...`);
-    chrome.runtime.sendMessage({ action: 'log_progress', message: 'Buscando Stories...' });
+async function executeStoryInteract(targetUsername) {
+    addConsoleLog('info', `👁️ Tentando ver Story de @${targetUsername}...`);
+    try {
+        // Espera a página e a foto de perfil carregarem (3 segundos de margem)
+        await new Promise(r => setTimeout(r, 3000)); 
 
-    // 1. Clicar na foto de perfil para abrir story
-    const profilePic = document.querySelector('header canvas') ||
-        document.querySelector('header span[role="link"]') ||
-        document.querySelector('div[role="button"][aria-disabled="false"] canvas');
+        const header = document.querySelector('header');
+        if (!header) return { success: false, reason: 'Perfil não carregou a tempo' };
 
-    // Verificar se tem anel de story (canvas geralmente indica isso ou borda colorida)
-    // Método alternativo: verificar se a foto é clicável (button wrapper)
-    const storyButton = profilePic?.closest('button') || profilePic?.closest('div[role="button"]');
+        // O Instagram usa um <canvas> para desenhar o anel colorido do Story
+        const storyRing = header.querySelector('canvas');
+        
+        if (storyRing) {
+            addConsoleLog('info', `📸 Story novo encontrado! Clicando...`);
+            storyRing.click(); 
+            
+            // Fica com a tela aberta "assistindo" o story por 4 segundos
+            await new Promise(r => setTimeout(r, 4000));
+            addConsoleLog('success', `👁️ Viu Story de @${targetUsername}`);
 
-    if (!storyButton) {
-        addConsoleLog('info', 'ℹ️ Nenhum story disponível para interagir.');
-        return { success: true, action: 'no_stories_found' }; // Não trava o combo
-    }
-
-    storyButton.click();
-    addConsoleLog('info', '👁️ Abrindo Story...');
-    await randomDelay(3000, 5000); // Esperar story carregar
-
-    // 2. Procurar botão de curtir (Coração)
-    // O seletor de like no story muda frequentemente. Geralmente é um SVG de coração.
-    const likeStoryBtn = document.querySelector('svg[aria-label="Curtir"], svg[aria-label="Like"]')?.closest('div[role="button"]') ||
-        document.querySelector('span svg[aria-label="Curtir"]')?.closest('span');
-
-    if (likeStoryBtn) {
-        addConsoleLog('info', '❤️ Curtindo Story...');
-        chrome.runtime.sendMessage({ action: 'log_progress', message: 'Curtindo Story...' });
-
-        likeStoryBtn.click();
-        await randomDelay(1000, 2000);
-        addConsoleLog('success', '✅ Story curtido!');
-
-        // Fechar story (clicar no X ou voltar)
-        const closeBtn = document.querySelector('svg[aria-label="Fechar"], svg[aria-label="Close"]')?.closest('div[role="button"]');
-        if (closeBtn) closeBtn.click();
-        else history.back();
-
-        return { success: true, action: 'story_liked' };
-    } else {
-        addConsoleLog('warning', '⚠️ Botão de curtir story não encontrado ou já curtido.');
-        // Tentar fechar mesmo assim
-        const closeBtn = document.querySelector('svg[aria-label="Fechar"], svg[aria-label="Close"]')?.closest('div[role="button"]');
-        if (closeBtn) closeBtn.click();
-        else history.back();
-
-        return { success: true, action: 'story_viewed_only' };
+            // Tenta achar o botão "X" para fechar o Story
+            const closeBtn = document.querySelector('svg[aria-label="Fechar"], svg[aria-label="Close"]');
+            if (closeBtn) {
+                let btn = closeBtn.closest('button') || closeBtn.parentElement;
+                if (btn) btn.click();
+            } else {
+                // Se não achar o X, força o navegador a voltar a página anterior
+                window.history.back();
+            }
+            
+            // Pausa curta antes de ir para a próxima ação
+            await new Promise(r => setTimeout(r, 2000));
+            return { success: true };
+        } else {
+            addConsoleLog('warning', `⚠️ Nenhum Story novo para @${targetUsername}`);
+            return { success: true, reason: 'Sem Story ou já visto' }; // Retorna true para não travar a fila
+        }
+    } catch (e) {
+        addConsoleLog('error', `Erro no Story: ${e.message}`);
+        return { success: false, error: e.message };
     }
 }
-
-// v4.7.15 — executeDM, sendDMInCurrentPage, findMessageButton, findSendButton,
-// personalizeMessage, typeHumanized ALL REMOVED for MVP stability
-
-
+   
 async function executeViewStory(target) {
     const storyRing = document.querySelector('canvas')?.closest('div[role="button"]');
     if (storyRing) {
