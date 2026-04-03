@@ -1,13 +1,13 @@
 /*
 ═══════════════════════════════════════════════════════════
   E.I.O - BACKGROUND SCRIPT (Service Worker)
-  Motor de automação — VERSÃO 4.7.15
+  Motor de automação — VERSÃO 4.8.0
   MVP STREAMLINED: Follow → Like → View Story
   Comment e DM removidos para estabilidade
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('[E.I.O Engine] ✅ Motor v4.7.15 Ativo');
+console.log('[E.I.O Engine] ✅ Motor v4.8.0 Ativo');
 
 const BACKEND_URL = 'https://eio-system.vercel.app';
 
@@ -41,10 +41,10 @@ let isFilaRodando = false;
 // DELAYS FIXOS E SEGUROS - NÃO CONFIGURÁVEIS
 // ═══════════════════════════════════════════════════════════
 const DELAY_CONFIG = {
-    BETWEEN_ACTIONS_SAME_PROFILE: 3000, // 03s — super rápido entre ações
-    BETWEEN_PROFILES: 5000,             // 05s — pulo rápido para o próximo cliente
-    COMBO_MIN: 3000,                    // 03s — mínimo entre cliques do combo
-    COMBO_MAX: 8000                     // 08s — máximo absoluto de espera
+    BETWEEN_ACTIONS_SAME_PROFILE: 3000,
+    BETWEEN_PROFILES: 5000,
+    COMBO_MIN: 3000,
+    COMBO_MAX: 8000
 };
 
 function getRandomDelay(min, max) {
@@ -272,9 +272,9 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
                     const buffer = await blob.arrayBuffer();
                     const bytes = new Uint8Array(buffer);
                     let binary = '';
-                    const len = bytes.byteLength;
-                    for (let i = 0; i < len; i++) {
-                        binary += String.fromCharCode(bytes[i]);
+                    const chunkSize = 8192; // Processa em blocos para evitar travamentos
+                    for (let i = 0; i < bytes.length; i += chunkSize) {
+                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
                     }
                     const base64 = btoa(binary);
                     const mimeType = blob.type || 'image/jpeg';
@@ -529,7 +529,7 @@ async function executeInteractionCombo(tabId, username, options = {}) {
     // Combo concluído silenciosamente
 
     return {
-        success: results.follow.success || results.like1.success, // Se curtiu ou seguiu, consideramos a roda motriz vitoriosa
+        success: results.follow.success || results.like1.success || results.story.success, // Se curtiu, seguiu ou viu story, consideramos a roda motriz vitoriosa
         results
     };
 }
@@ -681,16 +681,13 @@ async function ensureValidTab() {
 
 async function sendMessageWithRetry(tabId, message) {
     try {
-        // Envia o comando UMA ÚNICA VEZ. Fim das ações duplicadas!
         return await chrome.tabs.sendMessage(tabId, message);
     } catch (error) {
-        // Se o Instagram recarregar a página do nada (context invalidated)
         if (error.message.includes('context invalidated')) {
             const newId = await ensureValidTab();
             if (newId) return await chrome.tabs.sendMessage(newId, message);
         }
-        // Para qualquer outro erro de lentidão, ele marca como sucesso falso para não travar, mas não repete!
-        return { success: false, reason: 'Erro de comunicação ignorado para evitar duplicação' };
+        return { success: false, reason: 'pulado para evitar loop' };
     }
 }
 
@@ -732,12 +729,14 @@ function sleep(ms) {
 }
 
 // INITIALIZATION
-loadState().then(() => console.log('[E.I.O Engine] Estado recuperado'));
-// Se havia automação em andamento, retomar
-if (extensionState.isRunning && extensionState.queue.length > 0) {
-    console.log('[E.I.O] Retomando automação anterior...');
-    setTimeout(() => processQueue(), 2000);
-}
+loadState().then(() => {
+    console.log('[E.I.O Engine] Estado recuperado');
+    // Se havia automação em andamento, retomar
+    if (extensionState.isRunning && extensionState.queue.length > 0) {
+        console.log('[E.I.O] Retomando automação anterior...');
+        setTimeout(() => processQueue(), 2000);
+    }
+});
 
 // ═══════════════════════════════════════════════════════════
 // v4.6.5 - EXTERNAL MESSAGE LISTENER (Dashboard Heartbeat)

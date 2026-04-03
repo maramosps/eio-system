@@ -783,48 +783,28 @@
     <script src="popup.js"></script>
 
 <style>
-  /* Trava de seguranca para impedir icones estourados */
-  svg { 
-    max-width: 25px !important; 
-    max-height: 25px !important; 
-  }
-</style>
-
-<style>
-  /* Forca o alinhamento da engrenagem do Config e limita o tamanho */
-  svg, img { 
-    vertical-align: middle !important; 
-    max-width: 20px !important;
-  }
-</style>
-
-<style>
-  /* TRAVA UNIVERSAL DE SEGURANÇA - NUNCA APAGAR */
+  /* TRAVA UNIVERSAL DE SEGURANÇA E ALINHAMENTO - NUNCA APAGAR */
   svg {
     max-width: 24px !important;
     max-height: 24px !important;
     vertical-align: middle !important;
   }
   
+  img {
+    vertical-align: middle !important; 
+    max-width: 20px !important;
+  }
+
   /* Alinhamento dos Botoes do Topo (Config, Contas, etc) */
   .eio-tab, button[title*="Configur"] {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
-  }
-</style>
-
-<style>
-  /* FORÇA O ALINHAMENTO DO MENU DE ABAS (Contas, Mídias, Filtros, Config, Logs) */
-  .eio-tab {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 6px !important;
-      flex-direction: row !important;
-      position: relative !important;
-      z-index: 50 !important;
-      padding: 5px 10px !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    flex-direction: row !important;
+    position: relative !important;
+    z-index: 50 !important;
+    padding: 5px 10px !important;
   }
   
   .eio-tab svg {

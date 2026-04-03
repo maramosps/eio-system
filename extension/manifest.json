@@ -8,15 +8,10 @@
     "tabs",
     "scripting",
     "storage",
-    "webRequest",
-    "cookies",
-    "alarms",
-    "notifications"
+    "alarms"
   ],
   "host_permissions": [
     "https://*.instagram.com/*",
-    "https://i.instagram.com/*",
-    "https://www.instagram.com/*",
     "https://*.fbcdn.net/*",
     "https://*.cdninstagram.com/*",
     "https://eio-system.vercel.app/*",
@@ -68,9 +63,6 @@
     {
       "resources": [
         "icons/*",
-        "styles/*",
-        "assets/*",
-        "scripts/*",
         "public/*",
         "popup.html",
         "popup.css",

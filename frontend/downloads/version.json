@@ -1,12 +1,15 @@
 {
-    "version": "4.7.15",
-    "filename": "eio-extension-v4.7.15.zip",
-    "date": "2026-03-28",
+    "version": "4.8.0",
+    "filename": "eio-extension-v4.8.0.zip",
+    "date": "2026-04-03",
     "changelog": [
         "MVP Streamlined: Focus on Follow, Like, Story View only",
+        "Fix: Race condition on Service Worker state recovery",
+        "Fix: ProxyImage chunked processing (prevents SW crash)",
+        "Fix: Combo action false-negative when only Story selected",
+        "Fix: Removed unused permissions (webRequest, cookies, notifications)",
+        "Fix: Cleaned up redundant CSS style blocks in popup",
         "Removed: Comment feature (DOM volatility reduction)",
-        "Removed: DM & Follow-back audit feature (stability)",
-        "Optimized: Action delays now 15-120 seconds (faster automation)",
-        "Removed: Follow-back alarm/cron system"
+        "Removed: DM & Follow-back audit feature (stability)"
     ]
 }
