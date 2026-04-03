@@ -429,8 +429,8 @@ async function loadFollowersViaAPI(username, limit = 200) {
                         user.friendship_status?.outgoing_request === true ||
                         user.outgoing_request === true;
 
-                    // FILTRAR EM TEMPO REAL: só adiciona se NÃO segue
-                    if (!isFollowing && !hasOutgoingRequest) {
+                    // FILTRAR EM TEMPO REAL: só adiciona se NÃO segue, não tem request e NÃO é conta privada
+                    if (!isFollowing && !hasOutgoingRequest && !user.is_private) {
                         newFollowers.push({
                             id: user.pk || user.id,
                             username: user.username,
@@ -552,22 +552,20 @@ async function loadFollowingViaAPI(username, limit = 200) {
                         user.is_following === true ||
                         user.followed_by_viewer === true;
 
-                    const hasOutgoingRequest =
-                        user.friendship_status?.outgoing_request === true ||
-                        user.outgoing_request === true ||
-                        user.requested_by_viewer === true;
-
-                    allFollowing.push({
-                        id: user.pk || user.id,
-                        username: user.username,
-                        full_name: user.full_name || '',
-                        profile_pic_url: user.profile_pic_url || '',
-                        is_private: user.is_private || false,
-                        is_verified: user.is_verified || false,
-                        followed_by_viewer: isFollowing,
-                        follows_viewer: user.friendship_status?.followed_by || user.follows_viewer || false,
-                        requested_by_viewer: hasOutgoingRequest
-                    });
+                    // FILTRAR EM TEMPO REAL: só adiciona se NÃO segue, não tem request e NÃO é conta privada
+                    if (!isFollowing && !hasOutgoingRequest && !user.is_private) {
+                        allFollowing.push({
+                            id: user.pk || user.id,
+                            username: user.username,
+                            full_name: user.full_name || '',
+                            profile_pic_url: user.profile_pic_url || '',
+                            is_private: user.is_private || false,
+                            is_verified: user.is_verified || false,
+                            followed_by_viewer: isFollowing,
+                            follows_viewer: user.friendship_status?.followed_by || user.follows_viewer || false,
+                            requested_by_viewer: hasOutgoingRequest
+                        });
+                    }
                 }
 
                 maxId = data.next_max_id || '';

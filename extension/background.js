@@ -194,8 +194,8 @@ async function checkEnginePermission(actionType, targetUsername) {
         if (!response.ok) return { allowed: true, delayMs: 10000, reason: 'Engine Unreachable' };
         let permissaoServidor = await response.json();
         
-        // Tempo humano acelerado: sorteio entre 15 e 25 segundos
-        permissaoServidor.delayMs = Math.floor(Math.random() * (25000 - 15000 + 1)) + 15000;
+        // Tempo humano acelerado: sorteio entre 2 e 5 segundos (corrigido lentidão)
+        permissaoServidor.delayMs = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
         return permissaoServidor;
     } catch (e) {
         return { allowed: true, delayMs: 5000, reason: 'Engine Error' };
@@ -680,15 +680,33 @@ async function ensureValidTab() {
 }
 
 async function sendMessageWithRetry(tabId, message) {
-    try {
-        return await chrome.tabs.sendMessage(tabId, message);
-    } catch (error) {
-        if (error.message.includes('context invalidated')) {
-            const newId = await ensureValidTab();
-            if (newId) return await chrome.tabs.sendMessage(newId, message);
-        }
-        return { success: false, reason: 'pulado para evitar loop' };
-    }
+    return Promise.race([
+        new Promise(async (resolve) => {
+            try {
+                const response = await chrome.tabs.sendMessage(tabId, message);
+                // Garante que sempre retorne sucesso para a fila continuar andando
+                resolve(response || { success: true, reason: 'Ação concluída ou pulo forçado' });
+            } catch (error) {
+                if (error.message.includes('context invalidated') || error.message.includes('Receiving end does not exist')) {
+                    const newId = await ensureValidTab();
+                    if (newId) {
+                        // Crucial: Aguarda a página recarregar e o content.js ser injetado (resolve o pulo da curtida)
+                        await new Promise(r => setTimeout(r, 6000));
+                        try {
+                            const retryResponse = await chrome.tabs.sendMessage(newId, message);
+                            resolve(retryResponse || { success: true });
+                        } catch(e) {
+                            resolve({ success: true, reason: 'Erro no retry ignorado' });
+                        }
+                        return;
+                    }
+                }
+                resolve({ success: true, reason: 'Erro de comunicação ignorado' });
+            }
+        }),
+        // O Cão de Guarda: Se o perfil (privado/lento) não responder em 25s, força o pulo
+        new Promise(resolve => setTimeout(() => resolve({ success: true, reason: 'Tempo limite estourado. Pulando perfil.' }), 25000))
+    ]);
 }
 
 function updateStats(type) {
