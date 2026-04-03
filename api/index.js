@@ -1,6 +1,6 @@
 /*
  * E.I.O API - Backend Service
- * Version: 4.6.5
+ * Version: 4.8.0
  */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
                 message: isHealthy
                     ? 'E.I.O System API está pronta para produção'
                     : supabaseStatus.error || `${missingVars.length} variável(eis) de ambiente não configurada(s)`,
-                version: '4.6.5',
+                version: '4.8.0',
                 timestamp: new Date().toISOString(),
                 env_check: envCheck,
                 database: {

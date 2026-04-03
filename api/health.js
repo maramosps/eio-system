@@ -1,4 +1,12 @@
+/**
+ * /api/health - Redirects to main API handler for full diagnostics
+ * Delegates to the comprehensive health check in api/index.js
+ */
+const mainHandler = require('./index');
+
 module.exports = (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json({ heartbeat: 'LIVE', version: '4.6.5' });
+    // Inject path so the main handler recognizes this as a health check
+    req.query = req.query || {};
+    req.query.path = 'health';
+    return mainHandler(req, res);
 };
