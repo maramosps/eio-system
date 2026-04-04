@@ -17,7 +17,7 @@ const config = {
         links: 'a[href^="/"]',
         buttons: {
             follow: 'button:not([disabled])',
-            like: 'svg[aria-label="Curtir"]',
+            like: 'svg[aria-label*='urtir']',
             comment: 'textarea[aria-label="Adicione um comentário..."]'
         },
         profileStats: 'header section ul li',
@@ -1888,7 +1888,7 @@ async function executeLikeFeed2(target) {
 
             // 3. Find the Like button (SVG heart) inside the opened post
             const likeSelectors = [
-                'svg[aria-label="Curtir"]',
+                'svg[aria-label*='urtir']',
                 'svg[aria-label="Like"]',
                 'svg[aria-label="Amei"]'
             ];
