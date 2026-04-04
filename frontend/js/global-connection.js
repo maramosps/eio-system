@@ -1,11 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════
- * E.I.O GLOBAL CONNECTION v4.8.0
+ * E.I.O GLOBAL CONNECTION v4.8.1
  * 🔥 SILENT GREEN - MutationObserver + Auto-Fix UI
  * ═══════════════════════════════════════════════════════════
  */
 
-const VERSION = '4.8.0';
+const VERSION = '4.8.1';
 
 console.log("%c🌐 [GLOBAL] Iniciando Protocolo v" + VERSION + "...", "color: #6246ea; font-weight: bold; font-size: 14px;");
 

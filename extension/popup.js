@@ -984,6 +984,8 @@ function updateSelectedCount() {
     if (el) {
         el.textContent = `${AppState.selectedAccounts.size} selected`;
     }
+    // Sincronizar também a barra da Fila (queueCount)
+    updateSelectedActions();
 }
 
 function sortAccounts() {
@@ -1629,13 +1631,26 @@ function initializeActionButtons() {
     if (btnStartMini) btnStartMini.onclick = () => {
         btnStartMini.disabled = true;
         if (btnStartAcc) btnStartAcc.disabled = true;
-        const selectedActions = getSelectedActions();
+        
+        let selectedActions = getSelectedActions();
+        
+        // UX: Se apertou play sem marcar nada, marca "Seguir" (Follow) como padrão.
         if (selectedActions.length === 0) {
-            alert('Escolha pelo menos uma ação (Seguir, Curtir, etc.) nos botões acima.');
-            btnStartMini.disabled = false;
-            if (btnStartAcc) btnStartAcc.disabled = false;
-            return;
+            const btnFollow = document.getElementById('toggleFollow');
+            if (btnFollow) {
+                btnFollow.classList.add('active');
+                selectedActions = ['follow'];
+                updateSelectedActions();
+                addLog('info', 'ℹ️ Nenhuma ação escolhida. Usando "Seguir" como padrão.');
+            } else {
+                addLog('warning', '⚠️ Escolha pelo menos uma ação nos botões acima.');
+                btnStartMini.disabled = false;
+                if (btnStartAcc) btnStartAcc.disabled = false;
+                try { alert('Escolha pelo menos uma ação (Seguir, Curtir, etc.) nos botões acima.'); } catch(e){}
+                return;
+            }
         }
+        
         prepareAndStartAutomation(selectedActions);
     };
 

@@ -257,7 +257,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
         case 'eio_ping':
         case 'EIO_HEARTBEAT_PING':
             sendResponse({
-                pong: true, version: '4.7.15',
+                pong: true, version: '4.8.0',
                 status: extensionState.isRunning ? 'running' : 'idle',
                 stats: extensionState.stats
             });
@@ -329,7 +329,7 @@ self.eioMessageHandler = (message, sender, sendResponse) => {
 
         case 'bridge_connected':
             console.log('[E.I.O Bridge] 🌉 Conectado!');
-            sendResponse({ success: true, version: '4.7.15' });
+            sendResponse({ success: true, version: '4.8.0' });
             break;
 
         // v4.5.0 - STATS SYNC HANDLER
@@ -773,7 +773,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     if (message.type === 'EIO_HEARTBEAT_PING' || message.action === 'eio_ping') {
         sendResponse({
-            pong: true, version: '4.7.15',
+            pong: true, version: '4.8.0',
             status: extensionState.isRunning ? 'running' : 'idle',
             stats: extensionState.stats
         });

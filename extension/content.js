@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════════════════
 */
 
-console.log('E.I.O Content Script v4.7.15 Initializing - HUMAN EMULATION MODE...');
+console.log('E.I.O Content Script v4.8.0 Initializing - HUMAN EMULATION MODE...');
 
 // 🛠️ CONFIGURAÇÕES E ESTADO
 const config = {
@@ -618,7 +618,7 @@ function randomDelay(min, max) {
 
 /**
  * ═══════════════════════════════════════════════════════════
- * ADVANCED HUMAN EMULATION HELPERS (v4.7.15)
+ * ADVANCED HUMAN EMULATION HELPERS (v4.8.0)
  * Bypasses Instagram anti-bot layer by simulating full user
  * interaction sequences with realistic timing.
  * ═══════════════════════════════════════════════════════════
@@ -1381,7 +1381,7 @@ async function runExtractionFlow(payload) {
             // O texto "Segue você" ou "Follows you" aparece no item.
             const followsMe = btnText.includes('segue você') || btnText.includes('follows you');
 
-            // APLICAR FILTROS RIGOROSOS DE EXTRAÇÃO (v4.7.15)
+            // APLICAR FILTROS RIGOROSOS DE EXTRAÇÃO (v4.8.0)
             // Skip automático de perfis que já seguimos ou já foi solicitado
             if (extractType === 'followers') {
                 if (isFollowing || isRequested) {
@@ -1558,7 +1558,7 @@ async function executeInstagramAction(payload) {
         'viewStory': executeStoryInteract,
         'like_feed_2': executeLikeFeed2,
         'story_interact': executeStoryInteract
-        // comment and dm removed in v4.7.15 for MVP stability
+        // comment and dm removed in v4.8.0 for MVP stability
     };
 
     const actionFn = actionFunctions[type];
@@ -1844,10 +1844,10 @@ async function executeLike(target) {
 
 
 
-// v4.7.15 — executeSmartComment REMOVED for MVP stability (DOM volatility)
+// v4.8.0 — executeSmartComment REMOVED for MVP stability (DOM volatility)
 
 /**
- * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.7.15)
+ * Curte posts recentes do perfil alvo via DOM Human Emulation (v4.8.0)
  * Navega para o perfil, abre posts e clica no coração via simulateHumanClick.
  * Bypasses Shadow Block que descartava fetch API silenciosamente.
  */
@@ -2158,7 +2158,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Inicialização
-console.log('E.I.O Content Script v4.7.15 Ready!');
+console.log('E.I.O Content Script v4.8.0 Ready!');
 
 // ===== ÍCONE FLUTUANTE E CONTAINER INJETADO =====
 
@@ -2591,6 +2591,6 @@ setTimeout(async () => {
     await dismissInstagramPopups();
 }, 2000);
 
-console.log('E.I.O Content Script v4.7.15 - DOM Human Emulation active!');
+console.log('E.I.O Content Script v4.8.0 - DOM Human Emulation active!');
 
 
