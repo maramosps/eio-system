@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { supabase } = require('../../../src/services/supabase');
+const supabaseService = require('../../../../src/services/supabase');
+function getDb() {
+  const { client, error } = supabaseService.getSupabase();
+  if (!client) throw new Error(`Supabase indisponível: ${error}`);
+  return client;
+}
 
 /**
  * @route   POST /api/v1/license/validate
@@ -18,9 +23,10 @@ router.post('/validate', async (req, res) => {
 
         // Verificar token
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'eio-secret-key-2026');
+        const db = getDb();
 
         // Buscar usuário
-        const { data: user, error: userError } = await supabase
+        const { data: user, error: userError } = await db
             .from('users')
             .select('*')
             .eq('id', decoded.userId)
@@ -31,7 +37,7 @@ router.post('/validate', async (req, res) => {
         }
 
         // Buscar assinatura
-        const { data: subscription } = await supabase
+        const { data: subscription } = await db
             .from('subscriptions')
             .select('*')
             .eq('user_id', user.id)
@@ -79,8 +85,10 @@ router.post('/activate', async (req, res) => {
             return res.status(400).json({ message: 'userId e plan são obrigatórios' });
         }
 
+        const db = getDb();
+
         // Buscar ou criar assinatura
-        const { data: existingSub } = await supabase
+        const { data: existingSub } = await db
             .from('subscriptions')
             .select('*')
             .eq('user_id', userId)
@@ -91,7 +99,7 @@ router.post('/activate', async (req, res) => {
 
         if (existingSub) {
             // Atualizar assinatura existente
-            const { data: subscription, error } = await supabase
+            const { data: subscription, error } = await db
                 .from('subscriptions')
                 .update({
                     plan,
@@ -115,7 +123,7 @@ router.post('/activate', async (req, res) => {
             });
         } else {
             // Criar nova assinatura
-            const { data: subscription, error } = await supabase
+            const { data: subscription, error } = await db
                 .from('subscriptions')
                 .insert([{
                     user_id: userId,

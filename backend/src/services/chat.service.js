@@ -3,7 +3,12 @@
 // Gerencia conversas em tempo real do Instagram
 // ═══════════════════════════════════════════════════════════
 
-const { supabase } = require('../../../src/services/supabase');
+const supabaseService = require('../../../src/services/supabase');
+function getDb() {
+  const { client, error } = supabaseService.getSupabase();
+  if (!client) throw new Error(`Supabase indisponível: ${error}`);
+  return client;
+}
 
 class ChatService {
     constructor(io) {
@@ -170,7 +175,7 @@ class ChatService {
 
     async loadUserConversations(userId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await getDb()
                 .from('conversations')
                 .select(`
                     *,
@@ -191,7 +196,7 @@ class ChatService {
 
     async createConversation(data) {
         try {
-            const { data: conversation, error } = await supabase
+            const { data: conversation, error } = await getDb()
                 .from('conversations')
                 .insert({
                     user_id: data.user_id,
@@ -218,7 +223,8 @@ class ChatService {
 
     async saveMessage(data) {
         try {
-            const { data: message, error } = await supabase
+            const db = getDb();
+            const { data: message, error } = await db
                 .from('messages')
                 .insert({
                     conversation_id: data.conversation_id,
@@ -234,14 +240,14 @@ class ChatService {
             if (error) throw error;
 
             // Atualizar conversa
-            await supabase
+            await db
                 .from('conversations')
                 .update({
                     updated_at: new Date().toISOString(),
                     last_message: data.content,
                     unread_count: data.sender === 'follower'
-                        ? supabase.raw('unread_count + 1')
-                        : supabase.raw('unread_count')
+                        ? db.rpc('increment_unread', { conv_id: data.conversation_id })
+                        : 0
                 })
                 .eq('id', data.conversation_id);
 
@@ -255,15 +261,17 @@ class ChatService {
 
     async markConversationAsRead(conversationId) {
         try {
+            const db = getDb();
+
             // Marcar todas as mensagens como lidas
-            await supabase
+            await db
                 .from('messages')
                 .update({ read: true })
                 .eq('conversation_id', conversationId)
                 .eq('sender', 'follower');
 
             // Zerar contador de não lidas
-            await supabase
+            await db
                 .from('conversations')
                 .update({ unread_count: 0 })
                 .eq('id', conversationId);

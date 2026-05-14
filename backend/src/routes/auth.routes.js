@@ -2,7 +2,14 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { supabase } = require('../../../src/services/supabase');
+const supabaseService = require('../../../../src/services/supabase');
+
+// Helper para obter cliente Supabase em runtime (evita bug do export null)
+function getDb() {
+  const { client, error } = supabaseService.getSupabase();
+  if (!client) throw new Error(`Supabase indisponível: ${error}`);
+  return client;
+}
 
 /**
  * @route   POST /api/v1/auth/register
@@ -22,8 +29,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'A senha deve ter no mínimo 6 caracteres' });
     }
 
+    const db = getDb();
+
     // Verificar se email já existe
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await db
       .from('users')
       .select('id')
       .eq('email', email)
@@ -37,7 +46,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Criar usuário
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error } = await db
       .from('users')
       .insert([
         {
@@ -57,7 +66,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Criar assinatura de trial
-    await supabase
+    await db
       .from('subscriptions')
       .insert([
         {
@@ -100,42 +109,59 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email e senha são obrigatórios' });
     }
 
-    // Buscar usuário
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    // Buscar usuário (tentativa — pode falhar se Supabase indisponível)
+    let user = null;
+    let dbError = null;
+    try {
+      const db = getDb();
+      const { data, error } = await db
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+      user = data;
+      dbError = error;
+    } catch (e) {
+      dbError = e;
+      console.warn('⚠️ Supabase indisponível durante login, prosseguindo com bypass check:', e.message);
+    }
 
-    // BYPASS PARA ADMINISTRADOR REAL
-    if (email === 'maramosps@gmail.com' && password === 'vaio*0320') {
+    // BYPASS PARA ADMINISTRADOR PRINCIPAL
+    if (email === 'maramosps@gmail.com' && password === '032031') {
+      const adminId = user?.id || 'admin-main-id';
       const token = jwt.sign(
-        { userId: user?.id || 'admin-main-id', email: 'maramosps@gmail.com', role: 'admin' },
+        { userId: adminId, email: 'maramosps@gmail.com', role: 'admin' },
         process.env.JWT_SECRET || 'eio-secret-key-2026',
         { expiresIn: '30d' }
       );
+      console.log('✅ Login admin principal realizado: maramosps@gmail.com');
       return res.json({
         success: true,
         token,
-        user: { id: user?.id || 'admin-main-id', name: user?.name || 'Administrador', email: 'maramosps@gmail.com', role: 'admin' }
+        user: { id: adminId, name: user?.name || 'Administrador', email: 'maramosps@gmail.com', role: 'admin' }
       });
     }
 
-    if (error || !user) {
+    if (dbError || !user) {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    // Verificar senha (ajustado para password_hash)
+    // Verificar senha
     const isMatch = await bcrypt.compare(password, user.password_hash || user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    // Atualizar último login
-    await supabase
-      .from('users')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', user.id);
+    // Atualizar último login (silencioso em caso de erro)
+    try {
+      const db = getDb();
+      await db
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch (e) {
+      console.warn('⚠️ Não foi possível atualizar last_login:', e.message);
+    }
 
     // Gerar token
     const token = jwt.sign(
@@ -177,8 +203,10 @@ router.post('/extension-login', async (req, res) => {
       return res.status(400).json({ message: 'Email e senha são obrigatórios' });
     }
 
+    const db = getDb();
+
     // Buscar usuário
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await db
       .from('users')
       .select('*')
       .eq('email', email)
@@ -195,14 +223,14 @@ router.post('/extension-login', async (req, res) => {
     }
 
     // Buscar assinatura
-    const { data: subscription } = await supabase
+    const { data: subscription } = await db
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
     // Atualizar último login
-    await supabase
+    await db
       .from('users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', user.id);
@@ -267,8 +295,10 @@ router.post('/instagram-login', async (req, res) => {
 
     const handle = instagram_handle.replace('@', '').trim().toLowerCase();
 
+    const db = getDb();
+
     // Buscar usuário pelo handle
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await db
       .from('users')
       .select('*')
       .eq('instagram_handle', handle)
@@ -283,7 +313,7 @@ router.post('/instagram-login', async (req, res) => {
     }
 
     // Buscar assinatura
-    const { data: subscription } = await supabase
+    const { data: subscription } = await db
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
@@ -363,9 +393,10 @@ router.get('/me', async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'eio-secret-key-2026');
 
-    const { data: user, error } = await supabase
+    const db = getDb();
+    const { data: user, error } = await db
       .from('users')
-      .select('id, name, email, created_at, last_login')
+      .select('id, name, email, role, created_at, last_login')
       .eq('id', decoded.userId)
       .single();
 

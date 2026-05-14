@@ -6,7 +6,12 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
-const { supabase } = require('../../../src/services/supabase');
+const supabaseService = require('../../../../src/services/supabase');
+function getDb() {
+  const { client, error } = supabaseService.getSupabase();
+  if (!client) throw new Error(`Supabase indisponível: ${error}`);
+  return client;
+}
 
 // Middleware de autenticação
 const { authenticate } = require('../middlewares/auth');
@@ -22,7 +27,8 @@ router.get('/download', authenticate, async (req, res) => {
         const userEmail = req.user.email;
 
         // Verificar se usuário tem licença ativa
-        const { data: subscription, error: subError } = await supabase
+        const db = getDb();
+        const { data: subscription, error: subError } = await db
             .from('subscriptions')
             .select('*')
             .eq('user_id', userId)
@@ -60,7 +66,7 @@ router.get('/download', authenticate, async (req, res) => {
 
         // Registrar download (opcional - para estatísticas)
         try {
-            const { error: logError } = await supabase
+            const { error: logError } = await db
                 .from('executions')
                 .insert({
                     user_id: userId,
