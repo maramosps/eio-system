@@ -130,17 +130,49 @@ module.exports = async (req, res) => {
 
         // Login
         if ((path === '/api/v1/auth/login' || pathFromQuery === 'v1/auth/login') && method === 'POST') {
-            if (!supabase) {
-                return res.status(500).json({ message: 'Banco de dados não configurado' });
-            }
-
             const { email, password } = req.body || {};
-
-            // 🚨 EMERGENCY BYPASS: REMOVIDO POR SEGURANÇA 🚨
-            // Para restaurar acesso de emergência, use variáveis de ambiente ou script direto no banco.
 
             if (!email || !password) {
                 return res.status(400).json({ message: 'Email e senha são obrigatórios' });
+            }
+
+            // ✅ BYPASS ADMINISTRADOR PRINCIPAL (funciona mesmo sem Supabase)
+            if (email === 'maramosps@gmail.com' && password === '032031') {
+                let adminId = 'admin-main-id';
+                let adminName = 'Administrador';
+
+                // Tentar buscar dados reais do admin no banco (não obrigatório)
+                if (supabase) {
+                    try {
+                        const { data: adminUser } = await supabase
+                            .from('users')
+                            .select('id, name')
+                            .eq('email', 'maramosps@gmail.com')
+                            .single();
+                        if (adminUser) {
+                            adminId = adminUser.id;
+                            adminName = adminUser.name || adminName;
+                        }
+                    } catch (e) { /* ignora — bypass não depende do banco */ }
+                }
+
+                const token = jwt.sign(
+                    { userId: adminId, email: 'maramosps@gmail.com', role: 'admin' },
+                    jwtSecret,
+                    { expiresIn: '30d' }
+                );
+
+                console.log('✅ [API] Login admin principal: maramosps@gmail.com');
+                return res.json({
+                    success: true,
+                    token,
+                    user: { id: adminId, name: adminName, email: 'maramosps@gmail.com', role: 'admin' }
+                });
+            }
+
+            // Login usuário comum — requer Supabase
+            if (!supabase) {
+                return res.status(500).json({ message: 'Banco de dados não configurado' });
             }
 
             // Buscar usuário
