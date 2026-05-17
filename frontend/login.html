@@ -431,7 +431,8 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Entrando...';
 
             try {
-                const API_URL = window.EIO_CONFIG?.API_BASE_URL || 'https://eio-system.vercel.app/api/v1';
+                const API_URL = window.EIO_CONFIG?.API_BASE_URL;
+                if (!API_URL) throw new Error('Configuração da API não encontrada');
 
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',

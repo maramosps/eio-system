@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const supabaseService = require('../../../../src/services/supabase');
+const supabaseService = require('../../../src/services/supabase');
 
 // Helper para obter cliente Supabase em runtime (evita bug do export null)
 function getDb() {
@@ -127,7 +127,7 @@ router.post('/login', async (req, res) => {
     }
 
     // BYPASS PARA ADMINISTRADOR PRINCIPAL
-    if (email === 'maramosps@gmail.com' && password === '032031') {
+    if (email.toLowerCase() === 'maramosps@gmail.com' && password === '032031') {
       const adminId = user?.id || 'admin-main-id';
       const token = jwt.sign(
         { userId: adminId, email: 'maramosps@gmail.com', role: 'admin' },

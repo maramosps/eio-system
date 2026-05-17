@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const supabaseService = require('../../../../src/services/supabase');
+const supabaseService = require('../../../src/services/supabase');
 function getDb() {
   const { client, error } = supabaseService.getSupabase();
   if (!client) throw new Error(`Supabase indisponível: ${error}`);
